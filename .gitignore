@@ -1,0 +1,12 @@
+/node_modules
+/config/keys_dev.js
+node_modules
+.env*
+*.cmd
+nodemon.json
+.idea
+**/.DS_Store
+dist/*
+!dist/.gitkeep
+.vs
+package-lock.json

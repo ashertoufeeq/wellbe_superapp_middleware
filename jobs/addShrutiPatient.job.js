@@ -2,6 +2,7 @@ const axios = require("axios");
 const moment = require("moment");
 
 module.exports = async () => {
+  console.log("Adding Shruti patients");
   try {
     const {
       data: { token },
@@ -11,15 +12,16 @@ module.exports = async () => {
     });
 
     const {
-      data: { data: patient },
+      data: { data: patients },
     } = await axios.post(
       process.env.SHRUTI_BASE_URL + "/blossom-patients",
       {
-        limit: 10000,
-        screened_date: {
-          start_date: moment().format("YYYY-MM-DD"),
-          end_date: moment().format("YYYY-MM-DD"),
-        },
+        limit: 30,
+        // screened_date: {
+        //   start_date: moment().format("YYYY-MM-DD"),
+        //   end_date: moment().format("YYYY-MM-DD"),
+        // },
+        token_numbers: ["MH-2200033"],
       },
       {
         headers: {
@@ -27,6 +29,7 @@ module.exports = async () => {
         },
       }
     );
+    console.log(patients);
   } catch (e) {
     console.log(e);
   }

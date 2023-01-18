@@ -4,9 +4,27 @@ require("dotenv").config();
 const bodyParser = require("body-parser");
 const Agenda = require("agenda");
 const Agendash = require("agendash");
+const mongoose = require('mongoose');
+const path = require('path');
+
+const patientRecord = require('./models/patientRecord')
+const campScreening = require('./models/campScreening.model')
+const labItem = require('./models/labItem')
 
 const app = express();
 const jobs = require("./jobs");
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+console.log(path.join(__dirname, 'views'), express.static(path.join(__dirname, 'public')))
+
+const ConsolidatedReport = require("./routes/printConsolidatedReport");
+
+app.use("/patient", ConsolidatedReport);
+
 
 const agenda = new Agenda({
   db: {
@@ -15,6 +33,18 @@ const agenda = new Agenda({
   defaultLockLifetime: 240000,
   defaultConcurrency: 100,
 });
+
+mongoose.set("strictQuery", false);
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log('db connected');
+    jobs.generateConsolidatedReport();
+  })
+  .catch((err) => console.warn(err));
 
 app.use("/dash", Agendash(agenda));
 
@@ -58,7 +88,7 @@ app.use((req, res, next) => {
 
 app.listen(process.env.PORT || 4000, async () => {
   console.log("Running server... http://localhost:4000");
-  jobs.addShrutiPatient();
+  // jobs.addShrutiPatient();
 });
 
 // agenda.define("Get Patients", { concurrency: 10 }, async (job, done) => {

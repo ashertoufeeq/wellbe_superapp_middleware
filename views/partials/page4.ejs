@@ -1,0 +1,97 @@
+<!-- Header -->
+<div class="w-100">
+  <h3 class="text-right mr-5"><%= date %></h3>
+</div>
+
+<div
+  class="my-2"
+  style="border-top: 1px solid black; border-bottom: 1px solid black"
+>
+  <h5 class="text-center">Basic Health Checkup Report</h5>
+</div>
+
+<div>
+  <table class="n-b w-100">
+    <tr class="n-b">
+      <td class="n-b t-c">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">Name</p>
+          <p><%= name %></p>
+        </div>
+      </td>
+      <td class="n-b px-3">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">Phone No</p>
+          <p><%= phoneNo %></p>
+        </div>
+      </td>
+      <td class="n-b">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">Height</p>
+          <p><%= height %> Cms</p>
+        </div>
+      </td>
+    </tr>
+
+    <tr class="n-b">
+      <td class="n-b t-c">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">Gender</p>
+          <p><%= gender %></p>
+        </div>
+      </td>
+      <td class="n-b px-3">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">Labor Id</p>
+          <p><%= LabourId %></p>
+        </div>
+      </td>
+      <td class="n-b">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">weight</p>
+          <p><%= weight %> Cms</p>
+        </div>
+      </td>
+    </tr>
+
+    <tr class="n-b">
+      <td class="n-b t-c">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">Location</p>
+          <p><%= location %></p>
+        </div>
+      </td>
+      <td class="n-b px-3">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">MRN no</p>
+          <p><%= mrnNo %></p>
+        </div>
+      </td>
+      <td class="n-b">
+        <div class="d-flex flex-row">
+          <p class="font-weight-bold mr-3">Age</p>
+          <p><%= age %> Yrs</p>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- Setehoscopy -->
+<div class="my-3">
+  <h4>Stethoscopy</h4>
+  <div>
+    <% stethoscopyResults.forEach(function(item) { %>
+    <p class="ml-4"><%= item %></p>
+    <% }); %>
+  </div>
+</div>
+
+<div class="my-3">
+  <h4>Dermascopy</h4>
+  <div>
+    <% dermascopyResult.forEach(function(item) { %>
+    <p class="ml-4"><%= item %></p>
+    <% }); %>
+  </div>
+</div>

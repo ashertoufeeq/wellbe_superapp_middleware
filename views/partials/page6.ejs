@@ -1,0 +1,81 @@
+<table class="w-100 t-l">
+  <tr>
+    <td class="py-2 f-b">Labor Id</td>
+    <td class="py-2" colspan="3"><%= LabourId %></td>
+    <td class="py-2 f-b" colspan="2">Screening Date</td>
+    <td class="py-2" colspan="3"><%= screenDate %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Patient ID</td>
+    <td class="py-2" colspan="3"><%= patientId %></td>
+    <td class="py-2 f-b" colspan="5">Screening Location</td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Name</td>
+    <td class="py-2"><%= name %></td>
+    <td class="py-2" rowspan="4" colspan="5"><%= screeingAddress %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Age</td>
+    <td class="py-2"><%= age %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Gender</td>
+    <td class="py-2"><%= gender %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Contact</td>
+    <td class="py-2"><%= phoneNo %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Provisional Diagnosis</td>
+    <td colspan="9"><%= provisionalDiagnosis %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Is Hearing Screening Done?</td>
+    <td colspan="9"><%= isHearingScreeningDone %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Hearing Screening</td>
+    <td class="f-b">500Hz</td>
+    <td class="f-b" colspan="2">1000Hz</td>
+    <td class="f-b" colspan="2">2000Hz</td>
+    <td class="f-b">4000Hz</td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Left Ear</td>
+    <td class="f-b"><%= leftEar["500Hz"] %></td>
+    <td class="f-b" colspan="2"><%= leftEar["1000Hz"] %></td>
+    <td class="f-b" colspan="2"><%= leftEar["2000Hz"] %></td>
+    <td class="f-b"><%= leftEar["4000Hz"] %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b">Right Ear</td>
+    <td class="f-b"><%= leftEar["500Hz"] %></td>
+    <td class="f-b" colspan="2"><%= rightEar["1000Hz"] %></td>
+    <td class="f-b" colspan="2"><%= rightEar["2000Hz"] %></td>
+    <td class="f-b"><%= rightEar["4000Hz"] %></td>
+  </tr>
+  <tr>
+    <td class="py-2 f-b" rowspan="5">Recommendation</td>
+    <td class="py-2 t-l">1.Pure tone Audiometry(PTA)</td>
+    <td></td>
+    <td colspan="4">Comments</td>
+  </tr>
+  <tr>
+    <td class="py-2 t-l">2. Impedence Audiometry</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td class="py-2 t-l">3. Hearing Aid Trail(HAT)</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td class="py-2 t-l">4. Other</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td class="py-2 t-l">5. Ent Consultation</td>
+    <td></td>
+  </tr>
+</table>

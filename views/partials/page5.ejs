@@ -1,0 +1,301 @@
+<div style="font-size: 0.875rem">
+  <h4>COPD Screening Report</h4>
+
+  <div>
+    <p
+      style="
+        color: white;
+        background-color: #24c4ff;
+        text-align: center;
+        margin: 0;
+      "
+    >
+      Subject Information
+    </p>
+    <table class="n-b w-100 m-0 p-0">
+      <tr>
+        <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
+          Subject Name
+        </td>
+        <td class="n-b t-l" style="width: 30%"><%= name %></td>
+        <td class="n-b t-l" style="width: 20%">Subject ID:</td>
+        <td class="n-b t-l" style="width: 30%"><%= subjectId %></td>
+      </tr>
+      <tr>
+        <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
+          Gender
+        </td>
+        <td class="n-b t-l" style="width: 30%"><%= gender %></td>
+        <td class="n-b t-l" style="width: 20%">Age:</td>
+        <td class="n-b t-l" style="width: 30%"><%= age %></td>
+      </tr>
+      <tr>
+        <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
+          Height
+        </td>
+        <td class="n-b t-l" style="width: 30%"><%= height %></td>
+        <td class="n-b t-l" style="width: 20%">Regression Set:</td>
+        <td class="n-b t-l" style="width: 30%"><%= regressionSet %></td>
+      </tr>
+      <tr>
+        <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
+          Weight
+        </td>
+        <td class="n-b t-l" style="width: 30%"><%= weight %></td>
+        <td class="n-b t-l" style="width: 20%">BMI:</td>
+        <td class="n-b t-l" style="width: 30%"><%= bmi %></td>
+      </tr>
+    </table>
+  </div>
+  <!-- test imformation -->
+  <div>
+    <p
+      style="
+        color: white;
+        background-color: #24c4ff;
+        text-align: center;
+        margin: 0;
+      "
+    >
+      Test Information
+    </p>
+    <table class="n-b w-100 m-0 p-0">
+      <tr>
+        <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
+          Test Date
+        </td>
+        <td class="n-b t-l" style="width: 30%"><%= testDate %></td>
+        <td class="n-b t-l" style="width: 20%">Values at BTPS:</td>
+        <td class="n-b t-l" style="width: 30%"><%= valuesAtBTPS %></td>
+      </tr>
+      <tr>
+        <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
+          Device ID:
+        </td>
+        <td class="n-b t-l" style="width: 30%"><%= deviceId %></td>
+        <td class="n-b t-l" style="width: 20%">Device Software Ref:</td>
+        <td class="n-b t-l" style="width: 30%"><%= DeviceSoftwareRef %></td>
+      </tr>
+      <tr>
+        <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
+          Number of Blows:
+        </td>
+        <td class="n-b t-l" style="width: 30%"><%= NoOfBlows %></td>
+        <td class="n-b t-l" style="width: 20%">Number of Good Blows:</td>
+        <td class="n-b t-l" style="width: 30%"><%= NoOfGoodBlows %></td>
+      </tr>
+      <tr>
+        <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
+          Best FEV1 within
+        </td>
+        <td class="n-b t-l" style="width: 30%"><%= bestFev1Within %></td>
+        <td class="n-b t-l" style="width: 20%">Best FEV6 Within:</td>
+        <td class="n-b t-l" style="width: 30%"><%= bestFev6Withing %></td>
+      </tr>
+    </table>
+  </div>
+  <!-- results -->
+  <div>
+    <p
+      style="
+        color: white;
+        background-color: #24c4ff;
+        text-align: center;
+        margin: 0;
+      "
+    >
+      Result
+    </p>
+    <table class="w-100">
+      <tr>
+        <th>Parameter</th>
+        <th>Predicted</th>
+        <th>Test 1</th>
+        <th>Test 2</th>
+        <th>Test 3</th>
+        <th>Best</th>
+        <th>%Pred</th>
+      </tr>
+      <% results.forEach(function(item) { %>
+      <tr>
+        <td class="t-l"><%= item.parameter %></td>
+        <td class="t-l"><%= item.predicted %></td>
+        <td class="t-l"><%= item.test1 %></td>
+        <td class="t-l"><%= item.test2 %></td>
+        <td class="t-l"><%= item.best %></td>
+        <td class="t-l"><%= item.best %></td>
+        <td class="t-l"><%= item.pred %></td>
+      </tr>
+      <% }); %>
+    </table>
+  </div>
+  <!-- Obstructive index and copd classification -->
+  <div
+    style="
+      color: white;
+      background-color: #24c4ff;
+      display: flex;
+      justify-items: space-between;
+      margin: 0;
+      padding: 0;
+      align-items: center;
+    "
+  >
+    <p class="w-50" style="text-align: center">Obstructive Index</p>
+    <p class="w-50">COPD (GOLD) classification</p>
+  </div>
+  <div class="my-2 d-flex w-100 align-items-start justify-content-between">
+    <table class="n-b w-50 mr-1">
+      <tr>
+        <td class="pr-3 n-b">FEV1 Meas./FEV1 Pred.&ge; 80%</td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (obstructiveIndex === "Normal") { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">►</i>
+          <% } else { %> <% } %>
+        </td>
+        <td
+          class="p-2 n-b text-white"
+          style="background-color: green; width: 30%"
+        >
+          Normal
+        </td>
+      </tr>
+      <tr>
+        <td class="pr-3 n-b">FEV1 Meas./FEV1 Pred. < 80%</td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (obstructiveIndex === "Mild") { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">►</i>
+          <% } else { %> <% } %>
+        </td>
+        <td class="p-2 n-b" style="background-color: yellow; width: 30%">
+          Mild
+        </td>
+      </tr>
+      <tr>
+        <td class="pr-3 n-b">FEV1 Meas./FEV1 Pred. < 50%</td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (obstructiveIndex === "Moderate") { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">►</i>
+          <% } else { %> <% } %>
+        </td>
+        <td class="p-2 n-b" style="background-color: orange; width: 30%">
+          Moderate
+        </td>
+      </tr>
+      <tr>
+        <td class="pr-3 n-b">FEV1 Meas./FEV1 Pred. < 30%</td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (obstructiveIndex === "Severe") { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">►</i>
+          <% } else { %> <% } %>
+        </td>
+        <td class="p-2 n-b" style="background-color: red; width: 30%">
+          Severe
+        </td>
+      </tr>
+    </table>
+    <table class="n-b w-50 ml-1">
+      <tr>
+        <td
+          class="p-2 py-0 text-white"
+          style="background-color: green; width: 30%; border-color: white"
+        >
+          Normal
+        </td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (copdClassfication === 0) { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
+          <% } else { %> <% } %>
+        </td>
+        <td class="pr-3 n-b">FEV1/FEV6&ge; 0.70</td>
+      </tr>
+      <tr>
+        <td
+          class="p-2 py-0"
+          style="background-color: deepskyblue; width: 30%; border-color: white"
+        >
+          Stage I
+        </td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (copdClassfication === 1) { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
+          <% } else { %> <% } %>
+        </td>
+        <td class="pr-3 n-b">FEV1/FEV6 < 0.70 & FEV1 &ge; 80% Pred</td>
+      </tr>
+      <tr>
+        <td
+          class="p-2 py-0"
+          style="background-color: deepskyblue; width: 30%; border-color: white"
+        >
+          Stage II
+        </td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (copdClassfication === 2) { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
+          <% } else { %> <% } %>
+        </td>
+        <td class="pr-3 n-b">FEV1/FEV6 < 0.70 & FEV1 < 80% pred.</0.70></td>
+      </tr>
+      <tr>
+        <td
+          class="p-2 py-0"
+          style="background-color: deepskyblue; width: 30%; border-color: white"
+        >
+          Stage III
+        </td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (copdClassfication === 3) { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
+          <% } else { %> <% } %>
+        </td>
+        <td class="pr-3 n-b">FEV1/FEV6 < 0.70 & FEV1 < 50% Pred.</td>
+      </tr>
+      <tr>
+        <td
+          class="p-2 py-0"
+          style="background-color: deepskyblue; width: 30%; border-color: white"
+        >
+          Stage IV
+        </td>
+        <td class="n-b" style="font-size: 1rem">
+          <% if (copdClassfication === 4) { %>
+          <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
+          <% } else { %> <% } %>
+        </td>
+        <td class="pr-3 n-b">FEV1/FEV6 < 0.70 & FEV1 < 30% Pred.</td>
+      </tr>
+    </table>
+  </div>
+</div>
+  <p
+      style="
+        color: white;
+        background-color: #24c4ff;
+        text-align: center;
+        margin: 0;
+      "
+    >
+      Interpretation
+    </p>
+    <div class="d-flex">
+      <div class="w-50">
+        <table class="my-2 n-b">
+          <tr >
+            <td class="t-b n-b py-2 f-b">Lung Age:</td>
+            <td class="n-b"><%= lungAge %></td>
+          </tr>
+          <tr >
+            <td class="t-b n-b py-2 f-b">Obstructive Index:</td>
+            <td class="n-b"><%= obstructiveIndexPercent %></td>
+          </tr>
+          <tr>
+            <td class="t-b n-b py-2 f-b">Interpretation:</td>
+            <td class="n-b"><%= interpretation %></td>
+          </tr>
+        </table>
+      </div>
+      <div class="w-50">
+        <img src="pdf_diagram.png"  height="100%"/>
+      </div>
+    </div>

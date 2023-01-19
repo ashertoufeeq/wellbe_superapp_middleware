@@ -17,17 +17,17 @@
         <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
           Subject Name
         </td>
-        <td class="n-b t-l" style="width: 30%"><%= name %></td>
+        <td class="n-b t-l" style="width: 30%"><%= patientName %></td>
         <td class="n-b t-l" style="width: 20%">Subject ID:</td>
-        <td class="n-b t-l" style="width: 30%"><%= subjectId %></td>
+        <td class="n-b t-l" style="width: 30%"><%= patientUhid %></td>
       </tr>
       <tr>
         <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
           Gender
         </td>
-        <td class="n-b t-l" style="width: 30%"><%= gender %></td>
+        <td class="n-b t-l" style="width: 30%"><%= patientGender %></td>
         <td class="n-b t-l" style="width: 20%">Age:</td>
-        <td class="n-b t-l" style="width: 30%"><%= age %></td>
+        <td class="n-b t-l" style="width: 30%"><%= patientAge %></td>
       </tr>
       <tr>
         <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
@@ -64,7 +64,7 @@
         <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
           Test Date
         </td>
-        <td class="n-b t-l" style="width: 30%"><%= testDate %></td>
+        <td class="n-b t-l" style="width: 30%"><%= screenDate %></td>
         <td class="n-b t-l" style="width: 20%">Values at BTPS:</td>
         <td class="n-b t-l" style="width: 30%"><%= valuesAtBTPS %></td>
       </tr>
@@ -131,18 +131,22 @@
   </div>
   <!-- Obstructive index and copd classification -->
   <div
+    class="row"
     style="
       color: white;
       background-color: #24c4ff;
-      display: flex;
       justify-items: space-between;
       margin: 0;
       padding: 0;
       align-items: center;
     "
   >
-    <p class="w-50" style="text-align: center">Obstructive Index</p>
-    <p class="w-50">COPD (GOLD) classification</p>
+  <div class="col-6">
+    <p class="" style="text-align: center">Obstructive Index</p>
+  </div>
+  <div class="col-6">
+    <p class="" style="text-align: center">COPD (GOLD) classification</p>
+  </div>
   </div>
   <div class="my-2 d-flex w-100 align-items-start justify-content-between">
     <table class="n-b w-50 mr-1">
@@ -279,18 +283,19 @@
       Interpretation
     </p>
     <div class="d-flex">
+      
       <div class="w-50">
         <table class="my-2 n-b">
           <tr >
-            <td class="t-b n-b py-2 f-b">Lung Age:</td>
+            <td class="text-left n-b py-2 f-b">Lung Age:</td>
             <td class="n-b"><%= lungAge %></td>
           </tr>
           <tr >
-            <td class="t-b n-b py-2 f-b">Obstructive Index:</td>
+            <td class="text-left n-b py-2 f-b">Obstructive Index:</td>
             <td class="n-b"><%= obstructiveIndexPercent %></td>
           </tr>
           <tr>
-            <td class="t-b n-b py-2 f-b">Interpretation:</td>
+            <td class="text-left n-b py-2 f-b">Interpretation:</td>
             <td class="n-b"><%= interpretation %></td>
           </tr>
         </table>

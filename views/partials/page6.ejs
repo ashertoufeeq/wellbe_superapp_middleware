@@ -1,31 +1,32 @@
+<div style="padding-top: 300px;">
 <table class="w-100 t-l">
   <tr>
     <td class="py-2 f-b">Labor Id</td>
-    <td class="py-2" colspan="3"><%= LabourId %></td>
-    <td class="py-2 f-b" colspan="2">Screening Date</td>
+    <td class="py-2" colspan="1"><%= patientLabourId %></td>
+    <td class="py-2 f-b" colspan="4">Screening Date</td>
     <td class="py-2" colspan="3"><%= screenDate %></td>
   </tr>
   <tr>
     <td class="py-2 f-b">Patient ID</td>
-    <td class="py-2" colspan="3"><%= patientId %></td>
-    <td class="py-2 f-b" colspan="5">Screening Location</td>
+    <td class="py-2" colspan="1"><%= patientUhid %></td>
+    <td class="py-2 f-b" colspan="7">Screening Location</td>
   </tr>
   <tr>
     <td class="py-2 f-b">Name</td>
-    <td class="py-2"><%= name %></td>
+    <td class="py-2"><%= patientName %></td>
     <td class="py-2" rowspan="4" colspan="5"><%= screeingAddress %></td>
   </tr>
   <tr>
     <td class="py-2 f-b">Age</td>
-    <td class="py-2"><%= age %></td>
+    <td class="py-2"><%= patientAge %></td>
   </tr>
   <tr>
     <td class="py-2 f-b">Gender</td>
-    <td class="py-2"><%= gender %></td>
+    <td class="py-2"><%= patientGender %></td>
   </tr>
   <tr>
     <td class="py-2 f-b">Contact</td>
-    <td class="py-2"><%= phoneNo %></td>
+    <td class="py-2"><%= patientPhoneNo %></td>
   </tr>
   <tr>
     <td class="py-2 f-b">Provisional Diagnosis</td>
@@ -65,6 +66,7 @@
   <tr>
     <td class="py-2 t-l">2. Impedence Audiometry</td>
     <td></td>
+    <td rowspan="4" colspan="5"></td>
   </tr>
   <tr>
     <td class="py-2 t-l">3. Hearing Aid Trail(HAT)</td>
@@ -79,3 +81,4 @@
     <td></td>
   </tr>
 </table>
+</div>

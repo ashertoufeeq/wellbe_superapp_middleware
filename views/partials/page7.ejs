@@ -1,18 +1,18 @@
-<div>
+<div style="padding-top: 300px;">
   <table class="n-b w-100 m-0 p-0">
     <tr>
       <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">
         Subject Name
       </td>
-      <td class="n-b t-l" style="width: 30%"><%= name %></td>
+      <td class="n-b t-l" style="width: 30%"><%= patientName %></td>
       <td class="n-b t-l" style="width: 20%">Subject ID:</td>
-      <td class="n-b t-l" style="width: 30%"><%= subjectId %></td>
+      <td class="n-b t-l" style="width: 30%"><%= patientUhid %></td>
     </tr>
     <tr>
       <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">Gender</td>
-      <td class="n-b t-l" style="width: 30%"><%= gender %></td>
+      <td class="n-b t-l" style="width: 30%"><%= patientGender %></td>
       <td class="n-b t-l" style="width: 20%">Age:</td>
-      <td class="n-b t-l" style="width: 30%"><%= age %></td>
+      <td class="n-b t-l" style="width: 30%"><%= patientAge %></td>
     </tr>
     <tr>
       <td class="n-b t-l" style="width: 20%; padding-right: 0.6rem">Height</td>
@@ -42,8 +42,8 @@
       <th style="width: 9rem; text-align: center">LE</th>
     </tr>
     <tr>
-      <td><%= visualAcuity.RE %>/<%= visualAcuity.TRE %></td>
-      <td><%= visualAcuity.LE %>/<%= visualAcuity.TLE %></td>
+      <td><%= visualAcuity.RE %></td>
+      <td><%= visualAcuity.LE %></td>
     </tr>
   </table>
 </div>
@@ -51,6 +51,7 @@
 <p class="mt-4"><b>Prescription: </b></p>
 <table class="w-100">
   <tr>
+    <th style="text-align: center"></th>
     <th style="text-align: center">SPH</th>
     <th style="text-align: center">CYL</th>
     <th style="text-align: center">Axis</th>

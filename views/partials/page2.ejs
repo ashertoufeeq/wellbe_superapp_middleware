@@ -8,7 +8,7 @@
     class="my-2"
     style="border-top: 1px solid black; border-bottom: 1px solid black"
   >
-    <h5 class="text-center">Basic Health Checkup Report</h5>
+    <h5 class="text-center m-0 p-0 py-1">Basic Health Checkup Report</h5>
   </div>
 
   <div>
@@ -17,19 +17,19 @@
         <td class="n-b t-c">
           <div class="d-flex flex-row">
             <p class="font-weight-bold mr-3">Name</p>
-            <p><%= name %></p>
+            <p><%= patientName %></p>
           </div>
         </td>
         <td class="n-b px-3">
           <div class="d-flex flex-row">
             <p class="font-weight-bold mr-3">Phone No</p>
-            <p><%= phoneNo %></p>
+            <p><%= patientPhoneNo %></p>
           </div>
         </td>
         <td class="n-b">
           <div class="d-flex flex-row">
             <p class="font-weight-bold mr-3">Height</p>
-            <p><%= height %> Cms</p>
+            <p><%= height %> Cm</p>
           </div>
         </td>
       </tr>
@@ -38,19 +38,19 @@
         <td class="n-b t-c">
           <div class="d-flex flex-row">
             <p class="font-weight-bold mr-3">Gender</p>
-            <p><%= gender %></p>
+            <p><%= patientGender %></p>
           </div>
         </td>
         <td class="n-b px-3">
           <div class="d-flex flex-row">
             <p class="font-weight-bold mr-3">Labor Id</p>
-            <p><%= LabourId %></p>
+            <p><%= patientLabourId %></p>
           </div>
         </td>
         <td class="n-b">
           <div class="d-flex flex-row">
-            <p class="font-weight-bold mr-3">weight</p>
-            <p><%= weight %> Cms</p>
+            <p class="font-weight-bold mr-3">Weight</p>
+            <p><%= weight %> Kg(s)</p>
           </div>
         </td>
       </tr>
@@ -71,14 +71,14 @@
         <td class="n-b">
           <div class="d-flex flex-row">
             <p class="font-weight-bold mr-3">Age</p>
-            <p><%= age %> Yrs</p>
+            <p><%= patientAge %> </p>
           </div>
         </td>
       </tr>
     </table>
   </div>
   <!-- BODY STATWS -->
-  <h6 style="color: skyblue; margin-bottom: -1rem;" class="mt-4">BODY STATS</h6>
+  <h6 style="color: skyblue; margin-bottom: -0.7rem;" class="mt-4">BODY STATS</h6>
 
   <table style="width: 100%; border: none">
     <!-- BMI -->
@@ -342,7 +342,7 @@
   </table>
 
   <!-- BLOOD PRESSURE -->
-   <h6 style="color: skyblue; margin-bottom: -1rem;" class="mt-4">BLOOD PRESSURE</h6>
+   <h6 style="color: skyblue; margin-bottom: -0.7rem;" class="mt-4">BLOOD PRESSURE</h6>
   <table class="w-100 n-b">
     <tr class="n-b">
       <td class="n-b" colspan="3"></td>
@@ -432,7 +432,7 @@
     </tr>
   </table>
   <!-- TEMPERATURE -->
-   <h6 style="color: skyblue; margin-bottom: -1rem;" class="mt-4">TEMPERATURE</h6>
+   <h6 style="color: skyblue; margin-bottom: -0.7rem;" class="mt-4">TEMPERATURE</h6>
   <table class="n-b w-100">
     <tr class="n-b">
       <td class="n-b" colspan="3"></td>
@@ -469,7 +469,7 @@
     </tr>
   </table>
   <!-- PULSE -->
-   <h6 style="color: skyblue; margin-bottom: -1rem;" class="mt-4">PULSE</h6>
+   <h6 style="color: skyblue; margin-bottom: -0.7rem;" class="mt-4">PULSE</h6>
     <table class="w-100 n-b">
 <tr class="n-b">
       <td class="n-b" colspan="3"></td>

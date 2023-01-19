@@ -1,10 +1,31 @@
 const express = require("express");
 const router = express.Router();
+const fs = require("fs");
+const ejs = require("ejs");
+
+const pdf = require("html-pdf");
+const path = require("path");
+
+const consolidatedReport = fs.readFileSync(
+  path.resolve(__dirname, "../views/consolidatedReport.ejs"),
+  "utf8"
+);
+const render = ejs.compile(consolidatedReport);
+
 
 // const ConsolidatedReportController = require("../controllers");
 
 // router.get("/", ConsolidatedReportController.print());
 
+
+/*
+patientLabourId
+patientName
+patientGender
+patientAge
+patientPhoneNo
+patientUhid
+*/
 const data = {
   name: "RAHUL KUMAR DAS",
   age: "20",
@@ -175,8 +196,26 @@ const data = {
   },
   diagnosis: "Bilateral Vision is found to be Normal",
 };
+
 router.get("/print", (req, res) => {
-  res.render("../views/consolidatedReport.ejs", { ...data });
+  const html = render(data);
+  const title = "moment"
+  if (!req.query.html) {
+    pdf.create(html).toStream((err, stream) => {
+      if (err) {
+        console.log("error generating pdf ->", err);
+      } else {
+        res.attachment(title);
+        res.contentType("application/pdf");
+        stream.pipe(res);
+      }
+    });
+  } else {
+    res.json({ html, title });
+  }
+
+  // res.render("../views/consolidatedReport.ejs", { ...data });
+
 });
 
 module.exports = router;

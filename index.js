@@ -7,6 +7,7 @@ const Agendash = require("agendash");
 const mongoose = require('mongoose');
 const path = require('path');
 
+const camps = require('./models/camps.model')
 const patientRecord = require('./models/patientRecord')
 const campScreening = require('./models/campScreening.model')
 const labItem = require('./models/labItem')
@@ -23,7 +24,6 @@ console.log(path.join(__dirname, 'views'), express.static(path.join(__dirname, '
 
 const ConsolidatedReport = require("./routes/printConsolidatedReport");
 
-app.use("/patient", ConsolidatedReport);
 
 
 const agenda = new Agenda({
@@ -42,7 +42,7 @@ mongoose
   })
   .then(() => {
     console.log('db connected');
-    jobs.generateConsolidatedReport();
+    // jobs.generateConsolidatedReport();
   })
   .catch((err) => console.warn(err));
 
@@ -104,6 +104,7 @@ app.listen(process.env.PORT || 4000, async () => {
 //     done();
 //   }
 // });
+app.use("/patient", async (req, res) => { await jobs.generateConsolidatedReport(req, res) });
 
 function time() {
   return new Date().toTimeString().split(" ")[0];

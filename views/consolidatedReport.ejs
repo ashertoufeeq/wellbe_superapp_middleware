@@ -11,73 +11,89 @@
       crossorigin="anonymous"
     />
     <style>
+      body {
+        zoom: .7;
+      }
+      @page {
+       size: 7in 9.25in;
+        margin: 27mm 16mm 27mm 16mm;
+      }
       .box {
-        /* width: 210mm; */
-        /* height: 297mm; */
+        width: 210mm;
+        min-height: 297mm !important;
         /* background-color: rgb(255, 255, 187); */
-        margin: auto;
-        padding: 5rem;
-    }
-
+        /* margin: auto; */
+        /* padding: 5rem; */
+        padding-left: 3rem;
+      }
       table, th, td {
+        page-break-inside:auto;
         border: 1px solid black;
         border-collapse: collapse;
         vertical-align: "center";
+      }
+      tr {
+        page-break-inside:avoid; page-break-after:auto 
       }
       td {
           text-align: center;
         }
       .l-td {
+          padding-left: 1rem;
           text-align: inherit;
         }
       .n-b {
         border: none;
       }
       .t-l {
+        padding-left: 0.5rem;
         text-align: left;
       }
       .f-b {
         font-weight: 700;
+      }
+      .t-c{
+        text-align: center;
       }
     </style>
   </head>
   <body>
     <% var dir = process.cwd() %>
     <page class="1">
-      <div class="box">
+      <div class="box" style="margin-top: 8rem;">
         <%- include(dir + '/views/partials/page1'); %>
       </div>
     </page>
 
     <page class="2">
-      <div class="box">
+      <div class="box" style="padding-top: 2rem;">
         <%- include(dir + '/views/partials/page2');  %>
       </div>
     </page>
 
     <page class="3">
-      <div class="box">
+      <div class="box" style="padding-top: 4rem;">
       <%- include(dir + '/views/partials/page3');  %>
       </div>
     </page>
 
     <page class="4">
-      <div class="box">
+      <div class="box" style="padding-top: 8rem;">
       <%- include(dir + '/views/partials/page4');  %>
       </div>
     </page>
      <page class="5">
-      <div class="box">
+      <div class="box" style="padding-top: 8rem;">
       <%- include(dir + '/views/partials/page5'); %>
       </div>
     </page>
      <page class="6">
-      <div class="box">
+      <div class="box" style="padding-top: 4rem;">
       <%- include(dir + '/views/partials/page6');  %>
       </div>
     </page>
      <page class="7">
-      <div class="box">
+      <div class="box" style="padding-top: 5rem;">
       <%- include(dir + '/views/partials/page7');   %>
       </div>
     </page>

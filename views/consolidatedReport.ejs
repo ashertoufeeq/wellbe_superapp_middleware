@@ -16,11 +16,12 @@
       }
       @page {
        size: 7in 9.25in;
-        margin: 27mm 16mm 27mm 16mm;
+       margin: 27mm 16mm 27mm 16mm;
       }
       .box {
-        width: 210mm;
-        min-height: 297mm !important;
+        width: 210mm !important;
+        height: 297mm !important;
+        page-break-inside: auto;
         /* background-color: rgb(255, 255, 187); */
         /* margin: auto; */
         /* padding: 5rem; */
@@ -33,7 +34,8 @@
         vertical-align: "center";
       }
       tr {
-        page-break-inside:avoid; page-break-after:auto 
+        page-break-inside:avoid;
+         page-break-after:auto 
       }
       td {
           text-align: center;
@@ -54,6 +56,11 @@
       }
       .t-c{
         text-align: center;
+      }
+      .align-center{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
       }
     </style>
   </head>
@@ -88,7 +95,7 @@
       </div>
     </page>
      <page class="6">
-      <div class="box" style="padding-top: 4rem;">
+      <div class="box">
       <%- include(dir + '/views/partials/page6');  %>
       </div>
     </page>

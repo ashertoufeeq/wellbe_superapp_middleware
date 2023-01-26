@@ -13,19 +13,6 @@ const consolidatedReport = fs.readFileSync(
 const render = ejs.compile(consolidatedReport);
 
 
-// const ConsolidatedReportController = require("../controllers");
-
-// router.get("/", ConsolidatedReportController.print());
-
-
-/*
-patientLabourId
-patientName
-patientGender
-patientAge
-patientPhoneNo
-patientUhid
-*/
 const data = {
   name: "RAHUL KUMAR DAS",
   age: "20",
@@ -55,7 +42,7 @@ const data = {
   muscle: "79.07",
   muscleStatus: "Good",
   visceralFat: "2",
-  visceralFatStatu: "Good",
+  visceralFatStatus: "Good",
   metabolicAge: "17",
   metablicStatus: "Good",
   // page-2 blood Pressure section
@@ -75,7 +62,7 @@ const data = {
   bmiRecommendation:
     "Healthy weight can be maintained by regularly doing exercise and eating healthy food.",
   fatRecommendation: "No recommendations",
-  muslceRecommendation:
+  muscleRecommendation:
     "This is an indication of a fit body. High muscle mass is usually present in people doing high intensity workout",
   hydrationRecommendation:
     "Total Body Water Percentage is the total amount of fluid in a person’s body expressed as a percentage of their total weight.",

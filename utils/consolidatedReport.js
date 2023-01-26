@@ -1,196 +1,211 @@
 const moment = require("moment");
 const { calculateAge } = require('./index');
 
-const test = {
+// const vitalographLogo = require('../assets/vitalographLogo.png');
 
-    // page2
-    // date: "7 Sep",
-    // page-2 blood Pressure section
-
-    // page-2 Temparature section
-    // temperature: "96.98",
-    // temperatureStatus: "Normal",
-    // page-3 Pulse Section
-
-    // recommedations-page-3
-
-    // PAGE-4
-
-    // page-5 copd screeing report
-    // subjectId: "717",
-    regressionSet: "NA",
-    valuesAtBTPS: "",
-    deviceId: "NA",
-    DeviceSoftwareRef: "NA",
-    NoOfBlows: "3",
-    NoOfGoodBlows: "3",
-    bestFev1Within: "-",
-    bestFev6Withing: "-",
-    results: [
-        {
-            parameter: "FEV1 (L)",
-            predicted: "4.04",
-            test1: "2.28",
-            test2: "",
-            test3: "",
-            best: "2.28",
-            pred: "0.56",
-        },
-        {
-            parameter: "FEV6 (L)",
-            predicted: "4.73",
-            test1: "4.24",
-            test2: "",
-            test3: "",
-            best: "4.24",
-            pred: "0.90",
-        },
-        {
-            parameter: "FEV6/FEV6 (ration)",
-            predicted: "0.84",
-            test1: "0.54",
-            test2: "",
-            test3: "",
-            best: "0.54",
-            pred: "0.64",
-        },
-    ],
-    obstructiveIndex: "Mild", // Uppercase must be to shwo at correct index
-    copdClassfication: 1,
-    lungAge: "76",
-    obstructiveIndexPercent: "63",
-    interpretation: "Mild COPD indicated",
-    // page-6
-
-
-    recommendations: {
-        pureTone: "",
-        impediance: "",
-        hearingAid: "",
-        other: "",
-        ent: "",
-    },
-    // page-7
-
+const getAge = ({ patient }) => {
+    const { dob } = patient;
+    const ts = Date.parse(dob);
+    return moment().diff(ts, 'years');
 }
 
-const getBmiStatus = (bmi) => {
+const getBmiStatus = (value) => {
+    const bmi = Number(value)
     if (bmi < 18) {
-        return 'Underweight'
-    } else if (bmi <= 18 && bmi < 27) {
-        return 'Normal'
-    } else if (bmi <= 27 && bmi <= 30) {
-        return 'Overweight'
+        return {
+            bmiStatus: 'Underweight',
+            bmiRecommendation: 'Eat five to six times a day (3 large meals and 3 mid meal snacks) Eat foods with Full fat and avoid low calorie diet. Recommended food options: Banana, Milk,  Consult a Dietician to help you gain weight.'
+        }
+    } else if (bmi >= 18 && bmi < 27) {
+        return {
+            bmiStatus: 'Normal',
+            bmiRecommendation: 'Healthy weight can be maintained by regularly doing exercise and eating healthy food.'
+        }
+    } else if (bmi >= 27 && bmi <= 30) {
+        return {
+            bmiStatus: 'Overweight',
+            bmiRecommendation: 'Reduce carbohydrate intake like roti rice, sugar, potatoes. Eat More Vegetables and Fruits, Increase physical activity by doing Cardio activities, Yoga, or any other form of exercise at least 5 times a week.'
+        }
     } else if (bmi > 30) {
-        return 'Obase'
+        return {
+            bmiStatus: 'Obase',
+            bmiRecommendation: 'We recommend a diet plan to loose weight. Eat fiber rich foods like fruits, salads, whole wheat. Reduce the intake of sugar and refined carbohydrates, Exercise regularly.'
+        }
     } else {
-        return 'Normal'
+        return {
+            bmiStatus: 'Unknown',
+            bmiRecommendation: 'No recommendations'
+        }
     }
 };
 
-const getFatStatus = (fat) => {
+const getFatStatus = ({ resultsObject, patient } = { resultsObject: {}, patient: {} }) => {
+    const { gender } = patient;
+
+    const bmi = resultsObject?.BMI;
+    const height = Number(resultsObject.Height?.value || resultsObject.Height);
+    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight);
+    const age = getAge({ patient });
+
+    let fat = resultsObject.fat?.value || resultsObject?.fat;
+    if (!fat) {
+        if (gender && age && bmi) {
+            if (gender === 'Female') {
+                fat = ((1.20 * bmi) + (0.23 * age) - 5.4).toFixed(2);
+            } else {
+                fat = ((1.20 * bmi) + (0.23 * age) - 16.2).toFixed(2);
+            }
+        } else {
+            return { fat: '-', fatStatus: 'Unknown', fatRecommendation: 'No recommendations' }
+        }
+    }
     if (fat < 12) {
-        return 'Atheletic'
-    } else if (fat <= 12 && fat < 20) {
-        return 'Good'
-    } else if (fat <= 20 && fat <= 26) {
-        return 'Acceptable'
-    } else if (fat < 26 && fat <= 29) {
-        return 'Overweight'
+        return {
+            fat,
+            fatStatus: 'Atheletic',
+            fatRecommendation: 'No recommendations'
+        }
+    } else if (fat >= 12 && fat < 20) {
+        return { fat, fatStatus: 'Good', fatRecommendation: `To maintain the fat percentage at normal range, focus on exercising and eating healthy food.` }
+    } else if (fat >= 20 && fat <= 26) {
+        return { fat, fatStatus: 'Acceptable', fatRecommendation: 'You are in the acceptable range of fat percentage, please focus on exercising Eat healthy food , low on carbohydrates and saturated fats.' }
+    } else if (fat > 26 && fat <= 29) {
+        return { fat, fatStatus: 'Overweight', fatRecommendation: 'You are in category of Over FAT. Reduce the intake of sugar and refined carbohydrates, Fill up on non-starchy vegetables, fats and proteins, Exercise regularly. Reduce stress and Focus on getting enough sleep.' }
     } else if (fat > 30) {
-        return 'Obase'
+        return { fat, fatStatus: 'Obase', fatRecommendation: 'You are falling in Obese category of FAT. Please Reduce the intake of sugar and refined carbohydrates Eat non-starchy vegetables, fats and proteins, Exercise regularly, Reduce stress and Focus on getting enough sleep.' }
     } else {
-        return 'Unknown'
+        return { fat, fatStatus: 'Unknown', fatRecommendation: 'No recommendations' }
     }
 };
 
-const getHydrationStatus = (hydration) => {
-    if (hydration < 50) {
-        return 'Low'
-    } else if (hydration <= 50 && hydration < 65) {
-        return 'Normal'
-    } else if (hydration > 65) {
-        return 'Good'
+const getHydrationStatus = ({ resultsObject, patient } = { resultsObject: {}, patient: {} }) => {
+    const { gender } = patient;
+    const height = Number(resultsObject.Height?.value || resultsObject.Height);
+    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight);
+    const age = getAge({ patient });
+
+    let hydration = resultsObject?.hydration?.value || resultsObject?.hydration;
+    if (!hydration) {
+        if (age && height && weight) {
+            if (gender === 'Female') {
+                hydration = Number(((((0.1069 * height) + (0.2466 * weight) - (2.097)) / weight) * 100).toFixed(2))
+            } else {
+                hydration = Number((((2.447 - (0.09145 * age) + (0.1074 * height) + (0.3362 * weight)) / weight) * 100).toFixed(2))
+            }
+        } else {
+            return { hydrationStatus: 'Unknown', hydrationRecommendation: 'No recommendations', hydration: '-' }
+        }
+    }
+
+    if (Number(hydration) < 50) {
+        return { hydrationStatus: 'Low', hydrationRecommendation: 'We lose water constantly through sweat, urine and breathing. To keep hydrated drink about 2 liters of water per day, more if you are physically active or exercising.', hydration }
+    } else if (Number(hydration) >= 50 && Number(hydration) < 65) {
+        return { hydrationStatus: 'Normal', hydrationRecommendation: 'Total Body Water Percentage is the total amount of fluid in a person’s body expressed as a percentage of their total weight.', hydration }
+    } else if (Number(hydration) > 65) {
+        return { hydrationStatus: 'Good', hydrationRecommendation: `Total Body Water Percentage is the total amount of fluid in a person’s body expressed as a percentage of their total weight.`, hydration }
     } else {
-        return 'Low'
+        return { hydrationStatus: 'Unknown', hydrationRecommendation: 'No recommendations', hydration }
     }
 };
 
-const getBonemassStaus = (value) => {
-    if (value < 3.4) {
-        return 'Low'
-    } else if (value <= 3.4 && value <= 5) {
-        return 'Normal'
-    } else if (value > 5) {
-        return 'Good'
+const getBonemassStatus = (value) => {
+    const boneMass = Number(value);
+    if (boneMass < 3.4) {
+        return { boneStatus: 'Low', bonemassRecommendation: 'To increase the bone mass, try exercising regularly, eating foods high in calcium like Milk, Yoghurt, Paneer. Banana has high amount of Phosphorous and Vitamin D from egg yolk, cheese, fish,Foods fortified with vitamin D, like some dairy products, orange juice, soy milk.' }
+    } else if (boneMass >= 3.4 && boneMass <= 5) {
+        return { boneStatus: 'Normal', bonemassRecommendation: 'Usually athletes and people doing high intensity workout has high bone mass, however if its related to an underlying cause, please consult doctor.' }
+    } else if (boneMass > 5) {
+        return { boneStatus: 'Good', bonemassRecommendation: 'Usually athletes and people doing high intensity workout has high bone mass, however if its related to an underlying cause, please consult doctor.' }
     } else {
-        return 'Unknown'
+        return { boneStatus: 'Unknown', bonemassRecommendation: 'No Recommendation' }
     }
 };
 
-const getMusclesStaus = (value) => {
+const getMusclesStaus = (muscle) => {
+    const value = Number(muscle);
     if (value < 43.1) {
-        return 'Low'
-    } else if (value <= 43.1 && value <= 56.5) {
-        return 'Normal'
+        return { muscleStatus: 'Low', muscleRecommendation: 'If your muscle mass is low,then exercise regularly and eat food rich like pulses,fish,lean chicken,yogurt,eggs,soy product,dry fruits' }
+    } else if (value >= 43.1 && value <= 56.5) {
+        return { muscleStatus: 'Normal', muscleRecommendation: 'This is an indication of a fit body. Normal muscle mass is usually present in people doing normal workout.' }
     } else if (value > 56.5) {
-        return 'Good'
+        return { muscleStatus: 'Good', muscleRecommendation: 'This is an indication of a fit body. High muscle mass is usually present in people doing high intensity workout.' }
     } else {
-        return 'Unknown'
+        return { muscleStatus: 'Unknown', muscleRecommendation: 'No recommendation' }
     }
 };
 
-const getVFatStaus = (value) => {
+const getVFatStatus = (vFat) => {
+    const value = Number(vFat);
     if (value < 13) {
-        return 'Good'
+        return { visceralFatStatus: 'Good', visceralFatRecommendation: 'Visceral fat is the fat that is in the internal abdominal cavity, surrounding the vital organs.Continue monitoring to ensure that it stays within this healthy range.' }
     } else if (value >= 13) {
-        return 'High'
+        return {
+            visceralFatStatus: 'High', visceralFatRecommendation: 'Visceral fat is the fat that is in the internal abdominal cavity, surrounding the vital organs in the abdominal area.Consider making changes in your lifestyle by changing your diet or exercising moreEnsuring you have healthy levels of visceral fat may reduce the risk of certain diseases such as heart disease, high blood pressure, and the onset of type 2 diabetes.'
+        }
     } else {
-        return 'Unknown'
+        return { visceralFatStatus: 'Unknown', visceralFatRecommendation: 'No recommendation' }
     }
 };
 
 
-const getMetabolicAgeStaus = (value) => {
+const getMetabolicAgeStaus = (metablicStatus) => {
+    const value = Number(metablicStatus);
     if (value <= 20) {
-        return 'Good'
+        return { metablicStatus: 'Good', metabloicRangeRecommendation: 'A low basal metabolic rate makes it harder to lose body fat and overall weight.' }
     } else if (value > 20) {
-        return 'High'
+        return { metablicStatus: 'High', metabloicRangeRecommendation: 'Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body.' }
     } else {
-        return 'Unknown'
+        return { metablicStatus: 'Unknown', metabloicRangeRecommendation: 'No recommendation' }
     }
 };
 
-const getSustolicStatus = (value) => {
+const getSystolicStatus = (sys) => {
+    const value = Number(sys);
     if (value < 90) {
-        return 'Low'
-    } else if (value <= 90 && value < 130) {
-        return 'Normal'
-    } else if (value <= 130 && value <= 140) {
-        return 'Pre-Hyper'
+        return { systolicStatus: 'Low', systolicRecommendation: 'Eat more salt,avoid alcoholic beverages,cross legs while sitting. Drink water,eat small meals frequently or discuss medications with a doctor. ' }
+    } else if (value >= 90 && value < 130) {
+        return { systolicStatus: 'Normal', systolicRecommendation: 'No comment' }
+    } else if (value >= 130 && value <= 140) {
+        return { systolicStatus: 'Pre-Hyper', systolicRecommendation: 'Exercise helps lower blood pressure,try meditation or deep breathing. Eat calcium-rich foods, cut added sugar and refined carbs, eat foods rich in magnesium.' }
     } else if (value > 140) {
-        return 'High'
+        return { systolicStatus: 'High', systolicRecommendation: 'Walk and exercise regularly,reduce your sodium intake,drink less alcohol and quit smoking. Eat more potassium-rich foods,cut back on caffeine,eat dark chocolate or cocoa.' }
     } else {
-        return 'Unknown'
+        return { systolicStatus: 'Unknown', systolicRecommendation: 'No recommendation' }
     }
 };
 
-const getDiastolicStatus = (value) => {
+const getDiastolicStatus = (dia) => {
+    const value = Number(dia);
     if (value < 60) {
-        return 'Low'
-    } else if (value <= 60 && value < 90) {
-        return 'Normal'
-    } else if (value <= 90 && value <= 100) {
-        return 'Pre-Hyper'
+        return {
+            diastolicStatus: 'Low',
+            diastolicRecommendation: 'Eat a diet higher in salt. Drink lots of non-alcoholic fluids.Limit alcoholic beverages. Get regular exercise to promote blood flow. Consult the doctor.'
+        }
+    } else if (value >= 60 && value < 90) {
+        return {
+            diastolicStatus: 'Normal',
+            diastolicRecommendation: 'No comments'
+        }
+    } else if (value >= 90 && value <= 100) {
+        return {
+            diastolicStatus: 'Pre-Hyper',
+            diastolicRecommendation: ' Exercise helps lower blood pressure. Eat plenty of fruits, vegetables, whole grains, fish, and low- fat dairy.'
+        }
     } else if (value > 100) {
-        return 'High'
+        return {
+            diastolicStatus: 'High',
+            diastolicRecommendation: 'Losing weight, Quitting smoking, Eating a healthy diet, including more fruits, vegetables, and low fat dairy products.Consult the doctor and take regular medication if required.'
+        }
     } else {
-        return 'Unknown'
+        return {
+            diastolicStatus: 'Unknown',
+            diastolicRecommendation: 'No recommendation'
+        }
     }
 };
 
 const getTemperatureStatus = (value) => {
-    if (value <= 33 && value <= 37) {
+    if (value >= 33 && value <= 37) {
         return 'Normal'
     } else if (value > 37) {
         return 'High'
@@ -203,7 +218,7 @@ const getTemperatureStatus = (value) => {
 const getSpo2Status = (value) => {
     if (value < 90) {
         return 'Low'
-    } else if (value <= 90 && value <= 100) {
+    } else if (value >= 90 && value <= 100) {
         return 'Normal'
     } else if (value > 100) {
         return 'Good'
@@ -214,18 +229,114 @@ const getSpo2Status = (value) => {
 
 const getPulseStatus = (value) => {
     if (value < 60) {
-        return 'Low'
-    } else if (value <= 60 && value <= 90) {
-        return 'Normal'
+        return { pulseStatus: 'Low', pulseRecommendation: 'No comments' }
+    } else if (value >= 60 && value <= 90) {
+        return { pulseStatus: 'Normal', pulseRecommendation: 'No comments' }
     } else if (value > 90) {
-        return 'High'
+        return { pulseStatus: 'High', pulseRecommendation: ' Ideally pulse measurement is done on a resting body. High Beating Pulse suggests an underlying cause, we suggest to consult the doctor if it is persistent.' }
     } else {
-        return 'Unknown'
+        return { pulseStatus: 'Unknown', pulseRecommendation: 'No recommendation' }
     }
 };
 
 
+const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, patient: {} }) => {
+    const fev1 = Number(resultsObject.fev1);
+    const fev6 = Number(resultsObject.fev6);
+    const ratio = resultsObject?.fev1 && resultsObject?.fev6 ? Number((Number(fev1) / Number(fev6)).toFixed(2)) : null;
 
+    let vitalographValues = {
+        fev1,
+        fev6,
+        ratio
+    };
+
+    const { dob, gender } = patient;
+    const ts = Date.parse(dob);
+    let age = moment().diff(ts, 'years');
+
+    const height = Number(resultsObject.Height?.value || resultsObject.Height);
+    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight);
+    if (age && height && weight && gender) {
+        if (gender === 'Female') {
+            const lungAge = fev1 ? Number(((3.56 * height * 0.394) - (40 * fev1) - 77.28)).toFixed(0) : null
+            const predictedFev1 = Number((0.93 * 1.08 * ((0.0395 * height) - (0.025 * age) - 2.6)).toFixed(2));
+            const predictedFev6 = Number(0.93 * 1.15 * ((0.0443 * height) - (0.026 * age) - 2.89).toFixed(2));
+            const predictedRatio = Number(((89.1 - (0.19 * age)) / 100).toFixed(2));
+
+            const percentagePredictedFev1 = fev1 && predictedFev1 ? Number(((fev1 / predictedFev1) * 100).toFixed(2)) : null;
+            const percentagePredictedFev6 = fev6 && predictedFev6 ? Number(((fev6 / predictedFev6) * 100).toFixed(2)) : null;
+            const percentagePredictedRatio = percentagePredictedFev1 && percentagePredictedFev6 ? Number(((percentagePredictedFev1 / percentagePredictedFev6) * 100).toFixed(2)) : null;
+
+            const obstructiveIndexPercent = percentagePredictedFev1 && percentagePredictedFev6 ? Math.ceil(Number(((percentagePredictedFev1 / percentagePredictedFev6) * 100).toFixed(2))) : null;
+
+            vitalographValues = {
+                ...vitalographValues,
+                lungAge,
+                predictedFev1,
+                predictedFev6,
+                predictedRatio,
+                obstructiveIndexPercent,
+                percentagePredictedFev1,
+                percentagePredictedFev6,
+                percentagePredictedRatio
+            }
+        } else {
+            const lungAge = fev1 ? Number(((2.87 * height * 0.394) - (31.25 * fev1) - 39.375)).toFixed(0) : null
+            const predictedFev1 = Number((0.93 * 1.08 * ((0.043 * height) - (0.029 * age) - 2.49)).toFixed(2));
+            const predictedFev6 = Number((0.93 * 1.10 * ((0.0576 * height) - (0.0269 * age) - 4.34)).toFixed(2));
+            const predictedRatio = Number(((87.2 - (0.18 * age)) / 100).toFixed(2));
+
+
+            const percentagePredictedFev1 = fev1 && predictedFev1 ? Number(((fev1 / predictedFev1) * 100).toFixed(2)) : null;
+            const percentagePredictedFev6 = fev6 && predictedFev6 ? Number(((fev6 / predictedFev6) * 100).toFixed(2)) : null;
+            const percentagePredictedRatio = percentagePredictedFev1 && percentagePredictedFev6 ? Number(((percentagePredictedFev1 / percentagePredictedFev6) * 100).toFixed(2)) : null;
+
+            const obstructiveIndexPercent = percentagePredictedFev1 && percentagePredictedFev6 ? Math.ceil(Number(((percentagePredictedFev1 / percentagePredictedFev6) * 100).toFixed(2))) : null;
+
+            vitalographValues = {
+                ...vitalographValues,
+                lungAge,
+                predictedFev1,
+                predictedFev6,
+                predictedRatio,
+                obstructiveIndexPercent,
+                percentagePredictedFev1,
+                percentagePredictedFev6,
+                percentagePredictedRatio
+            }
+        }
+
+        const obstructiveIndexCalc = ((vitalographValues?.percentagePredictedFev1 / vitalographValues?.percentagePredictedFev6) * 100);
+
+        if (obstructiveIndexCalc > 79) {
+            vitalographValues = { ...vitalographValues, obstructiveIndex: 'Normal', }
+        } else if (obstructiveIndexCalc < 80 && obstructiveIndexCalc >= 50) {
+            vitalographValues = { ...vitalographValues, obstructiveIndex: 'Mild' }
+        } else if (obstructiveIndexCalc < 50 && obstructiveIndexCalc >= 30) {
+            vitalographValues = { ...vitalographValues, obstructiveIndex: 'Moderate' }
+        } else if (obstructiveIndexCalc < 30) {
+            vitalographValues = { ...vitalographValues, obstructiveIndex: 'Severe' }
+        }
+
+        if (vitalographValues.predictedRatio >= 0.70) {
+            vitalographValues = { ...vitalographValues, copdClassfication: 'Normal', interpretation: 'Normal Not COPD' }
+        } else {
+            if (vitalographValues?.percentagePredictedFev1 >= 80) {
+                vitalographValues = { ...vitalographValues, copdClassfication: 'Stage 1', interpretation: 'Mild COPD Indicated' }
+            } else if (vitalographValues?.percentagePredictedFev1 > 80 && vitalographValues?.percentagePredictedFev1 >= 50) {
+                vitalographValues = { ...vitalographValues, copdClassfication: 'Stage 2', interpretation: 'Moderated COPD Indicated' }
+            }
+            else if (vitalographValues?.percentagePredictedFev1 > 50 && vitalographValues?.percentagePredictedFev1 >= 30) {
+                vitalographValues = { ...vitalographValues, copdClassfication: 'Stage 3', interpretation: 'Severe COPD Indicated' }
+            }
+            else if (vitalographValues?.percentagePredictedFev1 < 30) {
+                vitalographValues = { ...vitalographValues, copdClassfication: 'Stage 4', interpretation: 'Severe COPD Indicated' }
+            }
+        }
+    }
+    return vitalographValues
+}
 
 const tranformerConsolidatedReportData = ({
     state,
@@ -252,55 +363,46 @@ const tranformerConsolidatedReportData = ({
         remain: "7 to End of Report",
     }
 
+    const vitalographValues = spirometryPrediction({ resultsObject, patient })
+
     const page2 = {
+        shrutiLogo: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674688658/shrutiLogo_jabgr5.svg',
+        alokaLogo: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674673653/Screenshot_2023-01-26_at_12.33.17_AM_uaal2f.png',
+        zeissLogo: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674673674/Screenshot_2023-01-26_at_12.33.26_AM_agbgqi.png',
         location: location || "No Data",
         mrnNo: "-",
         height: resultsObject.Height?.value || resultsObject.Height || '-',
         weight: resultsObject.Weight?.value || resultsObject.Weight || '-',
         bmi: resultsObject?.BMI || '-',
-        bmiStatus: getBmiStatus(resultsObject?.BMI),
-        hydration: resultsObject?.hydration?.value || resultsObject?.hydration || '-',
-        hydrationStatus: getHydrationStatus(resultsObject?.hydration?.value || resultsObject?.hydration),
-        fat: resultsObject?.fat?.value || resultsObject?.fat || '-',
-        fatStatus: getFatStatus(resultsObject.fat?.value || resultsObject?.fat),
+        ...getBmiStatus(resultsObject?.BMI),
+        ...getHydrationStatus({ resultsObject, patient }),
+        ...getFatStatus({ resultsObject, patient }),
         boneMass: resultsObject?.bonemass?.value || resultsObject?.bonemass || '-',
-        boneStatus: getBonemassStaus(resultsObject?.bonemass?.value || resultsObject?.bonemass),
+        ...getBonemassStatus(resultsObject?.bonemass?.value || resultsObject?.bonemass),
         muscle: resultsObject?.muscle?.value || resultsObject?.muscle || '-',
-        muscleStatus: getMusclesStaus(resultsObject?.muscle?.value || resultsObject?.muscle),
+        ...getMusclesStaus(resultsObject?.muscle?.value || resultsObject?.muscle),
         visceralFat: resultsObject?.vFat?.value || resultsObject?.vFat || '-',
-        visceralFatStatu: getVFatStaus(resultsObject?.vFat?.value || resultsObject?.vFat,),
+        ...getVFatStatus(resultsObject?.vFat?.value || resultsObject?.vFat,),
         metabolicAge: resultsObject?.Metabolic_Age?.value || resultsObject?.Metabolic_Age || '-',
-        metablicStatus: getMetabolicAgeStaus(resultsObject?.Metabolic_Age?.value || resultsObject?.Metabolic_Age),
+        ...getMetabolicAgeStaus(resultsObject?.Metabolic_Age?.value || resultsObject?.Metabolic_Age),
         systolic: resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure || '-',
-        systolicStatus: getSustolicStatus(resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure),
+        ...getSystolicStatus(resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure),
         diastolic: resultsObject?.Diastolic_Blood_Pressure?.value || resultsObject?.Diastolic_Blood_Pressure || '-',
-        diastolicStatus: getDiastolicStatus(resultsObject?.Diastolic_Blood_Pressure?.value || resultsObject?.Diastolic_Blood_Pressure),
+        ...getDiastolicStatus(resultsObject?.Diastolic_Blood_Pressure?.value || resultsObject?.Diastolic_Blood_Pressure),
         temperature: `${((resultsObject?.Temperature?.value || resultsObject?.Temperature || 0) * 1.8 + 32).toFixed(2)} F`,
         temperatureStatus: getTemperatureStatus(resultsObject?.Temperature?.value || resultsObject?.Temperature),
-        pulse: resultsObject?.pulse_bpm?.value || resultsObject?.pulse_bpm,
-        pulseStatus: getPulseStatus(resultsObject?.pulse_bpm?.value || resultsObject?.pulse_bpm),
+        pulse: resultsObject?.pulse_bpm?.value || resultsObject?.pulse,
+        ...getPulseStatus(resultsObject?.pulse?.value || resultsObject?.pulse),
         oxygenSat: resultsObject?.Spo2?.value || resultsObject?.Spo2,
         oxygenSatStatus: getSpo2Status(resultsObject?.Spo2?.value || resultsObject?.Spo2),
     }
+
+    //fix -3 
     const page3 = {
-        bmiRecommendation: resultsObject?.Bmi_Recommendation || "No recommendations",
-        fatRecommendation: resultsObject?.Fat_Recommendation || "No recommendations",
-        muslceRecommendation: resultsObject?.Muslce_Recommendation || "No recommendations",
-        hydrationRecommendation: resultsObject?.Hydration_Recommendation || "No recommendations",
-        bonemassRecommendation:
-            resultsObject?.Bonemass_Recommendation || "No recommendations",
-        metabloicRangeRecommendation:
-            resultsObject?.Metabloic_Range_Recommendation || "No recommendations",
-        visceralFatRecommendation:
-            resultsObject?.Visceral_Fat_Recommendation || "No recommendations",
         metabolicAgeRecommendation:
             resultsObject?.Metabolic_Age_Recommendation || "No recommendations",
         muscleQualityScoreRecommendation:
             resultsObject?.Muscle_Quality_Score_Recommendation || "No recommendations",
-        systolicRecommendation:
-            resultsObject?.Systolic_Recommendation || "No recommendations",
-        diastolicRecommendation: resultsObject?.Diastolic_Recommendation || "No recommendations",
-        pulseRecommendation: resultsObject?.Pulse_Recommendation || "No recommendations",
     }
 
     const page4 = {
@@ -313,7 +415,51 @@ const tranformerConsolidatedReportData = ({
     };
 
     const page5 = {
-
+        lungIcon: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674662267/lungs_avyhdl.svg',
+        imageGraph: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674661208/fev1ByAge_rjiv7x.png',
+        vitalographLogo: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674660197/vitalograph-logo_toi7dz.png',
+        regressionSet: "ERS93/Polgar",
+        valuesAtBTPS: "",
+        deviceId: "197911",
+        DeviceSoftwareRef: "40913 V1.03",
+        NoOfBlows: "1",
+        NoOfGoodBlows: "1",
+        bestFev1Within: vitalographValues?.fev1 || '-',
+        bestFev6Withing: vitalographValues?.fev6 || '-',
+        results: [
+            {
+                parameter: "FEV1 (L)",
+                predicted: vitalographValues?.predictedFev1 || '-',
+                test1: vitalographValues?.fev1 || '-',
+                test2: "",
+                test3: "",
+                best: vitalographValues?.fev1,
+                pred: vitalographValues?.percentagePredictedFev1 || "-",
+            },
+            {
+                parameter: "FEV6 (L)",
+                predicted: vitalographValues?.predictedFev6 || '-',
+                test1: vitalographValues?.fev6 || '-',
+                test2: "",
+                test3: "",
+                best: vitalographValues?.fev6 || '-',
+                pred: vitalographValues?.percentagePredictedFev6 || "-",
+            },
+            {
+                parameter: "FEV1/FEV6 (ration)",
+                predicted: vitalographValues?.predictedRatio || '-',
+                test1: vitalographValues?.ratio || '-',
+                test2: "",
+                test3: "",
+                best: vitalographValues?.ratio || '-',
+                pred: vitalographValues?.percentagePredictedRatio || '-',
+            },
+        ],
+        obstructiveIndex: vitalographValues?.obstructiveIndex || "-",
+        copdClassfication: vitalographValues?.copdClassfication || '-',
+        lungAge: vitalographValues?.lungAge || "-",
+        obstructiveIndexPercent: vitalographValues?.obstructiveIndexPercent || "-",
+        interpretation: vitalographValues?.interpretation || "-",
     }
 
     const page6 = {
@@ -340,8 +486,8 @@ const tranformerConsolidatedReportData = ({
         state: state || "Karnataka",
         eyeExamination: resultsObject?.External_Eye_Examination || "Normal",
         visualAcuity: {
-            RE: resultsObject?.Visual_Acuity__RE || "6",
-            LE: resultsObject?.Visual_Acuity__LE || "6",
+            RE: resultsObject?.Visual_Acuity__RE || "0",
+            LE: resultsObject?.Visual_Acuity__LE || "0",
         },
         prescription: {
             re: {
@@ -363,14 +509,14 @@ const tranformerConsolidatedReportData = ({
     return {
         ...indexPage,
         ...resultsObject,
-        ...test,
         date: moment().format('ll'),
         ...page2,
         ...page3,
         ...page4,
+        ...page5,
         ...page6,
         ...page7,
-        ...patientData
+        ...patientData,
     }
 
 }

@@ -65,7 +65,7 @@
         <td class="n-b px-3">
           <div class="d-flex flex-row">
             <p class="font-weight-bold mr-3">MRN no</p>
-            <p><%= mrnNo %></p>
+            <p><%= patientUhid %></p>
           </div>
         </td>
         <td class="n-b">
@@ -138,7 +138,9 @@
         Hydration
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= hydration %> %
+        <%= hydration %> <% if (hydration !== "-") { %>
+          %
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= hydrationStatus %>
@@ -176,7 +178,9 @@
         Fat
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= fat %> %
+        <%= fat %> <% if (fat !== "-") { %>
+          %
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= fatStatus %>
@@ -214,7 +218,9 @@
         Bone Mass
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= boneMass %> %
+        <%= boneMass %> <% if (boneMass !== "-") { %>
+          %
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= boneStatus %>
@@ -250,7 +256,9 @@
         Muscle
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= muscle %>
+        <%= muscle %> <% if (muscle !== "-") { %>
+          %
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= muscleStatus %>
@@ -288,7 +296,7 @@
         <%= visceralFat %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= visceralFatStatu %>
+        <%= visceralFatStatus %>
       </td>
       <td
         class="t-c n-b"
@@ -485,7 +493,9 @@
         Pulse
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= pulse %> %
+        <%= pulse %> <% if (pulse !== "-") { %>
+          %
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= pulseStatus %>
@@ -521,7 +531,9 @@
         Oxygen Sat
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= oxygenSat %> %
+        <%= oxygenSat %> <% if (oxygenSat !== "-") { %>
+          %
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= oxygenSatStatus %>

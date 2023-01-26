@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const pdf = require("html-pdf");
 
+const shrutiPatient = require('./addShrutiPatient.job')
 const ScreeningModel = require('../models/campScreening.model');
 const labItemModel = require('../models/labItem');
 const { uploadEJSPDF } = require("../utils/upload");
@@ -34,10 +35,12 @@ module.exports = async (req, res) => {
         $gte: moment().subtract(5, 'days').startOf('days').toISOString(),
         $lte: moment(today).endOf('day').toISOString()
       },
-      _id: { $in: [ObjectId('63c87b1d41b31001cfedf951'), ObjectId('63c8a4e90729190cf489e2d8')] },
+
+      // _id: { $in: [ObjectId('63c87b1d41b31001cfedf951'), ObjectId('63c8a4e90729190cf489e2d8')] },
     }
     const screenings = await ScreeningModel.find({
-      ...dateFilter
+      ...dateFilter,
+      patientId: ObjectId('63d11ba27219d523dac1769f')
     }).populate([{ path: 'patientId' }, { path: 'campId' }]).exec();
 
     if (screenings) {
@@ -59,7 +62,6 @@ module.exports = async (req, res) => {
         }
       })
     }
-
     if ((patientIds || []).length > 0) {
       const labs = await labItemModel.find({
         ...dateFilter,
@@ -117,7 +119,7 @@ module.exports = async (req, res) => {
           }
         }
       })
-
+      // shrutiPatient()
       // const { link } = await uploadEJSPDF({ render, data: { ...test, ...results }, fileName: 'consolidated-report' })
       // console.log(link, 'asher')
     }

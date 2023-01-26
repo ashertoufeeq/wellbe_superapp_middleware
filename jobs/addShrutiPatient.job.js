@@ -17,11 +17,11 @@ module.exports = async () => {
       process.env.SHRUTI_BASE_URL + "/blossom-patients",
       {
         limit: 30,
-        // screened_date: {
-        //   start_date: moment().format("YYYY-MM-DD"),
-        //   end_date: moment().format("YYYY-MM-DD"),
-        // },
-        token_numbers: ["MH-2200033"],
+        screened_date: {
+          start_date: moment().subtract(5, 'days').startOf('days').toISOString(),
+          end_date: moment().format("YYYY-MM-DD"),
+        },
+        // token_numbers: ["MH-2200033"],
       },
       {
         headers: {
@@ -29,7 +29,7 @@ module.exports = async () => {
         },
       }
     );
-    console.log(patients);
+    console.log(patients, JSON.stringify(patients[1] || {}), 'patient');
   } catch (e) {
     console.log(e);
   }

@@ -1,6 +1,8 @@
 <div style="font-size: 0.875rem">
-  <h4>COPD Screening Report</h4>
-
+  <div class="d-flex flex-column justify-content-center align-items-center w-100">
+    <img src="<%= vitalographLogo %>" height="60px" />
+    <h4 style="color: #24c4ff;">COPD Screening Report</h4>
+  </div>
   <div>
     <p
       style="
@@ -122,7 +124,7 @@
         <td class="t-l"><%= item.predicted %></td>
         <td class="t-l"><%= item.test1 %></td>
         <td class="t-l"><%= item.test2 %></td>
-        <td class="t-l"><%= item.best %></td>
+        <td class="t-l"><%= item.test3 %></td>
         <td class="t-l"><%= item.best %></td>
         <td class="t-l"><%= item.pred %></td>
       </tr>
@@ -151,7 +153,7 @@
   <div class="my-2 d-flex w-100 align-items-start justify-content-between">
     <table class="n-b w-50 mr-1">
       <tr>
-        <td class="pr-3 n-b">FEV1 Meas./FEV1 Pred.&ge; 80%</td>
+        <td class="pr-3 n-b">FEV1 Pred./FEV6 Pred.&ge; 80%</td>
         <td class="n-b" style="font-size: 1rem">
           <% if (obstructiveIndex === "Normal") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">►</i>
@@ -165,7 +167,7 @@
         </td>
       </tr>
       <tr>
-        <td class="pr-3 n-b">FEV1 Meas./FEV1 Pred. < 80%</td>
+        <td class="pr-3 n-b">FEV1 Pred./FEV6 Pred. < 80%</td>
         <td class="n-b" style="font-size: 1rem">
           <% if (obstructiveIndex === "Mild") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">►</i>
@@ -176,7 +178,7 @@
         </td>
       </tr>
       <tr>
-        <td class="pr-3 n-b">FEV1 Meas./FEV1 Pred. < 50%</td>
+        <td class="pr-3 n-b">FEV1 Pred./FEV6 Pred. < 50%</td>
         <td class="n-b" style="font-size: 1rem">
           <% if (obstructiveIndex === "Moderate") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">►</i>
@@ -187,7 +189,7 @@
         </td>
       </tr>
       <tr>
-        <td class="pr-3 n-b">FEV1 Meas./FEV1 Pred. < 30%</td>
+        <td class="pr-3 n-b">FEV1 Pred./FEV6 Pred. < 30%</td>
         <td class="n-b" style="font-size: 1rem">
           <% if (obstructiveIndex === "Severe") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">►</i>
@@ -207,11 +209,11 @@
           Normal
         </td>
         <td class="n-b" style="font-size: 1rem">
-          <% if (copdClassfication === 0) { %>
+          <% if (copdClassfication === "Normal") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
           <% } else { %> <% } %>
         </td>
-        <td class="pr-3 n-b">FEV1/FEV6&ge; 0.70</td>
+        <td class="pr-3 n-b">Pred. FEV1/Pred. FEV6&ge; 0.70</td>
       </tr>
       <tr>
         <td
@@ -221,11 +223,11 @@
           Stage I
         </td>
         <td class="n-b" style="font-size: 1rem">
-          <% if (copdClassfication === 1) { %>
+          <% if (copdClassfication === "Stage 1") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
           <% } else { %> <% } %>
         </td>
-        <td class="pr-3 n-b">FEV1/FEV6 < 0.70 & FEV1 &ge; 80% Pred</td>
+        <td class="pr-3 n-b">Pred. FEV1/Pred. FEV6 < 0.70 & FEV1 &ge; 80% Pred</td>
       </tr>
       <tr>
         <td
@@ -235,11 +237,11 @@
           Stage II
         </td>
         <td class="n-b" style="font-size: 1rem">
-          <% if (copdClassfication === 2) { %>
+          <% if (copdClassfication === "Stage 2") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
           <% } else { %> <% } %>
         </td>
-        <td class="pr-3 n-b">FEV1/FEV6 < 0.70 & FEV1 < 80% pred.</0.70></td>
+        <td class="pr-3 n-b">Pred. FEV1/Pred. FEV6 < 0.70 & FEV1 < 80% pred.</0.70></td>
       </tr>
       <tr>
         <td
@@ -249,11 +251,11 @@
           Stage III
         </td>
         <td class="n-b" style="font-size: 1rem">
-          <% if (copdClassfication === 3) { %>
+          <% if (copdClassfication === "Stage 3") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
           <% } else { %> <% } %>
         </td>
-        <td class="pr-3 n-b">FEV1/FEV6 < 0.70 & FEV1 < 50% Pred.</td>
+        <td class="pr-3 n-b">Pred. FEV1/Pred. FEV6 < 0.70 & FEV1 < 50% Pred.</td>
       </tr>
       <tr>
         <td
@@ -263,11 +265,11 @@
           Stage IV
         </td>
         <td class="n-b" style="font-size: 1rem">
-          <% if (copdClassfication === 4) { %>
+          <% if (copdClassfication === "Stage 4") { %>
           <i style="font-size: 1.5rem; margin-bottom: -2rem">◄</i>
           <% } else { %> <% } %>
         </td>
-        <td class="pr-3 n-b">FEV1/FEV6 < 0.70 & FEV1 < 30% Pred.</td>
+        <td class="pr-3 n-b">Pred. FEV1/Pred. FEV6 < 0.70 & FEV1 < 30% Pred.</td>
       </tr>
     </table>
   </div>
@@ -283,24 +285,28 @@
       Interpretation
     </p>
     <div class="d-flex">
-      
       <div class="w-50">
         <table class="my-2 n-b">
-          <tr >
+          <tr>
+            <td class="n-b">
+              <img src="<%= lungIcon %>"  height="50" width="50" style="margin-right: 2px"/>
+            </td>
             <td class="text-left n-b py-2 f-b">Lung Age:</td>
-            <td class="n-b"><%= lungAge %></td>
+            <td class="n-b text-left px-2"><%= lungAge %></td>
           </tr>
           <tr >
+            <td class="n-b"></td>
             <td class="text-left n-b py-2 f-b">Obstructive Index:</td>
-            <td class="n-b"><%= obstructiveIndexPercent %></td>
+            <td class="n-b text-left px-2"><%= obstructiveIndexPercent %></td>
           </tr>
           <tr>
+            <td class="n-b"></td>
             <td class="text-left n-b py-2 f-b">Interpretation:</td>
-            <td class="n-b"><%= interpretation %></td>
+            <td class="n-b text-left px-2"><%= interpretation %></td>
           </tr>
         </table>
       </div>
-      <div class="w-50">
-        <img src="pdf_diagram.png"  height="100%"/>
+      <div class="w-50 d-flex align-center justify-content-center">
+        <img src="<%= imageGraph %>"  height="280px" width="380px"/>
       </div>
     </div>

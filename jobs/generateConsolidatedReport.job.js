@@ -28,26 +28,31 @@ const render = ejs.compile(renderHTML);
 module.exports = async (req, res) => {
   console.log("Consolidated Report Fetching");
   try {
+    let urlMaps = {}
     let detailsMap = {};
     const patientIds = [];
     const today = moment().toISOString();
     const dateFilter = {
       createdAt: {
-        $gte: moment().subtract(5, 'days').startOf('days').toDate(),
-        $lte: moment(today).endOf('day').toDate()
-      },
+        $gte: moment().subtract(7, 'days').startOf('days').toDate(),
+        $lte: moment().subtract(5, 'days').endOf('days').toDate(),
+      }
+      // createdAt: {
+      //   $gte: moment().subtract(5, 'days').startOf('days').toDate(),
+      //   $lte: moment(today).endOf('day').toDate()
+      // },
     }
 
     const screenings = await ScreeningModel.find({
       ...dateFilter,
-      patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
+      // patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
       // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C
       // patientId: ObjectId("63ce2690d5b7a02a456dde9f") //atha
 
     }).populate([{ path: 'patientId' }, { path: 'campId' }]).sort({ createdAt: 'asc' }).exec();
 
-    // console.log(screenings)
+    console.log(screenings.length, 'screenings')
 
     if (screenings) {
       for (const screening of screenings) {
@@ -85,6 +90,7 @@ module.exports = async (req, res) => {
           }
         }
       }
+      console.log(labs.length, 'labs')
     }
     const uhidArray = Object.keys(detailsMap);
 
@@ -150,6 +156,8 @@ module.exports = async (req, res) => {
               }
             );
             console.log(patient?.consolidatedReportUrl, '---===---');
+            urlMaps = { ...urlMaps, [patient.uhid]: patient?.consolidatedReportUrl };
+            console.log(Object.keys(urlMaps).length, urlMaps)
           }
         }
       }

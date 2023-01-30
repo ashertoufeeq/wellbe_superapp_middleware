@@ -32,18 +32,18 @@ module.exports = async (req, res) => {
     const patientIds = [];
     const today = moment().toISOString();
     const dateFilter = {
-      // createdAt: {
-      // $gte: moment().subtract(5, 'days').startOf('days').toDate(),
-      // $lte: moment(today).endOf('day').toDate()
-      // },
-
-      // _id: { $in: [ObjectId('63c87b1d41b31001cfedf951'), ObjectId('63c8a4e90729190cf489e2d8')] },
+      createdAt: {
+        $gte: moment().subtract(5, 'days').startOf('days').toDate(),
+        $lte: moment(today).endOf('day').toDate()
+      },
     }
 
     const screenings = await ScreeningModel.find({
       ...dateFilter,
-      patientId: ObjectId("63ce2592d5b7a02a456dde29")
-      // patientId: ObjectId('63ce1870d5b7a02a456dd777')
+      // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
+      // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C
+      // patientId: ObjectId("63ce2690d5b7a02a456dde9f") //atha
+
     }).populate([{ path: 'patientId' }, { path: 'campId' }]).sort({ createdAt: 'asc' }).exec();
 
     console.log(screenings)
@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
         detailsMap = {
           ...detailsMap, [uhid]: {
             ...(detailsMap[uhid] || {}),
-            campsId: screening?.campId,
+            campId: screening?.campId,
             state: screening?.campId?.stateName,
             district: screening?.campId?.villageName,
             location: `${screening?.campId?.talukaName},${screening?.campId?.villageName}(${screening?.campId?.villagePinCode})`,
@@ -85,110 +85,77 @@ module.exports = async (req, res) => {
         }
       }
     }
-    let iteration = 0;
-    console.log('here------');
     const uhidArray = Object.keys(detailsMap);
 
-    if (iteration < 1) {
-      console.log('here------', 1);
+    console.log(uhidArray, detailsMap, 're1')
+    for (const uhid of uhidArray) {
+      const details = detailsMap[uhid];
 
-      console.log(uhidArray, detailsMap, 're1')
-      for (const uhid of uhidArray) {
-        const details = detailsMap[uhid];
+      if (details?.patient?.consolidatedReportUrl) {
+        console.log('Report already generated for :', uhid, details?.patient?.consolidatedReportUrl, details?.campId)
+      } else {
+        const pdfLinks = [];
+        let labReportGenerated = false;
+        let screeningReportGenerated = false;
+        let results = {
 
-        if (details?.patient?.consolidatedReportUrl) {
-          console.log('Report already generated for :', uhid, details?.patient?.consolidatedReportUrl)
-        } else {
-          const pdfLinks = [];
-          let labReportGenerated = false;
-          let screeningReportGenerated = false;
-          let results = {
-
-          };
-          (details || {}).screenings.map((screening) => {
-            if (screening.formsDetails) {
-              (screening.formsDetails || []).map((item) => {
-                results = { ...results, ...(item.results || {}) }
-              })
-            }
-          })
-
-          // if (req && false) {
-          //   const html = render(tranformerConsolidatedReportData({
-          //     patient: details?.patient,
-          //     resultsObject: results,
-          //     screeningDate: details?.screeningDate,
-          //     location: details?.location,
-          //     district: details.district,
-          //     state: details.state,
-          //   }));
-          //   const title = "moment"
-
-          //   if (!req.query.html) {
-          //     console.log('that...')
-          //     pdf.create(html).toStream((err, stream) => {
-          //       if (err) {
-          //         console.log("error generating pdf ->", err);
-          //       } else {
-          //         res.attachment(title);
-          //         res.contentType("application/pdf");
-          //         stream.pipe(res);
-          //       }
-          //     });
-          //   } else {
-          //     console.log('this...')
-          //     res.json({ html, title });
-          //   }
-          // }
-
-          const buffer = await getEjsFile({
-            render, data: tranformerConsolidatedReportData({
-              patient: details?.patient,
-              resultsObject: results,
-              screeningDate: details?.screeningDate,
-              location: details?.location,
-              district: details.district,
-              state: details.state,
-            }),
-            fileName: 'consolidated-report'
-          });
-          pdfLinks.push(buffer);
-          screeningReportGenerated = !!buffer;
-
-          const labItem = details.labItems || []
-          console.log(labItem, '--{{}}--');
-
-          for (const lab of (details.labItems || [])) {
-            console.log(lab.packages, 'reportUrl', '--- || ---');
-            if (lab?.packages && lab?.packages[0] && lab?.packages[0].reportUrl) {
-              const labBuffer = await getFileBufferFromUrl(lab?.packages[0].reportUrl);
-              pdfLinks.push(labBuffer);
-              labReportGenerated = true;
-            }
+        };
+        (details || {}).screenings.map((screening) => {
+          if (screening.formsDetails) {
+            (screening.formsDetails || []).map((item) => {
+              results = { ...results, ...(item.results || {}) }
+            })
           }
+        })
 
-          if (labReportGenerated && screeningReportGenerated) {
-            const { mergedUrl, error: mergeError } = await pdfMerge({ pdfLinks });
-            if (mergeError) {
-              console.log(mergeError);
-            } else {
-              const patient = await Patient.findByIdAndUpdate(details?.patient?._id, { consolidatedReportUrl: mergedUrl }, { new: true })
-              const campUpdated = await campsModel.findByIdAndUpdate(details?.campsId, {
-                $inc: {
-                  numberOfConsolidatedReportGenerated: 1
-                }
-              },
-                {
-                  new: true
-                }
-              );
-              console.log(patient, campUpdated, patient?.consolidatedReportUrl, '---===---');
-            }
+        const buffer = await getEjsFile({
+          render, data: tranformerConsolidatedReportData({
+            patient: details?.patient,
+            resultsObject: results,
+            screeningDate: details?.screeningDate,
+            location: details?.location,
+            district: details.district,
+            state: details.state,
+          }),
+          fileName: 'consolidated-report'
+        });
+        pdfLinks.push(buffer);
+        screeningReportGenerated = !!buffer;
+
+        const labItem = details.labItems || []
+        console.log(labItem, '--{{}}--');
+
+        for (const lab of (details.labItems || [])) {
+          console.log(lab.packages, 'reportUrl', '--- || ---');
+          if (lab?.packages && lab?.packages[0] && lab?.packages[0].reportUrl) {
+            const labBuffer = await getFileBufferFromUrl(lab?.packages[0].reportUrl);
+            pdfLinks.push(labBuffer);
+            labReportGenerated = true;
           }
-          iteration = iteration + 1;
         }
+
+        if (labReportGenerated && screeningReportGenerated) {
+          const { mergedUrl, error: mergeError } = await pdfMerge({ pdfLinks });
+          if (mergeError) {
+            console.log(mergeError);
+          } else {
+            const patient = await Patient.findByIdAndUpdate(details?.patient?._id, { consolidatedReportUrl: mergedUrl }, { new: true })
+            const campUpdated = await campsModel.findByIdAndUpdate(details?.campId, {
+              $inc: {
+                numberOfConsolidatedReportGenerated: 1
+              }
+            },
+              {
+                new: true
+              }
+            );
+            console.log(patient?.consolidatedReportUrl, campUpdated?._id, '---===---');
+          }
+        }
+        iteration = iteration + 1;
       }
     }
+
   } catch (e) {
     console.log(e);
   }

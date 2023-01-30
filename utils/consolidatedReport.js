@@ -287,9 +287,11 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
     const fev6 = Number(resultsObject.fev6);
     const ratio = resultsObject?.fev1 && resultsObject?.fev6 ? Number((Number(fev1) / Number(fev6)).toFixed(2)) : null;
 
+    console.log({ fev1, fev6 })
+
     let vitalographValues = {
-        fev1,
-        fev6,
+        fev1: Number(parseFloat(resultsObject.fev1).toFixed(2)),
+        fev6: Number(parseFloat(resultsObject.fev6).toFixed(2)),
         ratio
     };
 
@@ -314,10 +316,10 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
 
             vitalographValues = {
                 ...vitalographValues,
-                lungAge,
-                predictedFev1,
-                predictedFev6,
-                predictedRatio,
+                lungAge: lungAge > 0 ? lungAge : null,
+                predictedFev1: predictedFev1 ? (predictedFev1).toFixed(2) : null,
+                predictedFev6: predictedFev6 ? (predictedFev6).toFixed(2) : null,
+                predictedRatio: predictedRatio ? (predictedRatio).toFixed(2) : null,
                 obstructiveIndexPercent,
                 percentagePredictedFev1,
                 percentagePredictedFev6,
@@ -339,10 +341,10 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
 
             vitalographValues = {
                 ...vitalographValues,
-                lungAge,
-                predictedFev1,
-                predictedFev6,
-                predictedRatio,
+                lungAge: lungAge > 0 ? lungAge : null,
+                predictedFev1: predictedFev1 ? (predictedFev1).toFixed(2) : null,
+                predictedFev6: predictedFev6 ? (predictedFev6).toFixed(2) : null,
+                predictedRatio: predictedRatio ? (predictedRatio).toFixed(2) : null,
                 obstructiveIndexPercent,
                 percentagePredictedFev1,
                 percentagePredictedFev6,

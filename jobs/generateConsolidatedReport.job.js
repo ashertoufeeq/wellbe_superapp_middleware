@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
     }
 
     const screenings = await ScreeningModel.find({
-      // ...dateFilter,
+      ...dateFilter,
       patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
       // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C
@@ -71,7 +71,7 @@ module.exports = async (req, res) => {
     }
     if ((patientIds || []).length > 0) {
       const labs = await labItemModel.find({
-        // ...dateFilter,
+        ...dateFilter,
         patientId: patientIds
       }).populate([{ path: 'patientId' }])
       if ((labs || []).length > 0) {
@@ -92,7 +92,7 @@ module.exports = async (req, res) => {
     for (const uhid of uhidArray) {
       const details = detailsMap[uhid];
 
-      if (details?.patient?.consolidatedReportUrl && false) {
+      if (details?.patient?.consolidatedReportUrl) {
         console.log('Report already generated for :', uhid, details?.patient?.consolidatedReportUrl, details?.campId)
       } else {
         const pdfLinks = [];
@@ -140,15 +140,15 @@ module.exports = async (req, res) => {
             console.log(mergeError);
           } else {
             const patient = await Patient.findByIdAndUpdate(details?.patient?._id, { consolidatedReportUrl: mergedUrl }, { new: true })
-            // const campUpdated = await campsModel.findByIdAndUpdate(details?.campId, {
-            //   $inc: {
-            //     numberOfConsolidatedReportGenerated: 1
-            //   }
-            // },
-            //   {
-            //     new: true
-            //   }
-            // );
+            const campUpdated = await campsModel.findByIdAndUpdate(details?.campId, {
+              $inc: {
+                numberOfConsolidatedReportGenerated: 1
+              }
+            },
+              {
+                new: true
+              }
+            );
             console.log(patient?.consolidatedReportUrl, '---===---');
           }
         }

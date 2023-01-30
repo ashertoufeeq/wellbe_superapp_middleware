@@ -194,21 +194,21 @@ const getVFatStatus = (vFat) => {
 const getMetabolicAgeStaus = ({ resultsObject, patient }) => {
     const value = Number(calculateMetabolic({ resultsObject, patient }));
 
-    if (value <= 20) {
-        return { metablicStatus: 'Good', metabloicRangeRecommendation: 'A low basal metabolic rate makes it harder to lose body fat and overall weight.', metabolicAge: value }
-    } else if (value > 20) {
-        return { metablicStatus: 'High', metabloicRangeRecommendation: 'Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body.', metabolicAge: value }
+    if (value <= 52) {
+        return { metablicStatus: 'Good', metabolicAgeRecommendation: 'A low basal metabolic rate makes it harder to lose body fat and overall weight.', metabolicAge: value }
+    } else if (value > 52) {
+        return { metablicStatus: 'High', metabolicAgeRecommendation: 'Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body.', metabolicAge: value }
     } else {
-        return { metablicStatus: 'Unknown', metabloicRangeRecommendation: '-', metabolicAge: '-' }
+        return { metablicStatus: 'Unknown', metabolicAgeRecommendation: '-', metabolicAge: '-' }
     }
 };
 
 const getSystolicStatus = (sys) => {
     const value = Number(sys);
     if (value < 90) {
-        return { systolicStatus: 'Low', systolicRecommendation: 'Eat more salt,avoid alcoholic beverages,cross legs while sitting. Drink water,eat small meals frequently or discuss medications with a doctor. ' }
+        return { systolicStatus: 'Low', systolicRecommendation: 'Eat more salt,avoid alcoholic beverages,cross legs while sitting. Drink water,eat small meals frequently or discuss medications with a doctor.' }
     } else if (value >= 90 && value < 130) {
-        return { systolicStatus: 'Normal', systolicRecommendation: 'No comment' }
+        return { systolicStatus: 'Normal', systolicRecommendation: '-' }
     } else if (value >= 130 && value <= 140) {
         return { systolicStatus: 'Pre-Hyper', systolicRecommendation: 'Exercise helps lower blood pressure,try meditation or deep breathing. Eat calcium-rich foods, cut added sugar and refined carbs, eat foods rich in magnesium.' }
     } else if (value > 140) {
@@ -228,7 +228,7 @@ const getDiastolicStatus = (dia) => {
     } else if (value >= 60 && value < 90) {
         return {
             diastolicStatus: 'Normal',
-            diastolicRecommendation: 'No comments'
+            diastolicRecommendation: '-'
         }
     } else if (value >= 90 && value <= 100) {
         return {
@@ -278,9 +278,9 @@ const getSpo2Status = (value) => {
 
 const getPulseStatus = (value) => {
     if (value < 60) {
-        return { pulseStatus: 'Low', pulseRecommendation: 'No comments' }
+        return { pulseStatus: 'Low', pulseRecommendation: '-' }
     } else if (value >= 60 && value <= 90) {
-        return { pulseStatus: 'Normal', pulseRecommendation: 'No comments' }
+        return { pulseStatus: 'Normal', pulseRecommendation: '-' }
     } else if (value > 90) {
         return { pulseStatus: 'High', pulseRecommendation: ' Ideally pulse measurement is done on a resting body. High Beating Pulse suggests an underlying cause, we suggest to consult the doctor if it is persistent.' }
     } else {
@@ -421,6 +421,8 @@ const tranformerConsolidatedReportData = ({
         remain: "7 to End of Report",
     }
 
+    const metabolicData = getMetabolicAgeStaus({ resultsObject, patient });
+    console.log(metabolicData)
     const vitalographValues = spirometryPrediction({ resultsObject, patient })
     const boneData = getBonemassStatus(resultsObject?.bonemass?.value || resultsObject?.bonemass || resultsObject?.bone);
     const page2 = {
@@ -438,7 +440,7 @@ const tranformerConsolidatedReportData = ({
         ...boneData,
         ...getMusclesStaus(resultsObject?.muscle?.value || resultsObject?.muscle),
         ...getVFatStatus(resultsObject?.vFat?.value || resultsObject?.vFat || resultsObject?.viscIndex),
-        ...getMetabolicAgeStaus({ resultsObject, patient }),
+        ...metabolicData,
         systolic: resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure || resultsObject?.sys || '-',
         ...getSystolicStatus(resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure || resultsObject?.sys),
         diastolic: resultsObject?.Diastolic_Blood_Pressure?.value || resultsObject?.Diastolic_Blood_Pressure || resultsObject?.dia || '-',
@@ -452,10 +454,10 @@ const tranformerConsolidatedReportData = ({
 
     //fix -3 
     const page3 = {
-        metabolicAgeRecommendation:
-            resultsObject?.Metabolic_Age_Recommendation || "No recommendations",
+        metabloicRangeRecommendation:
+            "-",
         muscleQualityScoreRecommendation:
-            resultsObject?.Muscle_Quality_Score_Recommendation || "No recommendations",
+            resultsObject?.Muscle_Quality_Score_Recommendation || "-",
     }
 
     const page4 = {

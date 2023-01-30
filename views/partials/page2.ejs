@@ -97,7 +97,11 @@
         BMI
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= bmi %> Kg/m2
+        <%= bmi %> 
+        <% if (bmi !== "-") { %>
+          Kg/m2
+        <% } else { %> <% } %>
+        
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= bmiStatus %>
@@ -444,8 +448,8 @@
   <table class="n-b w-100">
     <tr class="n-b">
       <td class="n-b" colspan="3"></td>
-      <td class="n-b" colspan="3">93-99&#8457 (33-37&#8451;)</td>
-      <td class="n-b" colspan="3">>99#8457 (37&#8451;)</td>
+      <td class="n-b" colspan="3">93-99 F (33-37&#8451;)</td>
+      <td class="n-b" colspan="3">>99 F (37&#8451;)</td>
     </tr>
     <tr>
       <td
@@ -455,7 +459,7 @@
         Temperature
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= temperature %>&deg F
+        <%= temperature %> F
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= temperatureStatus %>

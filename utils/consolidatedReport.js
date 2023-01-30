@@ -1,7 +1,45 @@
 const moment = require("moment");
 const { calculateAge } = require('./index');
 
-// const vitalographLogo = require('../assets/vitalographLogo.png');
+const calculateMetabolic = ({ resultsObject, patient }) => {
+    const height = Number(resultsObject.Height?.value || resultsObject.Height || resultsObject?.height);
+    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight || resultsObject.weight);
+    const { gender } = patient;
+    if (height && weight && gender) {
+        if (gender === 'Female') {
+            const leanBodyMass = Number(((0.29569 * weight) + (0.41813 * height) - 43.2933).toFixed(2));
+            const bmr = 370 + (21.6 * leanBodyMass)
+            const metabolicAge = Number(((447.593 + (9.247 * weight) + (3.098 * height) - bmr) / 5.677).toFixed(2))
+            return metabolicAge
+        } else {
+            const leanBodyMass = Number(((0.32810 * weight) + (0.33929 * height) - 29.5336).toFixed(2));
+            const bmr = 370 + (21.6 * leanBodyMass)
+            const metabolicAge = Number(((88.362 + (13.397 * weight) + (4.799 * height) - bmr) / 5.677).toFixed(2))
+            return metabolicAge
+        }
+    } else {
+        return '-'
+    }
+}
+
+const calculateBmi = ({ resultsObject }) => {
+    const height = Number(resultsObject.Height?.value || resultsObject.Height || resultsObject?.height);
+    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight || resultsObject.weight);
+
+    if (height && weight) {
+        if (Number(height) === 0 || Number(weight) === 0) {
+            return null
+        } else {
+            const newBMI = (
+                (Number(weight) / (Number(height) * Number(height))) *
+                10000
+            ).toFixed(2);
+            return newBMI
+        }
+    } else {
+        return null
+    }
+}
 
 const getAge = ({ patient }) => {
     const { dob } = patient;
@@ -42,9 +80,7 @@ const getBmiStatus = (value) => {
 const getFatStatus = ({ resultsObject, patient } = { resultsObject: {}, patient: {} }) => {
     const { gender } = patient;
 
-    const bmi = resultsObject?.BMI;
-    const height = Number(resultsObject.Height?.value || resultsObject.Height);
-    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight);
+    const bmi = resultsObject?.BMI || resultsObject.bmi || calculateBmi({ resultsObject });
     const age = getAge({ patient });
 
     let fat = resultsObject.fat?.value || resultsObject?.fat;
@@ -80,11 +116,11 @@ const getFatStatus = ({ resultsObject, patient } = { resultsObject: {}, patient:
 
 const getHydrationStatus = ({ resultsObject, patient } = { resultsObject: {}, patient: {} }) => {
     const { gender } = patient;
-    const height = Number(resultsObject.Height?.value || resultsObject.Height);
-    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight);
+    const height = Number(resultsObject.Height?.value || resultsObject.Height || resultsObject?.height);
+    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight || resultsObject.weight);
     const age = getAge({ patient });
 
-    let hydration = resultsObject?.hydration?.value || resultsObject?.hydration;
+    let hydration = resultsObject?.hydration?.value || resultsObject?.hydration || resultsObject?.water;
     if (!hydration) {
         if (age && height && weight) {
             if (gender === 'Female') {
@@ -148,14 +184,15 @@ const getVFatStatus = (vFat) => {
 };
 
 
-const getMetabolicAgeStaus = (metablicStatus) => {
-    const value = Number(metablicStatus);
+const getMetabolicAgeStaus = ({ resultsObject, patient }) => {
+    const value = Number(calculateMetabolic({ resultsObject, patient }));
+    console.log(value, '------')
     if (value <= 20) {
-        return { metablicStatus: 'Good', metabloicRangeRecommendation: 'A low basal metabolic rate makes it harder to lose body fat and overall weight.' }
+        return { metablicStatus: 'Good', metabloicRangeRecommendation: 'A low basal metabolic rate makes it harder to lose body fat and overall weight.', metabolicAge: value }
     } else if (value > 20) {
-        return { metablicStatus: 'High', metabloicRangeRecommendation: 'Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body.' }
+        return { metablicStatus: 'High', metabloicRangeRecommendation: 'Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body.', metabolicAge: value }
     } else {
-        return { metablicStatus: 'Unknown', metabloicRangeRecommendation: 'No recommendation' }
+        return { metablicStatus: 'Unknown', metabloicRangeRecommendation: 'No recommendation', metabolicAge: '-' }
     }
 };
 
@@ -204,14 +241,19 @@ const getDiastolicStatus = (dia) => {
     }
 };
 
-const getTemperatureStatus = (value) => {
-    if (value >= 33 && value <= 37) {
-        return 'Normal'
-    } else if (value > 37) {
-        return 'High'
+const getTemperatureStatus = ({ resultsObject, patient }) => {
+    const isCelcius = (resultsObject?.Temperature?.value || resultsObject?.Temperature || resultsObject?.temp || 0) < 50
+
+    const value = isCelcius ? Number(((resultsObject?.Temperature?.value || resultsObject?.Temperature || resultsObject?.temp || 0) * 1.8 + 32).toFixed(2)) : Number(resultsObject?.Temperature?.value || resultsObject?.Temperature || resultsObject?.temp || 0)
+
+    if (value >= 93 && value <= 99) {
+        return { temperatureStatus: 'Normal', temperature: value }
+    } else if (value > 99) {
+        return { temperatureStatus: 'High', temperature: value }
     } else {
-        return 'Unknown'
+        return { temperatureStatus: 'Unknown', temperature: value }
     }
+
 };
 
 
@@ -255,8 +297,8 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
     const ts = Date.parse(dob);
     let age = moment().diff(ts, 'years');
 
-    const height = Number(resultsObject.Height?.value || resultsObject.Height);
-    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight);
+    const height = Number(resultsObject.Height?.value || resultsObject.Height || resultsObject?.height);
+    const weight = Number(resultsObject.Weight?.value || resultsObject.Weight || resultsObject.weight);
     if (age && height && weight && gender) {
         if (gender === 'Female') {
             const lungAge = fev1 ? Number(((3.56 * height * 0.394) - (40 * fev1) - 77.28)).toFixed(0) : null
@@ -283,6 +325,7 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
             }
         } else {
             const lungAge = fev1 ? Number(((2.87 * height * 0.394) - (31.25 * fev1) - 39.375)).toFixed(0) : null
+            console.log(lungAge, fev1, height, '------')
             const predictedFev1 = Number((0.93 * 1.08 * ((0.043 * height) - (0.029 * age) - 2.49)).toFixed(2));
             const predictedFev6 = Number((0.93 * 1.10 * ((0.0576 * height) - (0.0269 * age) - 4.34)).toFixed(2));
             const predictedRatio = Number(((87.2 - (0.18 * age)) / 100).toFixed(2));
@@ -371,30 +414,28 @@ const tranformerConsolidatedReportData = ({
         zeissLogo: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674673674/Screenshot_2023-01-26_at_12.33.26_AM_agbgqi.png',
         location: location || "No Data",
         mrnNo: "-",
-        height: resultsObject.Height?.value || resultsObject.Height || '-',
-        weight: resultsObject.Weight?.value || resultsObject.Weight || '-',
-        bmi: resultsObject?.BMI || '-',
-        ...getBmiStatus(resultsObject?.BMI),
+        height: resultsObject.Height?.value || resultsObject.Height || resultsObject?.height || '-',
+        weight: resultsObject.Weight?.value || resultsObject.Weight || resultsObject.weight || '-',
+        bmi: resultsObject?.BMI || resultsObject?.bmi || calculateBmi({ resultsObject }) || '-',
+        ...getBmiStatus(resultsObject?.BMI || resultsObject?.bmi || calculateBmi({ resultsObject })),
         ...getHydrationStatus({ resultsObject, patient }),
         ...getFatStatus({ resultsObject, patient }),
-        boneMass: resultsObject?.bonemass?.value || resultsObject?.bonemass || '-',
-        ...getBonemassStatus(resultsObject?.bonemass?.value || resultsObject?.bonemass),
+        boneMass: resultsObject?.bonemass?.value || resultsObject?.bonemass || resultsObject?.bone || '-',
+        ...getBonemassStatus(resultsObject?.bonemass?.value || resultsObject?.bonemass || resultsObject?.bone),
         muscle: resultsObject?.muscle?.value || resultsObject?.muscle || '-',
         ...getMusclesStaus(resultsObject?.muscle?.value || resultsObject?.muscle),
-        visceralFat: resultsObject?.vFat?.value || resultsObject?.vFat || '-',
-        ...getVFatStatus(resultsObject?.vFat?.value || resultsObject?.vFat,),
-        metabolicAge: resultsObject?.Metabolic_Age?.value || resultsObject?.Metabolic_Age || '-',
-        ...getMetabolicAgeStaus(resultsObject?.Metabolic_Age?.value || resultsObject?.Metabolic_Age),
-        systolic: resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure || '-',
-        ...getSystolicStatus(resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure),
-        diastolic: resultsObject?.Diastolic_Blood_Pressure?.value || resultsObject?.Diastolic_Blood_Pressure || '-',
-        ...getDiastolicStatus(resultsObject?.Diastolic_Blood_Pressure?.value || resultsObject?.Diastolic_Blood_Pressure),
-        temperature: `${((resultsObject?.Temperature?.value || resultsObject?.Temperature || 0) * 1.8 + 32).toFixed(2)} F`,
-        temperatureStatus: getTemperatureStatus(resultsObject?.Temperature?.value || resultsObject?.Temperature),
+        visceralFat: resultsObject?.vFat?.value || resultsObject?.vFat || resultsObject?.viscIndex || '-',
+        ...getVFatStatus(resultsObject?.vFat?.value || resultsObject?.vFat || resultsObject?.viscIndex),
+        ...getMetabolicAgeStaus({ resultsObject, patient }),
+        systolic: resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure || resultsObject?.sys || '-',
+        ...getSystolicStatus(resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure || resultsObject?.sys),
+        diastolic: resultsObject?.Diastolic_Blood_Pressure?.value || resultsObject?.Diastolic_Blood_Pressure || resultsObject?.dia || '-',
+        ...getDiastolicStatus(resultsObject?.Diastolic_Blood_Pressure?.value || resultsObject?.Diastolic_Blood_Pressure || resultsObject?.dia),
+        ...getTemperatureStatus({ resultsObject }),
         pulse: resultsObject?.pulse_bpm?.value || resultsObject?.pulse,
         ...getPulseStatus(resultsObject?.pulse?.value || resultsObject?.pulse),
-        oxygenSat: resultsObject?.Spo2?.value || resultsObject?.Spo2,
-        oxygenSatStatus: getSpo2Status(resultsObject?.Spo2?.value || resultsObject?.Spo2),
+        oxygenSat: resultsObject?.Spo2?.value || resultsObject?.Spo2 || resultsObject?.spo2,
+        oxygenSatStatus: getSpo2Status(resultsObject?.Spo2?.value || resultsObject?.Spo2 || resultsObject?.spo2),
     }
 
     //fix -3 
@@ -411,9 +452,9 @@ const tranformerConsolidatedReportData = ({
             ...(resultsObject?.Lung ? [resultsObject?.Lung] : []),
             ...(resultsObject?.Abdomen ? [resultsObject?.Abdomen] : []),
         ],
-        dermascopyResult: (resultsObject?.uvcData || []).map(item => item.comment),
+        dermascopyImage: (resultsObject?.uvcData || []) && (resultsObject?.uvcData || [])[0] && (resultsObject?.uvcData || [])[0]?.fileUrl || (resultsObject?.uvcData || [])[0]?.imageUrl,
+        dermascopyResult: (resultsObject?.uvcData || []).map(item => item.comment)
     };
-
     const page5 = {
         lungIcon: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674662267/lungs_avyhdl.svg',
         imageGraph: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674661208/fev1ByAge_rjiv7x.png',
@@ -523,3 +564,4 @@ const tranformerConsolidatedReportData = ({
 module.exports = {
     tranformerConsolidatedReportData,
 }
+

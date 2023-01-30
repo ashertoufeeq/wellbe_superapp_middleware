@@ -49,7 +49,33 @@ const uploadEJSPDF = ({ render, data, fileName }) =>
         });
     });
 
+const getEjsFile = ({ render, data, fileName }) =>
+    new Promise((resolve, reject) => {
+        console.log('called');
+        const html = render(data);
+        console.log('htlm');
+        pdf.create(html).toFile((err, file) => {
+            if (err) {
+
+                console.log('error generating pdf ->', err);
+                reject('error')
+            } else {
+                fs.readFile(file.filename, function (err1, data) {
+                    if (err1) {
+                        console.log(err1);
+                        res.status(500).json({ err: 'Could not read file ' });
+                    } else {
+                        console.log('This is a buffer:', Buffer.isBuffer(data));
+                        resolve(data);
+                    }
+
+                });
+            }
+        });
+    });
+
 
 module.exports = {
     uploadEJSPDF,
+    getEjsFile
 }

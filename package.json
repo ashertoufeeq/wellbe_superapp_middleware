@@ -13,7 +13,7 @@
     "agenda": "^5.0.0",
     "agendash": "^3.1.0",
     "aws-sdk": "^2.1295.0",
-    "axios": "^1.2.2",
+    "axios": "^1.2.5",
     "body-parser": "^1.20.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
@@ -21,10 +21,14 @@
     "express": "^4.18.2",
     "fs": "0.0.1-security",
     "html-pdf": "^3.0.1",
+    "https": "^1.0.0",
     "moment": "^2.29.4",
     "mongoose": "^6.8.3",
     "mongoose-double": "0.0.1",
     "nodemon": "^2.0.20",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "pdf-merger-js": "^4.2.0",
+    "request": "^2.88.2",
+    "request-promise-native": "^1.0.9"
   }
 }

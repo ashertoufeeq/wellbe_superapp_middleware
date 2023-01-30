@@ -4,6 +4,10 @@ const userSchema = require('./common/model.user');
 
 const itemSchema = new schema(
     {
+        numberOfConsolidatedReportGenerated: {
+            type: Number,
+            default: 0
+        },
         createdBy: userSchema.user,
         updatedBy: userSchema.user,
         name: {

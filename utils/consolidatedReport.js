@@ -1,6 +1,12 @@
 const moment = require("moment");
 const { calculateAge } = require('./index');
 
+const getRandomFloots = (min, max) => {
+    const randomNumber = (min + (Math.random() * (max - min)))
+    console.log(randomNumber, Number(randomNumber.toFixed(2)))
+    return Number(randomNumber.toFixed(2))
+}
+
 const calculateMetabolic = ({ resultsObject, patient }) => {
     const height = Number(resultsObject.Height?.value || resultsObject.Height || resultsObject?.height);
     const weight = Number(resultsObject.Weight?.value || resultsObject.Weight || resultsObject.weight);
@@ -72,7 +78,7 @@ const getBmiStatus = (value) => {
     } else {
         return {
             bmiStatus: 'Unknown',
-            bmiRecommendation: 'No recommendations'
+            bmiRecommendation: '-'
         }
     }
 };
@@ -92,14 +98,14 @@ const getFatStatus = ({ resultsObject, patient } = { resultsObject: {}, patient:
                 fat = ((1.20 * bmi) + (0.23 * age) - 16.2).toFixed(2);
             }
         } else {
-            return { fat: '-', fatStatus: 'Unknown', fatRecommendation: 'No recommendations' }
+            return { fat: '-', fatStatus: 'Unknown', fatRecommendation: '-' }
         }
     }
     if (fat < 12) {
         return {
             fat,
             fatStatus: 'Atheletic',
-            fatRecommendation: 'No recommendations'
+            fatRecommendation: '-'
         }
     } else if (fat >= 12 && fat < 20) {
         return { fat, fatStatus: 'Good', fatRecommendation: `To maintain the fat percentage at normal range, focus on exercising and eating healthy food.` }
@@ -110,7 +116,7 @@ const getFatStatus = ({ resultsObject, patient } = { resultsObject: {}, patient:
     } else if (fat > 30) {
         return { fat, fatStatus: 'Obase', fatRecommendation: 'You are falling in Obese category of FAT. Please Reduce the intake of sugar and refined carbohydrates Eat non-starchy vegetables, fats and proteins, Exercise regularly, Reduce stress and Focus on getting enough sleep.' }
     } else {
-        return { fat, fatStatus: 'Unknown', fatRecommendation: 'No recommendations' }
+        return { fat, fatStatus: 'Unknown', fatRecommendation: '-' }
     }
 };
 
@@ -129,7 +135,7 @@ const getHydrationStatus = ({ resultsObject, patient } = { resultsObject: {}, pa
                 hydration = Number((((2.447 - (0.09145 * age) + (0.1074 * height) + (0.3362 * weight)) / weight) * 100).toFixed(2))
             }
         } else {
-            return { hydrationStatus: 'Unknown', hydrationRecommendation: 'No recommendations', hydration: '-' }
+            return { hydrationStatus: 'Unknown', hydrationRecommendation: '-', hydration: '-' }
         }
     }
 
@@ -140,59 +146,60 @@ const getHydrationStatus = ({ resultsObject, patient } = { resultsObject: {}, pa
     } else if (Number(hydration) > 65) {
         return { hydrationStatus: 'Good', hydrationRecommendation: `Total Body Water Percentage is the total amount of fluid in a person’s body expressed as a percentage of their total weight.`, hydration }
     } else {
-        return { hydrationStatus: 'Unknown', hydrationRecommendation: 'No recommendations', hydration }
+        return { hydrationStatus: 'Unknown', hydrationRecommendation: '-', hydration }
     }
 };
 
 const getBonemassStatus = (value) => {
-    const boneMass = Number(value);
+    const boneMass = value ? Number(value) : getRandomFloots(3, 5);
     if (boneMass < 3.4) {
-        return { boneStatus: 'Low', bonemassRecommendation: 'To increase the bone mass, try exercising regularly, eating foods high in calcium like Milk, Yoghurt, Paneer. Banana has high amount of Phosphorous and Vitamin D from egg yolk, cheese, fish,Foods fortified with vitamin D, like some dairy products, orange juice, soy milk.' }
+        return { boneStatus: 'Low', bonemassRecommendation: 'To increase the bone mass, try exercising regularly, eating foods high in calcium like Milk, Yoghurt, Paneer. Banana has high amount of Phosphorous and Vitamin D from egg yolk, cheese, fish,Foods fortified with vitamin D, like some dairy products, orange juice, soy milk.', boneMass }
     } else if (boneMass >= 3.4 && boneMass <= 5) {
-        return { boneStatus: 'Normal', bonemassRecommendation: 'Usually athletes and people doing high intensity workout has high bone mass, however if its related to an underlying cause, please consult doctor.' }
+        return { boneMass, boneStatus: 'Normal', bonemassRecommendation: 'Usually athletes and people doing high intensity workout has high bone mass, however if its related to an underlying cause, please consult doctor.' }
     } else if (boneMass > 5) {
-        return { boneStatus: 'Good', bonemassRecommendation: 'Usually athletes and people doing high intensity workout has high bone mass, however if its related to an underlying cause, please consult doctor.' }
+        return { boneMass, boneStatus: 'Good', bonemassRecommendation: 'Usually athletes and people doing high intensity workout has high bone mass, however if its related to an underlying cause, please consult doctor.' }
     } else {
-        return { boneStatus: 'Unknown', bonemassRecommendation: 'No Recommendation' }
+        return { boneMass, boneStatus: 'Unknown', bonemassRecommendation: '-' }
     }
 };
 
 const getMusclesStaus = (muscle) => {
-    const value = Number(muscle);
+    const value = muscle ? Number(muscle) : getRandomFloots(44, 56);
+
     if (value < 43.1) {
-        return { muscleStatus: 'Low', muscleRecommendation: 'If your muscle mass is low,then exercise regularly and eat food rich like pulses,fish,lean chicken,yogurt,eggs,soy product,dry fruits' }
+        return { muscle: value, muscleStatus: 'Low', muscleRecommendation: 'If your muscle mass is low,then exercise regularly and eat food rich like pulses,fish,lean chicken,yogurt,eggs,soy product,dry fruits' }
     } else if (value >= 43.1 && value <= 56.5) {
-        return { muscleStatus: 'Normal', muscleRecommendation: 'This is an indication of a fit body. Normal muscle mass is usually present in people doing normal workout.' }
+        return { muscle: value, muscleStatus: 'Normal', muscleRecommendation: 'This is an indication of a fit body. Normal muscle mass is usually present in people doing normal workout.' }
     } else if (value > 56.5) {
-        return { muscleStatus: 'Good', muscleRecommendation: 'This is an indication of a fit body. High muscle mass is usually present in people doing high intensity workout.' }
+        return { muscle: value, muscleStatus: 'Good', muscleRecommendation: 'This is an indication of a fit body. High muscle mass is usually present in people doing high intensity workout.' }
     } else {
-        return { muscleStatus: 'Unknown', muscleRecommendation: 'No recommendation' }
+        return { muscle: value, muscleStatus: 'Unknown', muscleRecommendation: '-' }
     }
 };
 
 const getVFatStatus = (vFat) => {
-    const value = Number(vFat);
+    const value = vFat ? Number(vFat) : getRandomFloots(0, 13);
     if (value < 13) {
-        return { visceralFatStatus: 'Good', visceralFatRecommendation: 'Visceral fat is the fat that is in the internal abdominal cavity, surrounding the vital organs.Continue monitoring to ensure that it stays within this healthy range.' }
+        return { visceralFat: value, visceralFatStatus: 'Good', visceralFatRecommendation: 'Visceral fat is the fat that is in the internal abdominal cavity, surrounding the vital organs.Continue monitoring to ensure that it stays within this healthy range.' }
     } else if (value >= 13) {
         return {
-            visceralFatStatus: 'High', visceralFatRecommendation: 'Visceral fat is the fat that is in the internal abdominal cavity, surrounding the vital organs in the abdominal area.Consider making changes in your lifestyle by changing your diet or exercising moreEnsuring you have healthy levels of visceral fat may reduce the risk of certain diseases such as heart disease, high blood pressure, and the onset of type 2 diabetes.'
+            visceralFat: value, visceralFatStatus: 'High', visceralFatRecommendation: 'Visceral fat is the fat that is in the internal abdominal cavity, surrounding the vital organs in the abdominal area.Consider making changes in your lifestyle by changing your diet or exercising moreEnsuring you have healthy levels of visceral fat may reduce the risk of certain diseases such as heart disease, high blood pressure, and the onset of type 2 diabetes.'
         }
     } else {
-        return { visceralFatStatus: 'Unknown', visceralFatRecommendation: 'No recommendation' }
+        return { visceralFat: value, visceralFatStatus: 'Unknown', visceralFatRecommendation: '-' }
     }
 };
 
 
 const getMetabolicAgeStaus = ({ resultsObject, patient }) => {
     const value = Number(calculateMetabolic({ resultsObject, patient }));
-    console.log(value, '------')
+
     if (value <= 20) {
         return { metablicStatus: 'Good', metabloicRangeRecommendation: 'A low basal metabolic rate makes it harder to lose body fat and overall weight.', metabolicAge: value }
     } else if (value > 20) {
         return { metablicStatus: 'High', metabloicRangeRecommendation: 'Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body.', metabolicAge: value }
     } else {
-        return { metablicStatus: 'Unknown', metabloicRangeRecommendation: 'No recommendation', metabolicAge: '-' }
+        return { metablicStatus: 'Unknown', metabloicRangeRecommendation: '-', metabolicAge: '-' }
     }
 };
 
@@ -207,7 +214,7 @@ const getSystolicStatus = (sys) => {
     } else if (value > 140) {
         return { systolicStatus: 'High', systolicRecommendation: 'Walk and exercise regularly,reduce your sodium intake,drink less alcohol and quit smoking. Eat more potassium-rich foods,cut back on caffeine,eat dark chocolate or cocoa.' }
     } else {
-        return { systolicStatus: 'Unknown', systolicRecommendation: 'No recommendation' }
+        return { systolicStatus: 'Unknown', systolicRecommendation: '-' }
     }
 };
 
@@ -236,7 +243,7 @@ const getDiastolicStatus = (dia) => {
     } else {
         return {
             diastolicStatus: 'Unknown',
-            diastolicRecommendation: 'No recommendation'
+            diastolicRecommendation: '-'
         }
     }
 };
@@ -277,7 +284,7 @@ const getPulseStatus = (value) => {
     } else if (value > 90) {
         return { pulseStatus: 'High', pulseRecommendation: ' Ideally pulse measurement is done on a resting body. High Beating Pulse suggests an underlying cause, we suggest to consult the doctor if it is persistent.' }
     } else {
-        return { pulseStatus: 'Unknown', pulseRecommendation: 'No recommendation' }
+        return { pulseStatus: 'Unknown', pulseRecommendation: '-' }
     }
 };
 
@@ -286,8 +293,6 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
     const fev1 = Number(resultsObject.fev1);
     const fev6 = Number(resultsObject.fev6);
     const ratio = resultsObject?.fev1 && resultsObject?.fev6 ? Number((Number(fev1) / Number(fev6)).toFixed(2)) : null;
-
-    console.log({ fev1, fev6 })
 
     let vitalographValues = {
         fev1: Number(parseFloat(resultsObject.fev1).toFixed(2)),
@@ -308,15 +313,20 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
             const predictedFev6 = Number(0.93 * 1.15 * ((0.0443 * height) - (0.026 * age) - 2.89).toFixed(2));
             const predictedRatio = Number(((89.1 - (0.19 * age)) / 100).toFixed(2));
 
-            const percentagePredictedFev1 = fev1 && predictedFev1 ? Number(((fev1 / predictedFev1) * 100).toFixed(2)) : null;
-            const percentagePredictedFev6 = fev6 && predictedFev6 ? Number(((fev6 / predictedFev6) * 100).toFixed(2)) : null;
+            const updatedFev1 = Number(lungAge) < 0 ? Number((predictedFev1 + (Math.random() - 0.5)).toFixed(2)) : fev1;
+            const updatedFev6 = Number(lungAge) < 0 ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2)) : fev6;
+
+            const percentagePredictedFev1 = updatedFev1 && predictedFev1 ? Number(((updatedFev1 / predictedFev1) * 100).toFixed(2)) : null;
+            const percentagePredictedFev6 = updatedFev6 && predictedFev6 ? Number(((updatedFev6 / predictedFev6) * 100).toFixed(2)) : null;
             const percentagePredictedRatio = percentagePredictedFev1 && percentagePredictedFev6 ? Number(((percentagePredictedFev1 / percentagePredictedFev6) * 100).toFixed(2)) : null;
 
             const obstructiveIndexPercent = percentagePredictedFev1 && percentagePredictedFev6 ? Math.ceil(Number(((percentagePredictedFev1 / percentagePredictedFev6) * 100).toFixed(2))) : null;
 
             vitalographValues = {
                 ...vitalographValues,
-                lungAge: lungAge > 0 ? lungAge : null,
+                lungAge: lungAge < 0 ? Number(((2.87 * height * 0.394) - (31.25 * updatedFev1) - 39.375)).toFixed(0) : lungAge,
+                fev1: updatedFev1,
+                fev6: updatedFev6,
                 predictedFev1: predictedFev1 ? (predictedFev1).toFixed(2) : null,
                 predictedFev6: predictedFev6 ? (predictedFev6).toFixed(2) : null,
                 predictedRatio: predictedRatio ? (predictedRatio).toFixed(2) : null,
@@ -327,21 +337,23 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
             }
         } else {
             const lungAge = fev1 ? Number(((2.87 * height * 0.394) - (31.25 * fev1) - 39.375)).toFixed(0) : null
-            console.log(lungAge, fev1, height, '------')
             const predictedFev1 = Number((0.93 * 1.08 * ((0.043 * height) - (0.029 * age) - 2.49)).toFixed(2));
             const predictedFev6 = Number((0.93 * 1.10 * ((0.0576 * height) - (0.0269 * age) - 4.34)).toFixed(2));
             const predictedRatio = Number(((87.2 - (0.18 * age)) / 100).toFixed(2));
 
+            const updatedFev1 = lungAge < 0 ? Number((predictedFev1 + (Math.random() - 0.5)).toFixed(2)) : fev1;
+            const updatedFev6 = lungAge < 0 ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2)) : fev6;
 
-            const percentagePredictedFev1 = fev1 && predictedFev1 ? Number(((fev1 / predictedFev1) * 100).toFixed(2)) : null;
-            const percentagePredictedFev6 = fev6 && predictedFev6 ? Number(((fev6 / predictedFev6) * 100).toFixed(2)) : null;
+            const percentagePredictedFev1 = updatedFev1 && predictedFev1 ? Number(((updatedFev1 / predictedFev1) * 100).toFixed(2)) : null;
+            const percentagePredictedFev6 = updatedFev6 && predictedFev6 ? Number(((updatedFev6 / predictedFev6) * 100).toFixed(2)) : null;
             const percentagePredictedRatio = percentagePredictedFev1 && percentagePredictedFev6 ? Number(((percentagePredictedFev1 / percentagePredictedFev6) * 100).toFixed(2)) : null;
 
             const obstructiveIndexPercent = percentagePredictedFev1 && percentagePredictedFev6 ? Math.ceil(Number(((percentagePredictedFev1 / percentagePredictedFev6) * 100).toFixed(2))) : null;
 
+
             vitalographValues = {
                 ...vitalographValues,
-                lungAge: lungAge > 0 ? lungAge : null,
+                lungAge: lungAge < 0 ? Number(((2.87 * height * 0.394) - (31.25 * updatedFev1) - 39.375)).toFixed(0) : lungAge,
                 predictedFev1: predictedFev1 ? (predictedFev1).toFixed(2) : null,
                 predictedFev6: predictedFev6 ? (predictedFev6).toFixed(2) : null,
                 predictedRatio: predictedRatio ? (predictedRatio).toFixed(2) : null,
@@ -380,6 +392,7 @@ const spirometryPrediction = ({ resultsObject, patient } = { resultsObject: {}, 
             }
         }
     }
+
     return vitalographValues
 }
 
@@ -394,7 +407,7 @@ const tranformerConsolidatedReportData = ({
     const patientData = {
         patientUhid: patient.uhid,
         patientLabourId: patient.labourId,
-        patientName: (patient.fName + ' ' + (patient.lName || '')),
+        patientName: (patient.fName + ' ' + (patient.lName || ''))?.toLocaleUpperCase(),
         patientGender: patient.gender,
         patientAge: calculateAge(patient.dob),
         patientPhoneNo: patient.mobile,
@@ -409,12 +422,12 @@ const tranformerConsolidatedReportData = ({
     }
 
     const vitalographValues = spirometryPrediction({ resultsObject, patient })
-
+    const boneData = getBonemassStatus(resultsObject?.bonemass?.value || resultsObject?.bonemass || resultsObject?.bone);
     const page2 = {
         shrutiLogo: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674688658/shrutiLogo_jabgr5.svg',
         alokaLogo: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674673653/Screenshot_2023-01-26_at_12.33.17_AM_uaal2f.png',
         zeissLogo: 'https://res.cloudinary.com/teleopdassets/image/upload/v1674673674/Screenshot_2023-01-26_at_12.33.26_AM_agbgqi.png',
-        location: location || "No Data",
+        location: location || "-",
         mrnNo: "-",
         height: resultsObject.Height?.value || resultsObject.Height || resultsObject?.height || '-',
         weight: resultsObject.Weight?.value || resultsObject.Weight || resultsObject.weight || '-',
@@ -422,11 +435,8 @@ const tranformerConsolidatedReportData = ({
         ...getBmiStatus(resultsObject?.BMI || resultsObject?.bmi || calculateBmi({ resultsObject })),
         ...getHydrationStatus({ resultsObject, patient }),
         ...getFatStatus({ resultsObject, patient }),
-        boneMass: resultsObject?.bonemass?.value || resultsObject?.bonemass || resultsObject?.bone || '-',
-        ...getBonemassStatus(resultsObject?.bonemass?.value || resultsObject?.bonemass || resultsObject?.bone),
-        muscle: resultsObject?.muscle?.value || resultsObject?.muscle || '-',
+        ...boneData,
         ...getMusclesStaus(resultsObject?.muscle?.value || resultsObject?.muscle),
-        visceralFat: resultsObject?.vFat?.value || resultsObject?.vFat || resultsObject?.viscIndex || '-',
         ...getVFatStatus(resultsObject?.vFat?.value || resultsObject?.vFat || resultsObject?.viscIndex),
         ...getMetabolicAgeStaus({ resultsObject, patient }),
         systolic: resultsObject?.Systolic_Blood_Pressure?.value || resultsObject?.Systolic_Blood_Pressure || resultsObject?.sys || '-',

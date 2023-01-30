@@ -40,13 +40,14 @@ module.exports = async (req, res) => {
 
     const screenings = await ScreeningModel.find({
       ...dateFilter,
+      patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
       // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C
       // patientId: ObjectId("63ce2690d5b7a02a456dde9f") //atha
 
     }).populate([{ path: 'patientId' }, { path: 'campId' }]).sort({ createdAt: 'asc' }).exec();
 
-    console.log(screenings)
+    // console.log(screenings)
 
     if (screenings) {
       for (const screening of screenings) {
@@ -87,7 +88,7 @@ module.exports = async (req, res) => {
     }
     const uhidArray = Object.keys(detailsMap);
 
-    console.log(uhidArray, detailsMap, 're1')
+    // console.log(uhidArray, detailsMap, 're1')
     for (const uhid of uhidArray) {
       const details = detailsMap[uhid];
 
@@ -100,6 +101,7 @@ module.exports = async (req, res) => {
         let results = {
 
         };
+
         (details || {}).screenings.map((screening) => {
           if (screening.formsDetails) {
             (screening.formsDetails || []).map((item) => {
@@ -122,11 +124,9 @@ module.exports = async (req, res) => {
         pdfLinks.push(buffer);
         screeningReportGenerated = !!buffer;
 
-        const labItem = details.labItems || []
-        console.log(labItem, '--{{}}--');
 
         for (const lab of (details.labItems || [])) {
-          console.log(lab.packages, 'reportUrl', '--- || ---');
+          // console.log(lab.packages, 'reportUrl', '--- || ---');
           if (lab?.packages && lab?.packages[0] && lab?.packages[0].reportUrl) {
             const labBuffer = await getFileBufferFromUrl(lab?.packages[0].reportUrl);
             pdfLinks.push(labBuffer);
@@ -149,7 +149,7 @@ module.exports = async (req, res) => {
                 new: true
               }
             );
-            console.log(patient?.consolidatedReportUrl, campUpdated?._id, '---===---');
+            console.log(patient?.consolidatedReportUrl, '---===---');
           }
         }
       }

@@ -43,7 +43,7 @@
         </td>
         <td class="n-b px-3">
           <div class="d-flex flex-row">
-            <p class="font-weight-bold mr-3">Labour Id</p>
+            <p class="font-weight-bold mr-3">Labour ID</p>
             <p><%= patientLabourId %></p>
           </div>
         </td>
@@ -297,7 +297,9 @@
         Visceral Fat
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= visceralFat %>
+        <%= visceralFat %> <% if (visceralFat !== "-") { %>
+          %
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= visceralFatStatus %>
@@ -498,7 +500,7 @@
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= pulse %> <% if (pulse !== "-") { %>
-          %
+          bpm
           <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">

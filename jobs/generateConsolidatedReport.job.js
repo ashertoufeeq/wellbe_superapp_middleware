@@ -152,7 +152,6 @@ module.exports = async (req, res) => {
             console.log(patient?.consolidatedReportUrl, campUpdated?._id, '---===---');
           }
         }
-        iteration = iteration + 1;
       }
     }
 

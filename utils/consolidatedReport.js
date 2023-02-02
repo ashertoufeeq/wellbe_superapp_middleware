@@ -570,7 +570,7 @@ const spirometryPrediction = (
                     : null;
 
             const obstructiveIndexPercent =
-                percentagePredictedFev1 && percentagePredictedFev6
+                fev1 && percentagePredictedFev6
                     ? Math.ceil(
                         Number(
                             (
@@ -591,6 +591,9 @@ const spirometryPrediction = (
                         : lungAge,
                 fev1: updatedFev1,
                 fev6: updatedFev6,
+                ratio: updatedFev1 && updatedFev6
+                    ? Number((Number(updatedFev1) / Number(updatedFev6)).toFixed(2))
+                    : null,
                 predictedFev1: predictedFev1 ? predictedFev1.toFixed(2) : null,
                 predictedFev6: predictedFev6 ? predictedFev6.toFixed(2) : null,
                 predictedRatio: predictedRatio ? predictedRatio.toFixed(2) : null,
@@ -658,6 +661,11 @@ const spirometryPrediction = (
                             2.87 * height * 0.394 - 31.25 * updatedFev1 - 39.375
                         ).toFixed(0)
                         : lungAge,
+                fev1: updatedFev1,
+                fev6: updatedFev6,
+                ratio: updatedFev1 && updatedFev6
+                    ? Number((Number(updatedFev1) / Number(updatedFev6)).toFixed(2))
+                    : null,
                 predictedFev1: predictedFev1 ? predictedFev1.toFixed(2) : null,
                 predictedFev6: predictedFev6 ? predictedFev6.toFixed(2) : null,
                 predictedRatio: predictedRatio ? predictedRatio.toFixed(2) : null,
@@ -669,8 +677,8 @@ const spirometryPrediction = (
         }
 
         const obstructiveIndexCalc =
-            (vitalographValues?.percentagePredictedFev1 /
-                vitalographValues?.percentagePredictedFev6) *
+            (vitalographValues?.fev1 /
+                vitalographValues?.predictedFev1) *
             100;
 
         if (obstructiveIndexCalc > 79) {
@@ -686,7 +694,7 @@ const spirometryPrediction = (
             vitalographValues = { ...vitalographValues, obstructiveIndex: "Severe" };
         }
 
-        if (vitalographValues.predictedRatio >= 0.7) {
+        if (vitalographValues.ratio >= 0.7) {
             vitalographValues = {
                 ...vitalographValues,
                 copdClassfication: "Normal",
@@ -833,6 +841,7 @@ const tranformerConsolidatedReportData = ({
         oxygenSatStatus: getSpo2Status(
             resultsObject?.Spo2?.value || resultsObject?.Spo2 || resultsObject?.spo2
         ),
+        metabolicAgeReference: getAge({ patient })
     };
 
     //fix -3
@@ -948,7 +957,7 @@ const tranformerConsolidatedReportData = ({
                 add: resultsObject?.LE_Axis || 0,
             },
         },
-        diagnosis: (resultsObject?.Occular_Findings || '').toLocaleUpperCase() === 'NA' ? 'Normal' : resultsObject?.Occular_Findings || "",
+        diagnosis: resultsObject?.Occular_Findings === 'NA' ? 'Normal' : resultsObject?.Occular_Findings || "",
     };
 
     return {

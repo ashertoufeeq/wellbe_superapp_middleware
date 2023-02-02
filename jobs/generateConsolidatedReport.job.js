@@ -160,27 +160,27 @@ module.exports = async (req, res) => {
           if (mergeError) {
             console.log(mergeError);
           } else {
-            const patient = await Patient.findByIdAndUpdate(
-              details?.patient?._id,
-              { consolidatedReportUrl: mergedUrl },
-              { new: true }
-            );
-            const campUpdated = await campsModel.findByIdAndUpdate(
-              details?.campId,
-              {
-                $inc: {
-                  numberOfConsolidatedReportGenerated: 1,
-                },
-              },
-              {
-                new: true,
-              }
-            );
-            urlMaps = {
-              ...urlMaps,
-              [patient.uhid]: patient?.consolidatedReportUrl,
-            };
-            console.log(Object.keys(urlMaps).length, urlMaps);
+            // const patient = await Patient.findByIdAndUpdate(
+            //   details?.patient?._id,
+            //   { consolidatedReportUrl: mergedUrl },
+            //   { new: true }
+            // );
+            // const campUpdated = await campsModel.findByIdAndUpdate(
+            //   details?.campId,
+            //   {
+            //     $inc: {
+            //       numberOfConsolidatedReportGenerated: 1,
+            //     },
+            //   },
+            //   {
+            //     new: true,
+            //   }
+            // );
+            // urlMaps = {
+            //   ...urlMaps,
+            //   [patient.uhid]: patient?.consolidatedReportUrl,
+            // };
+            console.log('----------------|--------------', mergedUrl);
           }
         } else {
           pdfLinks = [];

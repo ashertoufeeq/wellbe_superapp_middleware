@@ -105,101 +105,105 @@ module.exports = async (req, res) => {
     // console.log(uhidArray, detailsMap, 're1')
     let allPdfs = [];
     let pdfLinks = [];
+    let interation = 1;
+
     for (const uhid of uhidArray) {
-      console.log(pdfLinks, "pdfLinks start");
-      const details = detailsMap[uhid];
+      if (interation < 5) {
+        console.log(pdfLinks.length, "pdfLinks start");
+        const details = detailsMap[uhid];
 
-      if (details?.patient?.consolidatedReportUrl) {
-        console.log(
-          "Report already generated for :",
-          uhid
-          // details?.patient?.consolidatedReportUrl,
-          // details?.campId
-        );
-      } else {
-        let labReportGenerated = false;
-        let screeningReportGenerated = false;
-        let results = {};
-
-        (details || {}).screenings.map((screening) => {
-          if (screening.formsDetails) {
-            (screening.formsDetails || []).map((item) => {
-              results = { ...results, ...(item.results || {}) };
-            });
-          }
-        });
-
-        const buffer = await getEjsFile({
-          render,
-          data: tranformerConsolidatedReportData({
-            patient: details?.patient,
-            resultsObject: results,
-            screeningDate: details?.screeningDate,
-            location: details?.location,
-            district: details.district,
-            state: details.state,
-          }),
-          fileName: "consolidated-report" + Date.now(),
-        });
-        pdfLinks.push(buffer);
-        screeningReportGenerated = !!buffer;
-
-        for (const lab of details.labItems || []) {
-          if (lab?.packages && lab?.packages[0] && lab?.packages[0].reportUrl) {
-            const labBuffer = await getFileBufferFromUrl(
-              lab?.packages[0].reportUrl
-            );
-            pdfLinks.push(labBuffer);
-            labReportGenerated = true;
-          }
-        }
-
-        if (labReportGenerated && screeningReportGenerated) {
-          console.log(pdfLinks, "pdfLinks");
-          const { mergedUrl, error: mergeError } = await pdfMerge({ pdfLinks });
-          if (mergeError) {
-            console.log(mergeError);
-          } else {
-            // const patient = await Patient.findByIdAndUpdate(
-            //   details?.patient?._id,
-            //   { consolidatedReportUrl: mergedUrl },
-            //   { new: true }
-            // );
-            // const campUpdated = await campsModel.findByIdAndUpdate(
-            //   details?.campId,
-            //   {
-            //     $inc: {
-            //       numberOfConsolidatedReportGenerated: 1,
-            //     },
-            //   },
-            //   {
-            //     new: true,
-            //   }
-            // );
-            // urlMaps = {
-            //   ...urlMaps,
-            //   [patient.uhid]: patient?.consolidatedReportUrl,
-            // };
-            console.log('----------------|--------------', mergedUrl);
-          }
+        if (details?.patient?.consolidatedReportUrl) {
+          console.log(
+            "Report already generated for :",
+            uhid
+            // details?.patient?.consolidatedReportUrl,
+            // details?.campId
+          );
         } else {
-          pdfLinks = [];
+          let labReportGenerated = false;
+          let screeningReportGenerated = false;
+          let results = {};
+
+          (details || {}).screenings.map((screening) => {
+            if (screening.formsDetails) {
+              (screening.formsDetails || []).map((item) => {
+                results = { ...results, ...(item.results || {}) };
+              });
+            }
+          });
+
+          const buffer = await getEjsFile({
+            render,
+            data: tranformerConsolidatedReportData({
+              patient: details?.patient,
+              resultsObject: results,
+              screeningDate: details?.screeningDate,
+              location: details?.location,
+              district: details.district,
+              state: details.state,
+            }),
+            fileName: "consolidated-report" + Date.now(),
+          });
+          pdfLinks.push(buffer);
+          screeningReportGenerated = !!buffer;
+
+          for (const lab of details.labItems || []) {
+            if (lab?.packages && lab?.packages[0] && lab?.packages[0].reportUrl) {
+              const labBuffer = await getFileBufferFromUrl(
+                lab?.packages[0].reportUrl
+              );
+              pdfLinks.push(labBuffer);
+              labReportGenerated = true;
+            }
+          }
+          console.log({ labReportGenerated, screeningReportGenerated });
+          if (labReportGenerated && screeningReportGenerated) {
+            console.log(pdfLinks.length, "pdfLinks");
+            const { mergedUrl, error: mergeError } = await pdfMerge({ pdfLinks });
+            if (mergeError) {
+              console.log(mergeError);
+            } else {
+              // const patient = await Patient.findByIdAndUpdate(
+              //   details?.patient?._id,
+              //   { consolidatedReportUrl: mergedUrl },
+              //   { new: true }
+              // );
+              // const campUpdated = await campsModel.findByIdAndUpdate(
+              //   details?.campId,
+              //   {
+              //     $inc: {
+              //       numberOfConsolidatedReportGenerated: 1,
+              //     },
+              //   },
+              //   {
+              //     new: true,
+              //   }
+              // );
+              // urlMaps = {
+              //   ...urlMaps,
+              //   [patient.uhid]: patient?.consolidatedReportUrl,
+              // };
+              interation = interation + 1;
+              console.log('----------------|--------------', Object.keys(urlMaps).length, urlMaps, mergedUrl);
+            }
+          } else {
+            pdfLinks = [];
+          }
         }
+        allPdfs = [...allPdfs, ...pdfLinks];
+        pdfLinks = [];
       }
-      allPdfs = [...allPdfs, ...pdfLinks];
-      pdfLinks = [];
+
+
+      // const { mergedUrl, error: mergeError } = await pdfMerge({
+      //   pdfLinks: allPdfs,
+      // });
+      // if (mergeError) {
+      //   console.log(mergeError)
+      // } else {
+      //   console.log("final", mergedUrl);
+      // }
     }
-
-    console.log("done..");
-
-    // const { mergedUrl, error: mergeError } = await pdfMerge({
-    //   pdfLinks: allPdfs,
-    // });
-    // if (mergeError) {
-    //   console.log(mergeError)
-    // } else {
-    //   console.log("final", mergedUrl);
-    // }
   } catch (e) {
     console.log(e);
   }

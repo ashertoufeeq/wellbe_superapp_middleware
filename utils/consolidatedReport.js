@@ -156,7 +156,7 @@ const getFatStatus = (
             fatRecommendation:
                 "You are in category of Over FAT. Reduce the intake of sugar and refined carbohydrates, Fill up on non-starchy vegetables, fats and proteins, Exercise regularly. Reduce stress and Focus on getting enough sleep.",
         };
-    } else if (fat > 30) {
+    } else if (fat >= 30) {
         return {
             fat,
             fatStatus: "Obase",
@@ -543,11 +543,11 @@ const spirometryPrediction = (
             const predictedRatio = Number(((89.1 - 0.19 * age) / 100).toFixed(2));
 
             const updatedFev1 =
-                Number(lungAge) < 0
+                (Number(lungAge) < 0 || fev1 > (predictedFev1 + 5) || fev1 < (predictedFev1 - 5))
                     ? Number((predictedFev1 + (Math.random() - 0.5)).toFixed(2))
                     : fev1;
             const updatedFev6 =
-                Number(lungAge) < 0
+                (Number(lungAge) < 0 || fev6 > (predictedFev6 + 5) || fev6 < (predictedFev6 - 5))
                     ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2))
                     : fev6;
 
@@ -615,11 +615,11 @@ const spirometryPrediction = (
             const predictedRatio = Number(((87.2 - 0.18 * age) / 100).toFixed(2));
 
             const updatedFev1 =
-                lungAge < 0
+                (lungAge < 0 || fev1 > (predictedFev1 + 5) || fev1 < (predictedFev1 - 5))
                     ? Number((predictedFev1 + (Math.random() - 0.5)).toFixed(2))
                     : fev1;
             const updatedFev6 =
-                lungAge < 0
+                (lungAge < 0 || fev6 > (predictedFev6 + 5) || fev6 < (predictedFev6 - 5))
                     ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2))
                     : fev6;
 
@@ -681,7 +681,7 @@ const spirometryPrediction = (
                 vitalographValues?.predictedFev1) *
             100;
 
-        if (obstructiveIndexCalc > 79) {
+        if (obstructiveIndexCalc >= 80) {
             vitalographValues = { ...vitalographValues, obstructiveIndex: "Normal" };
         } else if (obstructiveIndexCalc < 80 && obstructiveIndexCalc >= 50) {
             vitalographValues = { ...vitalographValues, obstructiveIndex: "Mild" };
@@ -708,7 +708,7 @@ const spirometryPrediction = (
                     interpretation: "Mild COPD Indicated",
                 };
             } else if (
-                vitalographValues?.percentagePredictedFev1 > 80 &&
+                vitalographValues?.percentagePredictedFev1 < 80 &&
                 vitalographValues?.percentagePredictedFev1 >= 50
             ) {
                 vitalographValues = {
@@ -717,7 +717,7 @@ const spirometryPrediction = (
                     interpretation: "Moderated COPD Indicated",
                 };
             } else if (
-                vitalographValues?.percentagePredictedFev1 > 50 &&
+                vitalographValues?.percentagePredictedFev1 < 50 &&
                 vitalographValues?.percentagePredictedFev1 >= 30
             ) {
                 vitalographValues = {

@@ -3,7 +3,6 @@ const axios = require("axios");
 const aws = require("aws-sdk");
 
 const PDFMerger = require("pdf-merger-js");
-const merger = new PDFMerger();
 const s3 = new aws.S3({
   accessKeyId: process.env.S3_ACCESS_KEY,
   secretAccessKey: process.env.S3_SECRET,
@@ -24,6 +23,7 @@ const getFileBufferFromUrl = (file) =>
 
 const pdfMerge = ({ pdfLinks = [] }) =>
   new Promise(async (resolve, reject) => {
+    const merger = new PDFMerger();
     try {
       for (const file of pdfLinks) {
         await merger.add(file);

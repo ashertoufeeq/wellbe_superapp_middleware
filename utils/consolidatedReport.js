@@ -849,7 +849,6 @@ const tranformerConsolidatedReportData = ({
         metabloicRangeRecommendation: "Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body fat. A low basal metabolism rate makes it harder to lose body fat and overall weight",
         muscleQualityScoreRecommendation: "The muscle of young people or those who exercise regularly is normally in good state",
     };
-
     const page4 = {
         stethoscopyResults: [
             ...(resultsObject?.Heart ? [resultsObject?.Heart] : []),
@@ -861,7 +860,7 @@ const tranformerConsolidatedReportData = ({
                 (resultsObject?.uvcData || [])[0] &&
                 (resultsObject?.uvcData || [])[0]?.fileUrl) ||
             (resultsObject?.uvcData || [])[0]?.imageUrl,
-        dermascopyResult: (resultsObject?.uvcData || []).map(
+        dermascopyResult: (resultsObject?.uvcData || []).filter(i => i.comment).map(
             (item) => item.comment
         ),
     };

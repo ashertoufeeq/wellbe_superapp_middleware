@@ -179,10 +179,10 @@ module.exports = async (req, res) => {
               //     new: true,
               //   }
               // );
-              // urlMaps = {
-              //   ...urlMaps,
-              //   [patient.uhid]: patient?.consolidatedReportUrl,
-              // };
+              urlMaps = {
+                ...urlMaps,
+                [uhid]: mergedUrl,
+              };
               interation = interation + 1;
               console.log('----------------|--------------', Object.keys(urlMaps).length, urlMaps, mergedUrl);
             }

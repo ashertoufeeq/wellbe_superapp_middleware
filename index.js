@@ -4,35 +4,36 @@ require("dotenv").config();
 const bodyParser = require("body-parser");
 const Agenda = require("agenda");
 const Agendash = require("agendash");
-const mongoose = require('mongoose');
-const path = require('path');
+const mongoose = require("mongoose");
+const path = require("path");
 
-const camps = require('./models/camps.model')
-const patientRecord = require('./models/patientRecord')
-const campScreening = require('./models/campScreening.model')
-const labItem = require('./models/labItem')
+const camps = require("./models/camps.model");
+const patientRecord = require("./models/patientRecord");
+const campScreening = require("./models/campScreening.model");
+const labItem = require("./models/labItem");
 
 const app = express();
 const jobs = require("./jobs");
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-console.log(path.join(__dirname, 'views'), express.static(path.join(__dirname, 'public')))
+console.log(
+  path.join(__dirname, "views"),
+  express.static(path.join(__dirname, "public"))
+);
 
 const ConsolidatedReport = require("./routes/printConsolidatedReport");
 
-
-
-const agenda = new Agenda({
-  db: {
-    address: process.env.MONGO_URI,
-  },
-  defaultLockLifetime: 240000,
-  defaultConcurrency: 100,
-});
+// const agenda = new Agenda({
+//   db: {
+//     address: process.env.MONGO_URI,
+//   },
+//   defaultLockLifetime: 240000,
+//   defaultConcurrency: 100,
+// });
 
 mongoose.set("strictQuery", false);
 mongoose
@@ -41,12 +42,13 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => {
-    console.log('db connected');
+    console.log("db connected");
+    jobs.sendMessages();
     // jobs.generateConsolidatedReport();
   })
   .catch((err) => console.warn(err));
 
-app.use("/dash", Agendash(agenda));
+// app.use("/dash", Agendash(agenda));
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
@@ -88,6 +90,7 @@ app.use((req, res, next) => {
 
 app.listen(process.env.PORT || 4000, async () => {
   console.log("Running server... http://localhost:4000");
+
   // jobs.addShrutiPatient();
 });
 
@@ -104,7 +107,9 @@ app.listen(process.env.PORT || 4000, async () => {
 //     done();
 //   }
 // });
-app.use("/patient", async (req, res) => { await jobs.generateConsolidatedReport(req, res) });
+app.use("/patient", async (req, res) => {
+  await jobs.generateConsolidatedReport(req, res);
+});
 
 function time() {
   return new Date().toTimeString().split(" ")[0];

@@ -106,10 +106,11 @@ module.exports = async (req, res) => {
     // console.log(uhidArray, detailsMap, 're1')
     let allPdfs = [];
     let pdfLinks = [];
-    let interation = 1;
+    let interation = 0;
+    let maxInteration = 1000;
 
     for (const uhid of uhidArray) {
-      if (interation < 2) {
+      if (interation < maxInteration) {
         console.log(pdfLinks.length, "pdfLinks start");
         const details = detailsMap[uhid];
 
@@ -184,29 +185,28 @@ module.exports = async (req, res) => {
                   new: true,
                 }
               );
+
               urlMaps = {
                 ...urlMaps,
                 [uhid]: mergedUrl,
               };
-              //['8882223210', '8867420141', '8105348885', '9845321258', '9557807977'] 
               interation = interation + 1;
-              console.log(details?.patient?.mobile, '---- patient ----')
               const res = await sendMessageBird({
-                toMultiple: true,
+                toMultiple: false,
                 to: details?.patient?.mobile,
                 media: { url: mergedUrl },
                 smsParameters: [mergedUrl],
                 templateId: "healthreport",
               });
               const res2 = await sendMessageBird({
-                toMultiple: true,
+                toMultiple: false,
                 to: details?.patient?.mobile,
                 media: { url: mergedUrl },
                 languageCode: 'kn',
                 smsParameters: [mergedUrl],
                 templateId: "healthreportkannada",
               });
-              console.log('----------------|--------------', patient?._id, Object.keys(urlMaps).length, urlMaps, mergedUrl);
+              console.log('----------------|--------------', details?.patient?.mobile, details?.patient?._id, Object.keys(urlMaps).length, urlMaps, mergedUrl);
             }
           } else {
             pdfLinks = [];
@@ -214,16 +214,17 @@ module.exports = async (req, res) => {
         }
         allPdfs = [...allPdfs, ...pdfLinks];
         pdfLinks = [];
-      }
-
-
-      const { mergedUrl, error: mergeError } = await pdfMerge({
-        pdfLinks: allPdfs,
-      });
-      if (mergeError) {
-        console.log(mergeError)
-      } else {
-        console.log("final url", mergedUrl);
+        console.log(interation, maxInteration)
+        if (interation === maxInteration) {
+          const { mergedUrl, error: mergeError } = await pdfMerge({
+            pdfLinks: allPdfs,
+          });
+          if (mergeError) {
+            console.log(mergeError)
+          } else {
+            console.log("final url", mergedUrl);
+          }
+        }
       }
 
     }

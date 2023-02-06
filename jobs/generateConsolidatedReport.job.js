@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
     const screenings = await ScreeningModel.find({
       ...dateFilter,
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
-      patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
+      // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C
       // patientId: ObjectId("63ce2690d5b7a02a456dde9f") //atha
     })
@@ -113,7 +113,7 @@ module.exports = async (req, res) => {
         console.log(pdfLinks.length, "pdfLinks start");
         const details = detailsMap[uhid];
 
-        if (details?.patient?.consolidatedReportUrl && false) {
+        if (details?.patient?.consolidatedReportUrl) {
           console.log(
             "Report already generated for :",
             uhid
@@ -164,45 +164,49 @@ module.exports = async (req, res) => {
             if (mergeError) {
               console.log(mergeError);
             } else {
-              // const patient = await Patient.findByIdAndUpdate(
-              //   details?.patient?._id,
-              //   { consolidatedReportUrl: mergedUrl },
-              //   { new: true }
-              // );
-              // const campUpdated = await campsModel.findByIdAndUpdate(
-              //   details?.campId,
-              //   {
-              //     $inc: {
-              //       numberOfConsolidatedReportGenerated: 1,
-              //     },
-              //   },
-              //   {
-              //     new: true,
-              //   }
-              // );
+              const patient = await Patient.findByIdAndUpdate(
+                details?.patient?._id,
+                {
+                  consolidatedReportUrl: mergedUrl,
+                  consolidatedReportGeneratedAt: today,
+
+                },
+                { new: true }
+              );
+              const campUpdated = await campsModel.findByIdAndUpdate(
+                details?.campId,
+                {
+                  $inc: {
+                    numberOfConsolidatedReportGenerated: 1,
+                  },
+                },
+                {
+                  new: true,
+                }
+              );
               urlMaps = {
                 ...urlMaps,
                 [uhid]: mergedUrl,
               };
               //['8882223210', '8867420141', '8105348885', '9845321258', '9557807977'] 
               interation = interation + 1;
+              console.log(details?.patient?.mobile, '---- patient ----')
               const res = await sendMessageBird({
                 toMultiple: true,
-                to: ['9557807977'] || details?.patient?.mobile,
+                to: details?.patient?.mobile,
                 media: { url: mergedUrl },
                 smsParameters: [mergedUrl],
                 templateId: "healthreport",
               });
               const res2 = await sendMessageBird({
                 toMultiple: true,
-                to: ['9557807977'] || details?.patient?.mobile,
+                to: details?.patient?.mobile,
                 media: { url: mergedUrl },
                 languageCode: 'kn',
                 smsParameters: [mergedUrl],
                 templateId: "healthreportkannada",
               });
-              console.log(res, res2);
-              console.log('----------------|--------------', Object.keys(urlMaps).length, urlMaps, mergedUrl);
+              console.log('----------------|--------------', patient?._id, Object.keys(urlMaps).length, urlMaps, mergedUrl);
             }
           } else {
             pdfLinks = [];
@@ -213,14 +217,15 @@ module.exports = async (req, res) => {
       }
 
 
-      // const { mergedUrl, error: mergeError } = await pdfMerge({
-      //   pdfLinks: allPdfs,
-      // });
-      // if (mergeError) {
-      //   console.log(mergeError)
-      // } else {
-      //   console.log("final", mergedUrl);
-      // }
+      const { mergedUrl, error: mergeError } = await pdfMerge({
+        pdfLinks: allPdfs,
+      });
+      if (mergeError) {
+        console.log(mergeError)
+      } else {
+        console.log("final url", mergedUrl);
+      }
+
     }
   } catch (e) {
     console.log(e);

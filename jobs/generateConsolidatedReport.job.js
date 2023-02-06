@@ -121,6 +121,15 @@ module.exports = async (req, res) => {
             // details?.patient?.consolidatedReportUrl,
             // details?.campId
           );
+          const oldPdf = await getFileBufferFromUrl(
+            details?.patient?.consolidatedReportUrl
+          );
+          allPdfs.push(oldPdf);
+          interation = interation + 1;
+          urlMaps = {
+            ...urlMaps,
+            [uhid]: details?.patient?.consolidatedReportUrl,
+          };
         } else {
           let labReportGenerated = false;
           let screeningReportGenerated = false;
@@ -220,9 +229,9 @@ module.exports = async (req, res) => {
             pdfLinks: allPdfs,
           });
           if (mergeError) {
-            console.log(mergeError)
+            console.log(mergeError,)
           } else {
-            console.log("final url", mergedUrl);
+            console.log("final url", mergedUrl, Object.keys(urlMaps).length);
           }
         }
       }

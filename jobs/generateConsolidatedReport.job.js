@@ -5,6 +5,7 @@ const ejs = require("ejs");
 const fs = require("fs");
 const path = require("path");
 const pdf = require("html-pdf");
+const sendMessageBird = require("../utils/message");
 
 const shrutiPatient = require("./addShrutiPatient.job");
 const ScreeningModel = require("../models/campScreening.model");
@@ -46,7 +47,7 @@ module.exports = async (req, res) => {
     const screenings = await ScreeningModel.find({
       ...dateFilter,
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
-      // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
+      patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C
       // patientId: ObjectId("63ce2690d5b7a02a456dde9f") //atha
     })
@@ -108,11 +109,11 @@ module.exports = async (req, res) => {
     let interation = 1;
 
     for (const uhid of uhidArray) {
-      if (interation < 5) {
+      if (interation < 2) {
         console.log(pdfLinks.length, "pdfLinks start");
         const details = detailsMap[uhid];
 
-        if (details?.patient?.consolidatedReportUrl) {
+        if (details?.patient?.consolidatedReportUrl && false) {
           console.log(
             "Report already generated for :",
             uhid
@@ -183,7 +184,24 @@ module.exports = async (req, res) => {
                 ...urlMaps,
                 [uhid]: mergedUrl,
               };
+              //['8882223210', '8867420141', '8105348885', '9845321258', '9557807977'] 
               interation = interation + 1;
+              const res = await sendMessageBird({
+                toMultiple: true,
+                to: ['9557807977'] || details?.patient?.mobile,
+                media: { url: mergedUrl },
+                smsParameters: [mergedUrl],
+                templateId: "healthreport",
+              });
+              const res2 = await sendMessageBird({
+                toMultiple: true,
+                to: ['9557807977'] || details?.patient?.mobile,
+                media: { url: mergedUrl },
+                languageCode: 'kn',
+                smsParameters: [mergedUrl],
+                templateId: "healthreportkannada",
+              });
+              console.log(res, res2);
               console.log('----------------|--------------', Object.keys(urlMaps).length, urlMaps, mergedUrl);
             }
           } else {

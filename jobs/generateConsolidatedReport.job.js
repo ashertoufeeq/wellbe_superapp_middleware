@@ -46,6 +46,7 @@ module.exports = async (req, res) => {
 
     const screenings = await ScreeningModel.find({
       ...dateFilter,
+      patientId: { "$ne": null }
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
       // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
       // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C

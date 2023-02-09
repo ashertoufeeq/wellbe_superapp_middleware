@@ -10,6 +10,7 @@ const path = require("path");
 const camps = require("./models/camps.model");
 const patientRecord = require("./models/patientRecord");
 const campScreening = require("./models/campScreening.model");
+const Program = require("./models/program.model");
 const labItem = require("./models/labItem");
 
 const app = express();
@@ -43,7 +44,8 @@ mongoose
   })
   .then(() => {
     console.log("db connected");
-    jobs.sendMessages();
+    jobs.analytics.add();
+    // jobs.sendMessages();
     // jobs.generateConsolidatedReport();
   })
   .catch((err) => console.warn(err));

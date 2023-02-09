@@ -67,7 +67,7 @@ const processScreening = () =>
       processedPatientMap[actions_json.patientId._id] = update;
 
       // Every 100, stop and wait for them to be done
-      if (moved_actions.length > 10) {
+      if (moved_actions.length > 300) {
         await Analytics.bulkWrite(moved_actions);
 
         count = count + moved_actions.length;
@@ -131,7 +131,7 @@ const processLab = () =>
       processedPatientMap[actions_json.patientId] = update;
 
       // Every 100, stop and wait for them to be done
-      if (moved_actions.length > 10) {
+      if (moved_actions.length > 300) {
         await Analytics.bulkWrite(moved_actions);
 
         count = count + moved_actions.length;
@@ -191,7 +191,7 @@ const processEod = () =>
 
         processedPatientMap[patient.patientId] = update;
       }
-      if (moved_actions.length > 10) {
+      if (moved_actions.length > 300) {
         await Analytics.bulkWrite(moved_actions);
 
         count = count + moved_actions.length;

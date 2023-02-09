@@ -47,9 +47,16 @@ const processScreening = () =>
 
       let update = screeningForUpdate({
         screening: actions_json,
-        existingUpdate: processedPatientMap[actions_json.patientId._id] || {},
+        existingUpdate:
+          processedPatientMap[
+            actions_json.patientId._id + actions_json.campId._id
+          ] || {},
       });
-      if (processedPatientMap[actions_json.patientId._id]) {
+      if (
+        processedPatientMap[
+          actions_json.patientId._id + actions_json.campId._id
+        ]
+      ) {
         moved_actions = moved_actions.map((a) => {
           if (
             a.updateOne.update.$setOnInsert["Patient Id"].equals(
@@ -64,7 +71,9 @@ const processScreening = () =>
         moved_actions.push(update);
       }
 
-      processedPatientMap[actions_json.patientId._id] = update;
+      processedPatientMap[
+        actions_json.patientId._id + actions_json.campId._id
+      ] = update;
 
       // Every 100, stop and wait for them to be done
       if (moved_actions.length > 300) {
@@ -171,10 +180,11 @@ const processEod = () =>
       // Every 100, stop and wait for them to be done
       for (let patient of actions_json.patients) {
         let update = eodForUpdate({
-          patient,
-          existingUpdate: processedPatientMap[patient.patientId] || {},
+          patient: { ...patient, campId: actions_json.campId },
+          existingUpdate:
+            processedPatientMap[patient.patientId + actions_json.campId] || {},
         });
-        if (processedPatientMap[patient.patientId]) {
+        if (processedPatientMap[patient.patientId + actions_json.campId]) {
           moved_actions = moved_actions.map((a) => {
             if (
               a.updateOne.update.$setOnInsert["Patient Id"].equals(
@@ -189,7 +199,7 @@ const processEod = () =>
           moved_actions.push(update);
         }
 
-        processedPatientMap[patient.patientId] = update;
+        processedPatientMap[patient.patientId + actions_json.campId] = update;
       }
       if (moved_actions.length > 300) {
         await Analytics.bulkWrite(moved_actions);

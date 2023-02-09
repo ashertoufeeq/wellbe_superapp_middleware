@@ -125,11 +125,11 @@ exports.screeningForUpdate = ({ screening, existingUpdate: existing }) => {
     "Work Order Short Code": screening.campId.programId?.programShortCode,
     "Screening Date": screening.createdAt,
     "Registration Done By": screening.patientId.createdBy,
-    "Basic Health Checkup Status": basicHealth.status,
+    "Basic Health Checkup Status": basicHealth.status || "Not Done",
     "Basic Health Checkup Done By": basicHealth.filledBy,
-    "Phlebotomy Response": phlebotomyResponse.response,
+    "Phlebotomy Response": phlebotomyResponse.response || "No Data",
     "Phlebotomy Done By": phlebotomyResponse.filledBy,
-    "Audiometry Status": audiometry.Status || "Not Done",
+    "Audiometry Status": audiometry.status || "Not Done",
     "Audiometry Done By": audiometry.filledBy,
     "Otology Status": audiometry.otologyStatus || "Not Done",
     "Optometry Status": optometry.status || "Not Done",
@@ -171,6 +171,7 @@ exports.screeningForUpdate = ({ screening, existingUpdate: existing }) => {
     updateOne: {
       filter: {
         "Patient Id": screening.patientId?._id,
+        campId: screening.campId._id,
       },
       update: {
         $set: { ...newScreening, "Users Involved": usersInvolved },
@@ -235,7 +236,7 @@ exports.eodForUpdate = ({ patient, existingUpdate: existing }) => {
 
   return {
     updateOne: {
-      filter: { "Patient Id": patient.patientId },
+      filter: { "Patient Id": patient.patientId, campId: screening.campId._id },
       update: {
         $set: update,
         $setOnInsert: { "Patient Id": patient.patientId },

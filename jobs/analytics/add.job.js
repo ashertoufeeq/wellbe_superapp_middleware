@@ -4,7 +4,8 @@ const Patient = require("../../models/patientRecord");
 const Camp = require("../../models/camps.model");
 const Program = require("../../models/program.model");
 const LabItem = require("../../models/labItem");
-const { screeningForUpdate, labForUpdate } = require("./helper");
+const Eod = require("../../models/eod.model");
+const { screeningForUpdate, labForUpdate, eodForUpdate } = require("./helper");
 const util = require("util");
 
 const processScreening = () =>
@@ -146,10 +147,72 @@ const processLab = () =>
       process.stdout.write(".");
     }
     console.log("lab done");
+    processedPatientMap = {};
+    resolve();
+  });
+
+const processEod = () =>
+  new Promise(async (resolve, reject) => {
+    let moved_actions = [];
+    let count = 0;
+    let processedPatientMap = {};
+    let moved_actions_ids = [];
+    console.log("Processing Eod --");
+    const eodCursor = await Eod.find({}).cursor();
+
+    for (
+      let action = await eodCursor.next();
+      action != null;
+      action = await eodCursor.next()
+    ) {
+      let actions_json = action.toJSON();
+      process.stdout.write(".");
+
+      // Every 100, stop and wait for them to be done
+      for (let patient of actions_json.patients) {
+        let update = eodForUpdate({
+          patient,
+          existingUpdate: processedPatientMap[patient.patientId] || {},
+        });
+        if (processedPatientMap[patient.patientId]) {
+          moved_actions = moved_actions.map((a) => {
+            if (
+              a.updateOne.update.$setOnInsert["Patient Id"].equals(
+                patient.patientId
+              )
+            ) {
+              return update;
+            }
+            return a;
+          });
+        } else {
+          moved_actions.push(update);
+        }
+
+        processedPatientMap[patient.patientId] = update;
+      }
+      if (moved_actions.length > 10) {
+        await Analytics.bulkWrite(moved_actions);
+
+        count = count + moved_actions.length;
+        process.stdout.write(".");
+
+        moved_actions = [];
+      }
+    }
+    if (moved_actions.length > 0) {
+      await Analytics.bulkWrite(moved_actions);
+
+      count = count + moved_actions.length;
+      process.stdout.write(".");
+    }
+    console.log("Eod done");
+    processedPatientMap = {};
     resolve();
   });
 
 module.exports = async () => {
   await processScreening();
   await processLab();
+  await processEod();
 };

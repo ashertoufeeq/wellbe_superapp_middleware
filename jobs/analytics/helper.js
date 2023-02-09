@@ -223,3 +223,23 @@ exports.labForUpdate = ({ lab, existingUpdate: existing }) => {
     },
   };
 };
+
+exports.eodForUpdate = ({ patient, existingUpdate: existing }) => {
+  const existingUpdate = existing?.updateOne?.update?.$set || {};
+  const update = {
+    "Sample Collection Time":
+      patient.insertedTime || existingUpdate["Sample Collection Time"],
+    "Sample Received Time":
+      patient.labTime || existingUpdate["Sample Received Time"],
+  };
+
+  return {
+    updateOne: {
+      filter: { "Patient Id": patient.patientId },
+      update: {
+        $set: update,
+        $setOnInsert: { "Patient Id": patient.patientId },
+      },
+    },
+  };
+};

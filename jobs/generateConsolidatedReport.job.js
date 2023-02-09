@@ -53,7 +53,6 @@ module.exports = async (req, res) => {
       // patientId: ObjectId("63ce2690d5b7a02a456dde9f") //atha
     })
       .populate([{ path: "patientId" }, { path: "campId" }])
-      .sort({ createdAt: "asc" })
       .exec();
 
     console.log(screenings.length, "screenings");
@@ -108,7 +107,7 @@ module.exports = async (req, res) => {
     let allPdfs = [];
     let pdfLinks = [];
     let interation = 0;
-    let maxInteration = 1000;
+    let maxInteration = 2000;
 
     for (const uhid of uhidArray) {
       if (interation < maxInteration) {
@@ -125,12 +124,15 @@ module.exports = async (req, res) => {
           const oldPdf = await getFileBufferFromUrl(
             details?.patient?.consolidatedReportUrl
           );
-          allPdfs.push(oldPdf);
-          interation = interation + 1;
-          urlMaps = {
+          if(interation >= 1000){
+            allPdfs.push(oldPdf);
+ urlMaps = {
             ...urlMaps,
             [uhid]: details?.patient?.consolidatedReportUrl,
           };
+          }
+          interation = interation + 1;
+         
         } else {
           let labReportGenerated = false;
           let screeningReportGenerated = false;

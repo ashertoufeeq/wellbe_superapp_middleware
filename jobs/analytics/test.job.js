@@ -26,7 +26,23 @@ const processLab = () =>
       action.packages = (actions_json.packages || []).map((p) => {
         return {
           ...p,
-          activities: (p.activities || []).slice(0, 2),
+          activities: (p.activities || []).slice(0, 2).map((a) => ({
+            at: a.at,
+            type: a.type,
+            by: a.by,
+            ...(a.reportUrl && { reportUrl: a.reportUrl }),
+            ...(a.rejectionReason && { rejectionReason: a.rejectionReason }),
+          })),
+          ...(p.reportData && {
+            reportData: {
+              ...p.reportData,
+              parameters: (p.reportData?.parameters || []).map((param) => ({
+                name: param.name,
+                ...(param.machineCode && { machineCode: param.machineCode }),
+                value: param.value,
+              })),
+            },
+          }),
         };
       });
       process.stdout.write(".");

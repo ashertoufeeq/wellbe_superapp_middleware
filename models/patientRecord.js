@@ -299,6 +299,9 @@ const patientRecordSchema = new schema(
         isRestricted: {
             type: Boolean,
         },
+        isReportSent:{
+            type: Boolean,
+        },
         nationality: { type: String },
         localName: { type: String },
         localFatherName: { type: String },

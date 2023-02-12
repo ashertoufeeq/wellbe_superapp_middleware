@@ -6,7 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const pdf = require("html-pdf");
 const sendMessageBird = require("../utils/message");
-
+const alreadyUpdated = require('../constants/alreadyGeneratedReport')
 const shrutiPatient = require("./addShrutiPatient.job");
 const ScreeningModel = require("../models/campScreening.model");
 const Patient = require("../models/patientRecord");
@@ -43,59 +43,90 @@ module.exports = async (req, res) => {
       //   $lte: moment(today).endOf('day').toDate()
       // },
     };
-
-    const screenings = await ScreeningModel.find({
-      ...dateFilter,
-      patientId: { "$ne": null }
-      // patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
-      // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
-      // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C
-      // patientId: ObjectId("63ce2690d5b7a02a456dde9f") //atha
-    })
-      .populate([{ path: "patientId" }, { path: "campId" }])
-      .exec();
-
-    console.log(screenings.length, "screenings");
-
-    if (screenings) {
-      for (const screening of screenings) {
-        if (!(patientIds || []).includes(screening?.patientId?._id)) {
-          patientIds.push(screening?.patientId?._id);
-        }
-        const uhid = screening?.patientId?.uhid;
-        detailsMap = {
-          ...detailsMap,
-          [uhid]: {
-            ...(detailsMap[uhid] || {}),
-            campId: screening?.campId,
-            state: screening?.campId?.stateName,
-            district: screening?.campId?.villageName,
-            location: `${screening?.campId?.talukaName},${screening?.campId?.villageName}(${screening?.campId?.villagePinCode})`,
-            patient: screening?.patientId,
-            screeningDate: screening?.createdAt,
-            screenings: [
-              ...((detailsMap[uhid] || {})?.screenings || []),
-              screening,
-            ],
+    console.log('Fetching Lab');
+    const labs = await labItemModel.aggregate([
+      {
+        $match:{
+          packages: {
+            $not: { $elemMatch: { reportUrl: { $exists: false }, cleared: false } },
           },
-        };
-      }
-    }
-    if ((patientIds || []).length > 0) {
-      const labs = await labItemModel
-        .find({
-          ...dateFilter,
-          patientId: patientIds,
-        })
-        .populate([{ path: "patientId" }]);
-      if ((labs || []).length > 0) {
+          "patientId":{
+              "$exists": true
+           }
+        }
+      },
+      {
+      $lookup: {
+          from: "patient_records",
+          localField: "patientId",
+          foreignField: "_id",
+          as: "patient"
+      }},
+      {
+          "$unwind":{
+           path: '$patient',
+           preserveNullAndEmptyArrays: true
+      },
+      },
+      { $addFields: { package: { $first: "$packages" }, patientUhid: "$patient.uhid", patientId:"$patient._id", isReportSent: "$patient.isReportSent"  } },
+      {
+        $addFields: {
+          reportUrl: "$package.reportUrl"
+            
+       },
+      },
+      { "$project": {"reportUrl": "$reportUrl", 'uhid': "$patientUhid", patientId: "$patientId", isReportSent: "$isReportSent"}},
+   ])
+
+    console.log({labs: labs.length});
+    if ((labs || []).length > 0) {
         for (const item of labs) {
-          const uhid = item?.patientId?.uhid;
+          const uhid = item?.uhid;
+          if(!item.isReportSent){
+          if (!(patientIds || []).includes(item?.patientId)) {
+            patientIds.push(item?.patientId);
+          }
           detailsMap = {
             ...detailsMap,
             [uhid]: {
               ...(detailsMap[uhid] || {}),
               labItems: [...((detailsMap[uhid] || {})?.labItems || []), item],
+            },
+          };
+        }
+      }
+      }
+      console.log('Fetching Screening....');
+      const screenings = await ScreeningModel.find({
+        ...dateFilter,
+        patientId: patientIds
+        // patientId: ObjectId("63ce417ce34e6e564f3c64f0") //  S
+        // patientId: ObjectId("63ce2592d5b7a02a456dde29") // hemant C
+        // patientId: ObjectId("63ce417ce34e6e564f3c64f0") // hemant C
+        // patientId: ObjectId("63ce2690d5b7a02a456dde9f") //atha
+      })
+        .populate([{ path: "patientId" }, { path: "campId" }])
+        .exec();
+  
+      console.log(screenings.length, "screenings");
+      if ((patientIds || []).length > 0) {
+      if (screenings) {
+        for (const screening of screenings) {
+          const uhid = screening?.patientId?.uhid;
+          detailsMap = {
+            ...detailsMap,
+            [uhid]: {
+              ...(detailsMap[uhid] || {}),
+              campId: screening?.campId,
+              state: screening?.campId?.stateName,
+              district: screening?.campId?.villageName,
+              location: `${screening?.campId?.talukaName},${screening?.campId?.villageName}(${screening?.campId?.villagePinCode})`,
+              patient: screening?.patientId,
+              screeningDate: screening?.createdAt,
+              screenings: [
+                ...((detailsMap[uhid] || {})?.screenings || []),
+                screening,
+              ],
             },
           };
         }
@@ -107,38 +138,37 @@ module.exports = async (req, res) => {
     let allPdfs = [];
     let pdfLinks = [];
     let interation = 0;
-    let maxInteration = 2000;
+    let maxInteration = 1000;
 
     for (const uhid of uhidArray) {
       if (interation < maxInteration) {
         console.log(pdfLinks.length, "pdfLinks start");
         const details = detailsMap[uhid];
-
         if (details?.patient?.consolidatedReportUrl) {
           console.log(
             "Report already generated for :",
-            uhid
-            // details?.patient?.consolidatedReportUrl,
+            uhid,
+            details?.patient?.consolidatedReportUrl,
             // details?.campId
           );
-          const oldPdf = await getFileBufferFromUrl(
-            details?.patient?.consolidatedReportUrl
-          );
-          if(interation >= 1000){
-            allPdfs.push(oldPdf);
- urlMaps = {
-            ...urlMaps,
-            [uhid]: details?.patient?.consolidatedReportUrl,
-          };
+          if(!alreadyUpdated.includes(uhid)){
+            const oldPdf = await getFileBufferFromUrl(
+              details?.patient?.consolidatedReportUrl
+            );
+              allPdfs.push(oldPdf);
+              urlMaps = {
+              ...urlMaps,
+              [uhid]: details?.patient?.consolidatedReportUrl,
           }
           interation = interation + 1;
-         
+        }
         } else {
+          if((details || {}).screenings){
           let labReportGenerated = false;
           let screeningReportGenerated = false;
           let results = {};
 
-          (details || {}).screenings.map((screening) => {
+          ((details || {}).screenings).map((screening) => {
             if (screening.formsDetails) {
               (screening.formsDetails || []).map((item) => {
                 results = { ...results, ...(item.results || {}) };
@@ -162,9 +192,9 @@ module.exports = async (req, res) => {
           screeningReportGenerated = !!buffer;
 
           for (const lab of details.labItems || []) {
-            if (lab?.packages && lab?.packages[0] && lab?.packages[0].reportUrl) {
+            if (lab?.reportUrl) {
               const labBuffer = await getFileBufferFromUrl(
-                lab?.packages[0].reportUrl
+                lab?.reportUrl
               );
               pdfLinks.push(labBuffer);
               labReportGenerated = true;
@@ -182,7 +212,6 @@ module.exports = async (req, res) => {
                 {
                   consolidatedReportUrl: mergedUrl,
                   consolidatedReportGeneratedAt: today,
-
                 },
                 { new: true }
               );
@@ -219,7 +248,7 @@ module.exports = async (req, res) => {
                 templateId: "healthreportkannada",
               });
               console.log('----------------|--------------', details?.patient?.mobile, details?.patient?._id, Object.keys(urlMaps).length, urlMaps, mergedUrl);
-            }
+            }}
           } else {
             pdfLinks = [];
           }
@@ -234,11 +263,27 @@ module.exports = async (req, res) => {
           if (mergeError) {
             console.log(mergeError,)
           } else {
+            if(Object.keys(urlMaps).length>0){
+            await Patient.updateMany(
+              {
+                uhid: {"$in": Object.keys(urlMaps)}
+              },
+              {
+                "$set":{
+                  isReportSent: true
+                }
+              },
+              { new: true }
+            )
+          }
             console.log("final url", mergedUrl, Object.keys(urlMaps).length);
           }
+          console.log('Exit')
+          return;
+        }else{
+
         }
       }
-
     }
   } catch (e) {
     console.log(e);

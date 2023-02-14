@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
           packages: {
           $elemMatch: { reportUrl: { $exists: true } } ,
           },
-          isProcessed: {
+          isProccessed: {
             $ne: true
           },
         }
@@ -136,10 +136,8 @@ module.exports = async (req, res) => {
     let interation = 1;
 
     for (const uhid of uhidArray) {
-      if (interation < 6) {
         console.log(pdfLinks.length, "pdfLinks start");
         const details = detailsMap[campId][uhid];
-
         if (details?.patient?.consolidatedReportUrl) {
           console.log(
             "Report already generated for :",
@@ -222,7 +220,7 @@ module.exports = async (req, res) => {
                 },
                {
                 $set:{
-                  isProcessed: true
+                  isProccessed: true
                 }
               });
 
@@ -258,7 +256,7 @@ module.exports = async (req, res) => {
           }
         }
         pdfLinks = [];
-      }
+      
     }
   }
   } catch (e) {

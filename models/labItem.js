@@ -198,14 +198,17 @@ const labItemSchema = new schema({
     ref: "packageItem",
   },
 
-  hidden: { type: Boolean },
-  ipDetailId: { type: schema.Types.ObjectId, ref: "ip_detail" },
-  queue: { type: QueueSchema },
-
-  prescribingDoctor: {
-    type: schema.Types.ObjectId,
-    ref: "doctor",
-  },
+    hidden: { type: Boolean },
+    ipDetailId: { type: schema.Types.ObjectId, ref: 'ip_detail' },
+    queue: { type: QueueSchema },
+    isProccessed: {
+        type: Boolean,
+        default: false
+    },
+    prescribingDoctor: {
+        type: schema.Types.ObjectId,
+        ref: 'doctor',
+    },
 });
 
 module.exports = mongoose.model("labItem", labItemSchema);

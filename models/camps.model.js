@@ -223,6 +223,9 @@ const itemSchema = new schema(
             type: Number,
             default: 0,
         },
+        reportUrl: {
+            type: String
+        }
     },
     { timestamps: true },
 );

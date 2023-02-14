@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
           packages: {
           $elemMatch: { reportUrl: { $exists: true } } ,
           },
-          isProccessed: {
+          isProcessed: {
             $ne: true
           },
         }
@@ -222,7 +222,7 @@ module.exports = async (req, res) => {
                 },
                {
                 $set:{
-                  isProccessed: true
+                  isProcessed: true
                 }
               });
 

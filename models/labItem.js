@@ -201,7 +201,7 @@ const labItemSchema = new schema({
     hidden: { type: Boolean },
     ipDetailId: { type: schema.Types.ObjectId, ref: 'ip_detail' },
     queue: { type: QueueSchema },
-    isProccessed: {
+    isProcessed: {
         type: Boolean,
         default: false
     },

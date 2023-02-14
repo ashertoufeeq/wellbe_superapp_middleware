@@ -44,7 +44,7 @@ mongoose
   })
   .then(() => {
     console.log("db connected");
-    jobs.analytics.test();
+    jobs.analytics.add();
     // jobs.sendMessages();
     // jobs.generateConsolidatedReport();
   })

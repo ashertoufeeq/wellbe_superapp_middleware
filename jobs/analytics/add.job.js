@@ -222,7 +222,7 @@ const processEod = () =>
   });
 
 module.exports = async () => {
-  await processScreening();
-  await processLab();
+  // await processScreening();
+  // await processLab();
   await processEod();
 };

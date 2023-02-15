@@ -236,7 +236,7 @@ exports.eodForUpdate = ({ patient, existingUpdate: existing }) => {
 
   return {
     updateOne: {
-      filter: { "Patient Id": patient.patientId, campId: screening.campId._id },
+      filter: { "Patient Id": patient.patientId, campId: patient.campId._id },
       update: {
         $set: update,
         $setOnInsert: { "Patient Id": patient.patientId },

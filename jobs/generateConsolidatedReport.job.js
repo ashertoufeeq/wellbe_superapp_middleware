@@ -33,63 +33,77 @@ module.exports = async (req, res) => {
     let detailsMap = {};
     const patientIds = [];
 
-    const labs = await labItemModel
-    .aggregate([
+    const labs = await labItemModel.aggregate([
       {
-        $match:{
+        $match: {
           packages: {
-          $elemMatch: { reportUrl: { $exists: true } } ,
+            $elemMatch: { reportUrl: { $exists: true } },
           },
-          isProccessed: {
-            $ne: true
+          isProcessed: {
+            $ne: true,
           },
-        }
+        },
       },
       {
         $lookup: {
-            from: "patient_records",
-            localField: "patientId",
-            foreignField: "_id",
-            as: "patient"
-        }
+          from: "patient_records",
+          localField: "patientId",
+          foreignField: "_id",
+          as: "patient",
+        },
       },
       {
-          "$unwind":{
-           path: '$patient',
-           preserveNullAndEmptyArrays: true
+        $unwind: {
+          path: "$patient",
+          preserveNullAndEmptyArrays: true,
+        },
       },
-      },
-      { $addFields: { package: { $first: "$packages" }, patientUhid: "$patient.uhid", patientId:"$patient._id", isReportSent: "$patient.isReportSent"  } },
       {
         $addFields: {
-          reportUrl: "$package.reportUrl"
-       },
+          package: { $first: "$packages" },
+          patientUhid: "$patient.uhid",
+          patientId: "$patient._id",
+          isReportSent: "$patient.isReportSent",
+        },
       },
-      { "$project": {"reportUrl": "$reportUrl", 'uhid': "$patientUhid", patientId: "$patientId", isReportSent: "$isReportSent"}},
-   ])
+      {
+        $addFields: {
+          reportUrl: "$package.reportUrl",
+        },
+      },
+      {
+        $project: {
+          reportUrl: "$reportUrl",
+          uhid: "$patientUhid",
+          patientId: "$patientId",
+          isReportSent: "$isReportSent",
+        },
+      },
+    ]);
 
-   console.log(labs.length, labs.filter(i => i.reportUrl).length, 'labs length')
+    console.log(
+      labs.length,
+      labs.filter((i) => i.reportUrl).length,
+      "labs length"
+    );
 
-   if ((labs || []).length > 0) {
+    if ((labs || []).length > 0) {
       for (const item of labs) {
         const uhid = item?.uhid;
-        if(item?.reportUrl){
+        if (item?.reportUrl) {
           if (!(patientIds || []).includes(item?.patientId)) {
             patientIds.push(item?.patientId);
-          }    
+          }
           labItemsMap = {
             ...labItemsMap,
-            [uhid]: [
-              ...(labItemsMap[uhid] || []),
-               item
-            ],
+            [uhid]: [...(labItemsMap[uhid] || []), item],
           };
         }
       }
     }
 
     const screenings = await ScreeningModel.find({
-      patientId: {$in: patientIds}
+      patientId: { $in: patientIds },
     })
       .populate([{ path: "patientId" }, { path: "campId" }])
       .sort({ createdAt: "asc" })
@@ -100,7 +114,7 @@ module.exports = async (req, res) => {
     if (screenings) {
       for (const screening of screenings) {
         const uhid = screening?.patientId?.uhid;
-        const campId = screening.campId?._id
+        const campId = screening.campId?._id;
         detailsMap = {
           ...detailsMap,
           [campId]: {
@@ -114,35 +128,33 @@ module.exports = async (req, res) => {
               patient: screening?.patientId,
               screeningDate: screening?.createdAt,
               screenings: [
-                ...((detailsMap[campId] ? detailsMap[campId][uhid] : {})?.screenings || []),
+                ...((detailsMap[campId] ? detailsMap[campId][uhid] : {})
+                  ?.screenings || []),
                 screening,
               ],
-              labItems: labItemsMap[uhid]
+              labItems: labItemsMap[uhid],
             },
           },
         };
       }
     }
-    
-    const campIdArray  = Object.keys(detailsMap);
+
+    const campIdArray = Object.keys(detailsMap);
     let campCounter = 1;
 
-    for(const campId of campIdArray){
-    console.log('Camp Count: ', campCounter, campIdArray.length);
+    for (const campId of campIdArray) {
+      console.log("Camp Count: ", campCounter, campIdArray.length);
 
-    campCounter = campCounter + 1;
-    const uhidArray = Object.keys(detailsMap[campId]);
-    let pdfLinks = [];
-    let interation = 1;
+      campCounter = campCounter + 1;
+      const uhidArray = Object.keys(detailsMap[campId]);
+      let pdfLinks = [];
+      let interation = 1;
 
-    for (const uhid of uhidArray) {
+      for (const uhid of uhidArray) {
         console.log(pdfLinks.length, "pdfLinks start");
         const details = detailsMap[campId][uhid];
         if (details?.patient?.consolidatedReportUrl) {
-          console.log(
-            "Report already generated for :",
-            uhid
-          );
+          console.log("Report already generated for :", uhid);
         } else {
           let labReportGenerated = false;
           let screeningReportGenerated = false;
@@ -170,12 +182,10 @@ module.exports = async (req, res) => {
           });
           pdfLinks.push(buffer);
           screeningReportGenerated = !!buffer;
-          console.log(details.labItems,'lab items')
+          console.log(details.labItems, "lab items");
           for (const lab of details.labItems || []) {
             if (lab && lab?.reportUrl) {
-              const labBuffer = await getFileBufferFromUrl(
-                lab?.reportUrl
-              );
+              const labBuffer = await getFileBufferFromUrl(lab?.reportUrl);
               pdfLinks.push(labBuffer);
               labReportGenerated = true;
             }
@@ -184,45 +194,54 @@ module.exports = async (req, res) => {
           console.log({ labReportGenerated, screeningReportGenerated });
 
           if (labReportGenerated && screeningReportGenerated) {
-            const globalReportBuffer = details?.campId?.reportUrl ? await getFileBufferFromUrl(
+            const globalReportBuffer = details?.campId?.reportUrl
+              ? await getFileBufferFromUrl(details?.campId?.reportUrl)
+              : undefined;
+
+            const { mergedUrl, error: mergeError } = await pdfMerge({
+              pdfLinks,
+            });
+
+            const { mergedUrl: globalReportUrl, error: globalMergeError } =
               details?.campId?.reportUrl
-            ): undefined;
+                ? await pdfMerge({
+                    pdfLinks: [globalReportBuffer, ...pdfLinks],
+                  })
+                : { mergedUrl: null, error: null };
 
-            const { mergedUrl, error: mergeError } = await pdfMerge({ pdfLinks});
-
-            const { mergedUrl: globalReportUrl, error: globalMergeError } = details?.campId?.reportUrl ? await pdfMerge({ pdfLinks :[globalReportBuffer, ...pdfLinks] }): {mergedUrl:null, error:null};
-            
             if (mergeError || globalMergeError) {
               console.log(mergeError);
               continue;
             } else {
-              
-            const patient = await Patient.findByIdAndUpdate(
-              details?.patient?._id,
-              { consolidatedReportUrl: mergedUrl },
-              { new: true }
-            );
+              const patient = await Patient.findByIdAndUpdate(
+                details?.patient?._id,
+                { consolidatedReportUrl: mergedUrl },
+                { new: true }
+              );
 
-            const campUpdated = await campsModel.findByIdAndUpdate(
+              const campUpdated = await campsModel.findByIdAndUpdate(
                 details?.campId?._id,
                 {
                   reportUrl: globalReportUrl ? globalReportUrl : mergedUrl,
-                });
-          
-            campUpdated.numberOfConsolidatedReportGenerated = (campUpdated.numberOfConsolidatedReportGenerated || 0) + 1;
-            campUpdated.save();
+                }
+              );
 
-            const updatedLab = await labItemModel.updateMany(
+              campUpdated.numberOfConsolidatedReportGenerated =
+                (campUpdated.numberOfConsolidatedReportGenerated || 0) + 1;
+              campUpdated.save();
+
+              const updatedLab = await labItemModel.updateMany(
                 {
                   _id: {
-                  $in: (details.labItems||[]).map(item=>item?._id) 
-                 }
+                    $in: (details.labItems || []).map((item) => item?._id),
+                  },
                 },
-               {
-                $set:{
-                  isProccessed: true
+                {
+                  $set: {
+                    isProcessed: true,
+                  },
                 }
-              });
+              );
 
               const res = await sendMessageBird({
                 toMultiple: false,
@@ -236,7 +255,7 @@ module.exports = async (req, res) => {
                 toMultiple: false,
                 to: details?.patient?.mobile,
                 media: { url: mergedUrl },
-                languageCode: 'kn',
+                languageCode: "kn",
                 smsParameters: [mergedUrl],
                 templateId: "healthreportkannada",
               });
@@ -256,9 +275,8 @@ module.exports = async (req, res) => {
           }
         }
         pdfLinks = [];
-      
+      }
     }
-  }
   } catch (e) {
     console.log(e);
   }

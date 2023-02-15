@@ -37,8 +37,8 @@ module.exports = async (req, res) => {
       {
         $match: {
           packages: {
-            $elemMatch: { reportUrl: { $exists: true } },
-          },
+            $not: { $elemMatch: { reportUrl: { $exists: false }, cleared: false } 
+          }},
           isProcessed: {
             $ne: true,
           },
@@ -153,7 +153,7 @@ module.exports = async (req, res) => {
       for (const uhid of uhidArray) {
         console.log(pdfLinks.length, "pdfLinks start");
         const details = detailsMap[campId][uhid];
-        if (details?.patient?.consolidatedReportUrl) {
+        if (details?.patient?.consolidatedReportUrl && false) {
           console.log("Report already generated for :", uhid);
         } else {
           let labReportGenerated = false;
@@ -219,16 +219,16 @@ module.exports = async (req, res) => {
                 { new: true }
               );
 
-              const campUpdated = await campsModel.findByIdAndUpdate(
+                const campUpdated = await campsModel.findByIdAndUpdate(
                 details?.campId?._id,
                 {
-                  reportUrl: globalReportUrl ? globalReportUrl : mergedUrl,
-                }
+                  "$set":{reportUrl: globalReportUrl ? globalReportUrl : mergedUrl},
+                  "$inc": {
+                    numberOfConsolidatedReportGenerated : 1
+                  },
+                },{new:true}
               );
-
-              campUpdated.numberOfConsolidatedReportGenerated =
-                (campUpdated.numberOfConsolidatedReportGenerated || 0) + 1;
-              campUpdated.save();
+                console.log(campUpdated, details?.campId?._id)
 
               const updatedLab = await labItemModel.updateMany(
                 {

@@ -32,7 +32,8 @@ module.exports = async (req, res) => {
     let labItemsMap = {};
     let detailsMap = {};
     const patientIds = [];
-
+    let uhidMap = {};
+    
     const labs = await labItemModel.aggregate([
       {
         $match: {
@@ -140,8 +141,9 @@ module.exports = async (req, res) => {
     }
 
     const campIdArray = Object.keys(detailsMap);
+    console.log({campIdArray});
     let campCounter = 1;
-
+    let globalCount = 1;
     for (const campId of campIdArray) {
       console.log("Camp Count: ", campCounter, campIdArray.length);
 
@@ -151,9 +153,10 @@ module.exports = async (req, res) => {
       let interation = 1;
 
       for (const uhid of uhidArray) {
-        console.log(pdfLinks.length, "pdfLinks start");
+        console.log(globalCount, labs.length);
         const details = detailsMap[campId][uhid];
-        if (details?.patient?.consolidatedReportUrl && false) {
+
+        if (details?.patient?.consolidatedReportUrl) {
           console.log("Report already generated for :", uhid);
         } else {
           let labReportGenerated = false;
@@ -194,22 +197,25 @@ module.exports = async (req, res) => {
           console.log({ labReportGenerated, screeningReportGenerated });
 
           if (labReportGenerated && screeningReportGenerated) {
-            const globalReportBuffer = details?.campId?.reportUrl
-              ? await getFileBufferFromUrl(details?.campId?.reportUrl)
+            const camp = await  campsModel.findOne({_id: details?.campId._id });
+            console.log({previousReportUrl: camp?.reportUrl,_id: camp?._id })
+            const globalReportBuffer = camp?.reportUrl
+              ? await getFileBufferFromUrl(camp?.reportUrl)
               : undefined;
-
+            console.log('global buffer', globalReportBuffer, camp?.reportUrl, details?.campId)
             const { mergedUrl, error: mergeError } = await pdfMerge({
               pdfLinks,
             });
 
             const { mergedUrl: globalReportUrl, error: globalMergeError } =
-              details?.campId?.reportUrl
+            camp?.reportUrl
                 ? await pdfMerge({
                     pdfLinks: [globalReportBuffer, ...pdfLinks],
                   })
                 : { mergedUrl: null, error: null };
 
-            if (mergeError || globalMergeError) {
+            console.log(globalReportUrl,'global', globalMergeError)    
+            if (mergeError) {
               console.log(mergeError);
               continue;
             } else {
@@ -228,7 +234,8 @@ module.exports = async (req, res) => {
                   },
                 },{new:true}
               );
-                console.log(campUpdated, details?.campId?._id)
+              
+              console.log(campUpdated.reportUrl, details?.campId?._id)
 
               const updatedLab = await labItemModel.updateMany(
                 {
@@ -260,7 +267,10 @@ module.exports = async (req, res) => {
                 templateId: "healthreportkannada",
               });
 
+              uhidMap = {...uhidMap, [uhid]:mergedUrl }
+
               console.log({
+                uhidMap,
                 mergedUrl,
                 interation,
                 globalReportUrl,
@@ -269,6 +279,7 @@ module.exports = async (req, res) => {
               });
 
               interation = interation + 1;
+              globalCount = globalCount + 1;
             }
           } else {
             pdfLinks = [];

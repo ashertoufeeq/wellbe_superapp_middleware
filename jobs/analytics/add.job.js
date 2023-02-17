@@ -7,6 +7,9 @@ const LabItem = require("../../models/labItem");
 const Eod = require("../../models/eod.model");
 const { screeningForUpdate, labForUpdate, eodForUpdate } = require("./helper");
 const util = require("util");
+const moment = require("moment");
+
+const last5Days = moment().subtract(30, "days").toISOString();
 
 const processScreening = () =>
   new Promise(async (resolve, reject) => {
@@ -17,12 +20,17 @@ const processScreening = () =>
     let screeningCount = 0;
     let moved_actions_ids = [];
     console.log("Processing Screenings --");
-    const screeningCursor = await Screening.find({})
+    const screeningCursor = await Screening.find({
+      $or: [
+        { createdAt: { $gte: last5Days } },
+        { updatedAt: { $gte: last5Days } },
+      ],
+    })
       .populate([
         {
           path: "patientId",
           select:
-            "fName lName gender dob _id createdAt updatedAt createdBy updatedBy consolidatedReportUrl consolidatedReportGeneratedAt uhid villagePinCode",
+            "fName lName gender dob _id createdAt updatedAt createdBy updatedBy consolidatedReportUrl consolidatedReportGeneratedAt uhid villagePinCode labourId",
         },
         {
           path: "campId",
@@ -107,6 +115,7 @@ const processLab = () =>
       packages: {
         $not: { $elemMatch: { reportUrl: { $exists: false }, cleared: false } },
       },
+      "packages.activities.at": { $gte: last5Days },
     }).cursor();
 
     for (
@@ -167,7 +176,12 @@ const processEod = () =>
     let processedPatientMap = {};
     let moved_actions_ids = [];
     console.log("Processing Eod --");
-    const eodCursor = await Eod.find({}).cursor();
+    const eodCursor = await Eod.find({
+      $or: [
+        { createdAt: { $gte: last5Days } },
+        { updatedAt: { $gte: last5Days } },
+      ],
+    }).cursor();
 
     for (
       let action = await eodCursor.next();
@@ -222,7 +236,7 @@ const processEod = () =>
   });
 
 module.exports = async () => {
-  // await processScreening();
-  // await processLab();
+  await processScreening();
+  await processLab();
   await processEod();
 };

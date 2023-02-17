@@ -139,6 +139,7 @@ exports.screeningForUpdate = ({ screening, existingUpdate: existing }) => {
       : "No",
     "Report URL": screening.patientId.consolidatedReportUrl || "-",
     "Report Sent At": screening.patientId.consolidatedReportGeneratedAt,
+    "Labour Id": screening.patientId.labourId,
   };
   let usersInvolved = [];
   if (

@@ -36,6 +36,7 @@ const analyticsSchema = new schema(
       type: String,
       default: null,
     },
+    "Labour Id": { type: String },
     campId: {
       type: schema.Types.ObjectId,
       ref: "camps",

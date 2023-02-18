@@ -29,6 +29,7 @@ module.exports = async (req, res) => {
   console.log("Consolidated Report Fetching");
 
   try {
+    let skippedUhid = {}; 
     let labItemsMap = {};
     let detailsMap = {};
     const patientIds = [];
@@ -131,7 +132,7 @@ module.exports = async (req, res) => {
               screenings: [
                 ...((detailsMap[campId] ? detailsMap[campId][uhid] : {})
                   ?.screenings || []),
-                screening,
+                ...(screening?.campId?._id === campId? [screening]: []),
               ],
               labItems: labItemsMap[uhid],
             },
@@ -155,9 +156,14 @@ module.exports = async (req, res) => {
       for (const uhid of uhidArray) {
         console.log(globalCount, labs.length);
         const details = detailsMap[campId][uhid];
-
+        if(((details || {}).screenings || []).length > 3){
+          ((details || {}).screenings || []).map(item=> {
+            console.log(item.formsDetails)
+          })
+          
         if (details?.patient?.consolidatedReportUrl) {
           console.log("Report already generated for :", uhid);
+          uhidMap = {...uhidMap, [uhid]:details?.patient?.consolidatedReportUrl }
         } else {
           let labReportGenerated = false;
           let screeningReportGenerated = false;
@@ -177,7 +183,7 @@ module.exports = async (req, res) => {
               patient: details?.patient,
               resultsObject: results,
               screeningDate: details?.screeningDate,
-              location: details?.location,
+              location: details?.campId?.name,
               district: details.district,
               state: details.state,
             }),
@@ -202,7 +208,7 @@ module.exports = async (req, res) => {
             const globalReportBuffer = camp?.reportUrl
               ? await getFileBufferFromUrl(camp?.reportUrl)
               : undefined;
-            console.log('global buffer', globalReportBuffer, camp?.reportUrl, details?.campId)
+            console.log('global buffer', globalReportBuffer, camp?.reportUrl)
             const { mergedUrl, error: mergeError } = await pdfMerge({
               pdfLinks,
             });
@@ -285,6 +291,10 @@ module.exports = async (req, res) => {
             pdfLinks = [];
           }
         }
+      }else{
+        console.log('Skipping because number of screening less than 4',details?.campId?._id, uhid);
+        skippedUhid = {...skippedUhid, [uhid]: details?.campId?._id } 
+      }
         pdfLinks = [];
       }
     }

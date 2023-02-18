@@ -962,7 +962,7 @@ const tranformerConsolidatedReportData = ({
     return {
         ...indexPage,
         ...resultsObject,
-        date: moment().format("ll"),
+        date: moment(screeningDate).format("ll"),
         ...page2,
         ...page3,
         ...page4,

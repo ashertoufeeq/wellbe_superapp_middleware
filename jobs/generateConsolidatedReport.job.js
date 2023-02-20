@@ -142,7 +142,6 @@ module.exports = async (req, res) => {
     }
 
     const campIdArray = Object.keys(detailsMap);
-    console.log({campIdArray});
     let campCounter = 1;
     let globalCount = 1;
     for (const campId of campIdArray) {
@@ -157,10 +156,6 @@ module.exports = async (req, res) => {
         console.log(globalCount, labs.length);
         const details = detailsMap[campId][uhid];
         if(((details || {}).screenings || []).length > 3){
-          ((details || {}).screenings || []).map(item=> {
-            console.log(item.formsDetails)
-          })
-          
         if (details?.patient?.consolidatedReportUrl) {
           console.log("Report already generated for :", uhid);
           uhidMap = {...uhidMap, [uhid]:details?.patient?.consolidatedReportUrl }
@@ -225,53 +220,53 @@ module.exports = async (req, res) => {
               console.log(mergeError);
               continue;
             } else {
-              const patient = await Patient.findByIdAndUpdate(
-                details?.patient?._id,
-                { consolidatedReportUrl: mergedUrl },
-                { new: true }
-              );
+              // const patient = await Patient.findByIdAndUpdate(
+              //   details?.patient?._id,
+              //   { consolidatedReportUrl: mergedUrl },
+              //   { new: true }
+              // );
 
-                const campUpdated = await campsModel.findByIdAndUpdate(
-                details?.campId?._id,
-                {
-                  "$set":{reportUrl: globalReportUrl ? globalReportUrl : mergedUrl},
-                  "$inc": {
-                    numberOfConsolidatedReportGenerated : 1
-                  },
-                },{new:true}
-              );
+              //   const campUpdated = await campsModel.findByIdAndUpdate(
+              //   details?.campId?._id,
+              //   {
+              //     "$set":{reportUrl: globalReportUrl ? globalReportUrl : mergedUrl},
+              //     "$inc": {
+              //       numberOfConsolidatedReportGenerated : 1
+              //     },
+              //   },{new:true}
+              // );
               
-              console.log(campUpdated.reportUrl, details?.campId?._id)
+              // console.log(campUpdated.reportUrl, details?.campId?._id)
 
-              const updatedLab = await labItemModel.updateMany(
-                {
-                  _id: {
-                    $in: (details.labItems || []).map((item) => item?._id),
-                  },
-                },
-                {
-                  $set: {
-                    isProcessed: true,
-                  },
-                }
-              );
+              // const updatedLab = await labItemModel.updateMany(
+              //   {
+              //     _id: {
+              //       $in: (details.labItems || []).map((item) => item?._id),
+              //     },
+              //   },
+              //   {
+              //     $set: {
+              //       isProcessed: true,
+              //     },
+              //   }
+              // );
 
-              const res = await sendMessageBird({
-                toMultiple: false,
-                to: details?.patient?.mobile,
-                media: { url: mergedUrl },
-                smsParameters: [mergedUrl],
-                templateId: "healthreport",
-              });
+              // const res = await sendMessageBird({
+              //   toMultiple: false,
+              //   to: details?.patient?.mobile,
+              //   media: { url: mergedUrl },
+              //   smsParameters: [mergedUrl],
+              //   templateId: "healthreport",
+              // });
 
-              const res2 = await sendMessageBird({
-                toMultiple: false,
-                to: details?.patient?.mobile,
-                media: { url: mergedUrl },
-                languageCode: "kn",
-                smsParameters: [mergedUrl],
-                templateId: "healthreportkannada",
-              });
+              // const res2 = await sendMessageBird({
+              //   toMultiple: false,
+              //   to: details?.patient?.mobile,
+              //   media: { url: mergedUrl },
+              //   languageCode: "kn",
+              //   smsParameters: [mergedUrl],
+              //   templateId: "healthreportkannada",
+              // });
 
               uhidMap = {...uhidMap, [uhid]:mergedUrl }
 

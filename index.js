@@ -47,7 +47,7 @@ mongoose
     console.log("db connected");
     jobs.analytics.add();
     // jobs.sendMessages();
-    // jobs.generateConsolidatedReport();
+    jobs.generateConsolidatedReport();
   })
   .catch((err) => console.warn(err));
 

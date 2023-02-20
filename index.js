@@ -12,6 +12,7 @@ const patientRecord = require("./models/patientRecord");
 const campScreening = require("./models/campScreening.model");
 const Program = require("./models/program.model");
 const labItem = require("./models/labItem");
+const mergeByUrl = require('./scripts/index')
 
 const app = express();
 const jobs = require("./jobs");

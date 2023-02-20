@@ -245,3 +245,18 @@ exports.eodForUpdate = ({ patient, existingUpdate: existing }) => {
     },
   };
 };
+
+exports.patientForUpdate = ({ patient }) => {
+  const update = {
+    "Report Generated": patient.consolidatedReportUrl ? "Yes" : "No",
+    "Report URL": patient.consolidatedReportUrl || "-",
+    "Report Sent At": patient.consolidatedReportGeneratedAt,
+  };
+
+  return {
+    updateOne: {
+      filter: { "Patient Id": patient._id },
+      update: { $set: update },
+    },
+  };
+};

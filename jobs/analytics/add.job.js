@@ -5,7 +5,13 @@ const Camp = require("../../models/camps.model");
 const Program = require("../../models/program.model");
 const LabItem = require("../../models/labItem");
 const Eod = require("../../models/eod.model");
-const { screeningForUpdate, labForUpdate, eodForUpdate } = require("./helper");
+const Patient = require("../../models/patientRecord");
+const {
+  screeningForUpdate,
+  labForUpdate,
+  eodForUpdate,
+  patientForUpdate,
+} = require("./helper");
 const util = require("util");
 const moment = require("moment");
 
@@ -165,7 +171,6 @@ const processLab = () =>
       process.stdout.write(".");
     }
     console.log("lab done");
-    processedPatientMap = {};
     resolve();
   });
 
@@ -235,8 +240,59 @@ const processEod = () =>
     resolve();
   });
 
+const processPatients = () =>
+  new Promise(async (resolve, reject) => {
+    let moved_actions = [];
+    let count = 0;
+    let processedPatientMap = {};
+    let moved_actions_ids = [];
+    console.log("Processing Patients --");
+    const patientCursor = await Patient.find({
+      $or: [
+        { createdAt: { $gte: last5Days } },
+        { updatedAt: { $gte: last5Days } },
+      ],
+    }).cursor();
+
+    for (
+      let action = await patientCursor.next();
+      action != null;
+      action = await patientCursor.next()
+    ) {
+      let actions_json = action.toJSON();
+      process.stdout.write(".");
+
+      let update = patientForUpdate({
+        patient: actions_json,
+      });
+
+      moved_actions.push(update);
+
+      // Every 100, stop and wait for them to be done
+
+      if (moved_actions.length > 300) {
+        await Analytics.bulkWrite(moved_actions);
+
+        count = count + moved_actions.length;
+        process.stdout.write(".");
+
+        moved_actions = [];
+      }
+    }
+    if (moved_actions.length > 0) {
+      await Analytics.bulkWrite(moved_actions);
+
+      count = count + moved_actions.length;
+      process.stdout.write(".");
+    }
+    console.log("Patients done");
+    processedPatientMap = {};
+    resolve();
+  });
+
 module.exports = async () => {
   await processScreening();
   await processLab();
   await processEod();
+  await processPatients();
 };

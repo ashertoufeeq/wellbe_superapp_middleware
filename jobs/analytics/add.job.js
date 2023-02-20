@@ -5,7 +5,6 @@ const Camp = require("../../models/camps.model");
 const Program = require("../../models/program.model");
 const LabItem = require("../../models/labItem");
 const Eod = require("../../models/eod.model");
-const Patient = require("../../models/patientRecord");
 const {
   screeningForUpdate,
   labForUpdate,

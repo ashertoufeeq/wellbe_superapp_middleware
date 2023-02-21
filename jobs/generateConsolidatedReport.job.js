@@ -16,7 +16,9 @@ const {
   tranformerConsolidatedReportData,
 } = require("../utils/consolidatedReport");
 const campsModel = require("../models/camps.model");
+const mergeByUrl = require('../scripts/merge')
 const ObjectId = require("mongoose").Types.ObjectId;
+
 
 const renderHTML = fs.readFileSync(
   path.resolve(__dirname, "../views/consolidatedReport.ejs"),
@@ -43,7 +45,7 @@ module.exports = async (req, res) => {
           }},
           isProcessed: {
             $ne: true,
-          },
+          }
         },
       },
       {
@@ -147,7 +149,6 @@ module.exports = async (req, res) => {
     for (const campId of campIdArray) {
       console.log("Camp Count: ", campCounter, campIdArray.length);
 
-      campCounter = campCounter + 1;
       const uhidArray = Object.keys(detailsMap[campId]);
       let pdfLinks = [];
       let interation = 1;
@@ -203,7 +204,7 @@ module.exports = async (req, res) => {
             const globalReportBuffer = camp?.reportUrl
               ? await getFileBufferFromUrl(camp?.reportUrl)
               : undefined;
-            console.log('global buffer', globalReportBuffer, camp?.reportUrl)
+            console.log('global buffer', globalReportBuffer, camp?.reportUrl);
             const { mergedUrl, error: mergeError } = await pdfMerge({
               pdfLinks,
             });
@@ -215,58 +216,58 @@ module.exports = async (req, res) => {
                   })
                 : { mergedUrl: null, error: null };
 
-            console.log(globalReportUrl,'global', globalMergeError)    
+            console.log(globalReportUrl,'global', globalMergeError);  
             if (mergeError) {
               console.log(mergeError);
               continue;
             } else {
-              // const patient = await Patient.findByIdAndUpdate(
-              //   details?.patient?._id,
-              //   { consolidatedReportUrl: mergedUrl },
-              //   { new: true }
-              // );
+              const patient = await Patient.findByIdAndUpdate(
+                details?.patient?._id,
+                { consolidatedReportUrl: mergedUrl },
+                { new: true }
+              );
 
-              //   const campUpdated = await campsModel.findByIdAndUpdate(
-              //   details?.campId?._id,
-              //   {
-              //     "$set":{reportUrl: globalReportUrl ? globalReportUrl : mergedUrl},
-              //     "$inc": {
-              //       numberOfConsolidatedReportGenerated : 1
-              //     },
-              //   },{new:true}
-              // );
+                const campUpdated = await campsModel.findByIdAndUpdate(
+                details?.campId?._id,
+                {
+                  "$set":{reportUrl: globalReportUrl ? globalReportUrl : mergedUrl},
+                  "$inc": {
+                    numberOfConsolidatedReportGenerated : 1
+                  },
+                },{new:true}
+              );
               
-              // console.log(campUpdated.reportUrl, details?.campId?._id)
+              console.log(campUpdated.reportUrl, details?.campId?._id)
 
-              // const updatedLab = await labItemModel.updateMany(
-              //   {
-              //     _id: {
-              //       $in: (details.labItems || []).map((item) => item?._id),
-              //     },
-              //   },
-              //   {
-              //     $set: {
-              //       isProcessed: true,
-              //     },
-              //   }
-              // );
+              const updatedLab = await labItemModel.updateMany(
+                {
+                  _id: {
+                    $in: (details.labItems || []).map((item) => item?._id),
+                  },
+                },
+                {
+                  $set: {
+                    isProcessed: true,
+                  },
+                }
+              );
 
-              // const res = await sendMessageBird({
-              //   toMultiple: false,
-              //   to: details?.patient?.mobile,
-              //   media: { url: mergedUrl },
-              //   smsParameters: [mergedUrl],
-              //   templateId: "healthreport",
-              // });
+              const res = await sendMessageBird({
+                toMultiple: false,
+                to: details?.patient?.mobile,
+                media: { url: mergedUrl },
+                smsParameters: [mergedUrl],
+                templateId: "healthreport",
+              });
 
-              // const res2 = await sendMessageBird({
-              //   toMultiple: false,
-              //   to: details?.patient?.mobile,
-              //   media: { url: mergedUrl },
-              //   languageCode: "kn",
-              //   smsParameters: [mergedUrl],
-              //   templateId: "healthreportkannada",
-              // });
+              const res2 = await sendMessageBird({
+                toMultiple: false,
+                to: details?.patient?.mobile,
+                media: { url: mergedUrl },
+                languageCode: "kn",
+                smsParameters: [mergedUrl],
+                templateId: "healthreportkannada",
+              });
 
               uhidMap = {...uhidMap, [uhid]:mergedUrl }
 
@@ -288,10 +289,16 @@ module.exports = async (req, res) => {
         }
       }else{
         console.log('Skipping because number of screening less than 4',details?.campId?._id, uhid);
-        skippedUhid = {...skippedUhid, [uhid]: details?.campId?._id } 
+        skippedUhid = {...skippedUhid, [uhid]: details?.campId?._id }
       }
         pdfLinks = [];
       }
+      if(campCounter === campIdArray.length){
+        console.log('last iterations');
+        await mergeByUrl(Object.values(uhidMap));
+        console.log('-------------------------', Object.values(uhidMap).length);
+      }
+      campCounter = campCounter + 1;
     }
   } catch (e) {
     console.log(e);

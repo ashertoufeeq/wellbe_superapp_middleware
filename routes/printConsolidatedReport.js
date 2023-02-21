@@ -188,7 +188,13 @@ router.get("/print", (req, res) => {
   const html = render(data);
   const title = "moment"
   if (!req.query.html) {
-    pdf.create(html).toStream((err, stream) => {
+    pdf.create(html, {
+      childProcessOptions: {
+        env: {
+          OPENSSL_CONF: '/dev/null',
+        },
+      }
+    }).toStream((err, stream) => {
       if (err) {
         console.log("error generating pdf ->", err);
       } else {

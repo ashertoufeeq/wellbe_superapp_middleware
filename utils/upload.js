@@ -6,7 +6,13 @@ const aws = require("aws-sdk");
 const uploadEJSPDF = ({ render, data, fileName }) =>
   new Promise((resolve, reject) => {
     const html = render(data);
-    pdf.create(html).toFile((err, file) => {
+    pdf.create(html, {
+      childProcessOptions: {
+        env: {
+          OPENSSL_CONF: '/dev/null',
+        },
+      }
+    }).toFile((err, file) => {
       if (err) {
         console.log("error generating pdf ->", err);
       } else {
@@ -54,7 +60,13 @@ const uploadEJSPDF = ({ render, data, fileName }) =>
 const getEjsFile = ({ render, data, fileName }) =>
   new Promise((resolve, reject) => {
     const html = render(data);
-    pdf.create(html).toFile((err, file) => {
+    pdf.create(html, {
+      childProcessOptions: {
+        env: {
+          OPENSSL_CONF: '/dev/null',
+        },
+      }
+    }).toFile((err, file) => {
       if (err) {
         console.log("error generating pdf ->", err);
         reject("error");

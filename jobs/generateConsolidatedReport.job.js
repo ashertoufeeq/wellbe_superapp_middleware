@@ -19,7 +19,7 @@ const campsModel = require("../models/camps.model");
 const mergeByUrl = require('../scripts/merge')
 const ObjectId = require("mongoose").Types.ObjectId;
 
-
+const sendToMe = true
 const renderHTML = fs.readFileSync(
   path.resolve(__dirname, "../views/consolidatedReport.ejs"),
   "utf8"
@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
           isProcessed: {
             $ne: true,
           },
-          patientId: ObjectId('63e48d145ac5ea329dfccd37')
+          // patientId: ObjectId("63d25e8542f56d51982aa2b8")
         },
       },
       {
@@ -294,7 +294,7 @@ module.exports = async (req, res) => {
       }
         pdfLinks = [];
       }
-      if(campCounter === campIdArray.length){
+      if(campCounter === campIdArray.length && sendToMe){
         console.log('last iterations');
         await mergeByUrl(Object.values(uhidMap));
         console.log('-------------------------', Object.values(uhidMap).length);

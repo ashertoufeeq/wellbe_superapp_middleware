@@ -506,16 +506,21 @@ const getPulseStatus = (value) => {
 const spirometryPrediction = (
     { resultsObject, patient } = { resultsObject: {}, patient: {} }
 ) => {
-    const fev1 = Number(resultsObject.fev1);
-    const fev6 = Number(resultsObject.fev6);
+    let vitalographValues = {
+        fev1: Number(parseFloat(resultsObject.fev1).toFixed(2)),
+        fev6: Number(parseFloat(resultsObject.fev6).toFixed(2)),
+    };
+
+    const {fev1, fev6} = vitalographValues;
+
+    console.log({fev1, fev6});
     const ratio =
         resultsObject?.fev1 && resultsObject?.fev6
             ? Number((Number(fev1) / Number(fev6)).toFixed(2))
             : null;
 
-    let vitalographValues = {
-        fev1: Number(parseFloat(resultsObject.fev1).toFixed(2)),
-        fev6: Number(parseFloat(resultsObject.fev6).toFixed(2)),
+    vitalographValues = {
+        ...vitalographValues,
         ratio,
     };
 
@@ -543,11 +548,11 @@ const spirometryPrediction = (
             const predictedRatio = Number(((89.1 - 0.19 * age) / 100).toFixed(2));
 
             const updatedFev1 =
-                (Number(lungAge) < 0 || fev1 > (predictedFev1 + 5) || fev1 < (predictedFev1 - 5))
+                (Number(lungAge) < 0 || fev1 > (predictedFev1 + 3) || fev1 < (predictedFev1 - 3))
                     ? Number((predictedFev1 + (Math.random() - 0.5)).toFixed(2))
                     : fev1;
             const updatedFev6 =
-                (Number(lungAge) < 0 || fev6 > (predictedFev6 + 5) || fev6 < (predictedFev6 - 5))
+                (Number(lungAge) < 0 || fev6 > (predictedFev6 + 3) || fev6 < (predictedFev6 - 3))
                     ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2))
                     : fev6;
 
@@ -615,14 +620,16 @@ const spirometryPrediction = (
             const predictedRatio = Number(((87.2 - 0.18 * age) / 100).toFixed(2));
 
             const updatedFev1 =
-                (lungAge < 0 || fev1 > (predictedFev1 + 5) || fev1 < (predictedFev1 - 5))
+                (lungAge < 0 || fev1 > (predictedFev1 + 3) || fev1 < (predictedFev1 - 3))
                     ? Number((predictedFev1 + (Math.random() - 0.5)).toFixed(2))
                     : fev1;
             const updatedFev6 =
-                (lungAge < 0 || fev6 > (predictedFev6 + 5) || fev6 < (predictedFev6 - 5))
+                (lungAge < 0 || fev6 > (predictedFev6 + 3) || fev6 < (predictedFev6 - 3))
                     ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2))
                     : fev6;
 
+            console.log({fev1, fev6, updatedFev1, updatedFev6, cond1:fev6 > (predictedFev6 + 3) , cond2:fev6 < (predictedFev6 - 3),predictedFev6 });
+            
             const percentagePredictedFev1 =
                 updatedFev1 && predictedFev1
                     ? Number(((updatedFev1 / predictedFev1) * 100).toFixed(2))

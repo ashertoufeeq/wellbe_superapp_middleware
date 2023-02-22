@@ -946,14 +946,14 @@ const tranformerConsolidatedReportData = ({
             re: {
                 sph: resultsObject?.RE_Spherical || 0,
                 cyl: resultsObject?.RE_Cylindrical || 0,
-                axis: resultsObject?.Re_Addition || 0,
-                add: resultsObject?.RE_Axis || 0,
+                add: resultsObject?.Re_Addition || 0,
+                axis: resultsObject?.RE_Axis || 0,
             },
             le: {
                 sph: resultsObject?.LE_Spherical || 0,
                 cyl: resultsObject?.LE_Cylindrical || 0,
-                axis: resultsObject?.LE_Addition || 0,
-                add: resultsObject?.LE_Axis || 0,
+                add: resultsObject?.LE_Addition || 0,
+                axis: resultsObject?.LE_Axis || 0,
             },
         },
         diagnosis: resultsObject?.Occular_Findings === 'NA' ? 'Normal' : resultsObject?.Occular_Findings || "",

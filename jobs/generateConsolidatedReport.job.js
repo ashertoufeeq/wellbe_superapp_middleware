@@ -45,7 +45,8 @@ module.exports = async (req, res) => {
           }},
           isProcessed: {
             $ne: true,
-          }
+          },
+          patientId: ObjectId('63e48d145ac5ea329dfccd37')
         },
       },
       {

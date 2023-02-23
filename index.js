@@ -12,7 +12,7 @@ const patientRecord = require("./models/patientRecord");
 const campScreening = require("./models/campScreening.model");
 const Program = require("./models/program.model");
 const labItem = require("./models/labItem");
-const mergeByUrl = require('./scripts/index')
+const mergeByUrl = require("./scripts/index");
 
 const app = express();
 const jobs = require("./jobs");
@@ -45,9 +45,9 @@ mongoose
   })
   .then(() => {
     console.log("db connected");
-    // jobs.analytics.add();
+    jobs.analytics.add();
     // jobs.sendMessages();
-    jobs.generateConsolidatedReport();
+    // jobs.generateConsolidatedReport();
   })
   .catch((err) => console.warn(err));
 

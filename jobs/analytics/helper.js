@@ -103,6 +103,7 @@ exports.screeningForUpdate = ({ screening, existingUpdate: existing }) => {
     ...existingUpdate,
     "First Name": screening.patientId?.fName,
     "Last Name": screening.patientId?.lName,
+    Mobile: screening.patientId?.mobile,
     Gender: screening.patientId?.gender,
     DOB: screening.patientId?.dob,
     Age: age,
@@ -210,6 +211,7 @@ exports.labForUpdate = ({ lab, existingUpdate: existing }) => {
   const existingUpdate = existing?.updateOne?.update?.$set || {};
   const updateTime = getLabCompletionTime(lab);
   const update = {
+    Barcode: lab.billId.billNumber,
     "Lab Test Status":
       existingUpdate["Lab Test Status"] === "Completed"
         ? "Completed"

@@ -5,6 +5,7 @@ const Camp = require("../../models/camps.model");
 const Program = require("../../models/program.model");
 const LabItem = require("../../models/labItem");
 const Eod = require("../../models/eod.model");
+const Bill = require("../../models/bill.model");
 const {
   screeningForUpdate,
   labForUpdate,
@@ -14,7 +15,7 @@ const {
 const util = require("util");
 const moment = require("moment");
 
-const last5Days = moment().subtract(30, "days").toISOString();
+const last5Days = moment().subtract(2, "days").toISOString();
 
 const processScreening = () =>
   new Promise(async (resolve, reject) => {
@@ -121,7 +122,9 @@ const processLab = () =>
         $not: { $elemMatch: { reportUrl: { $exists: false }, cleared: false } },
       },
       "packages.activities.at": { $gte: last5Days },
-    }).cursor();
+    })
+      .populate("billId", "billNumber")
+      .cursor();
 
     for (
       let action = await labCursor.next();
@@ -290,7 +293,7 @@ const processPatients = () =>
   });
 
 module.exports = async () => {
-  await processScreening();
+  // await processScreening();
   await processLab();
   await processEod();
   await processPatients();

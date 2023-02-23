@@ -113,6 +113,12 @@ const analyticsSchema = new schema(
       type: Date,
     },
     "Users Involved": [String],
+    Mobile: {
+      type: String,
+    },
+    Barcode: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

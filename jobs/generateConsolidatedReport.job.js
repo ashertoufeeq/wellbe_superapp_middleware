@@ -355,13 +355,13 @@ module.exports = async (req, res) => {
             details?.campId?._id,
             uhid
           );
-          // await Patient.findByIdAndUpdate(
-          //         details?.patient?._id,
-          //         {
-          //           consolidatedReportStatus: reportGenerationStatus.missingScreenings
-          //         },
-          //         { new: true }
-          //   );
+          await Patient.findByIdAndUpdate(
+                  details?.patient?._id,
+                  {
+                    consolidatedReportStatus: reportGenerationStatus.missingScreenings
+                  },
+                  { new: true }
+            );
           skippedUhid = { ...skippedUhid, [uhid]: details?.campId?._id };
         }
         pdfLinks = [];

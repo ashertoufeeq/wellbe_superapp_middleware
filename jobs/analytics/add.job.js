@@ -15,7 +15,7 @@ const {
 const util = require("util");
 const moment = require("moment");
 
-const last5Days = moment().subtract(2, "days").toISOString();
+const last5Days = moment().subtract(50, "days").toISOString();
 
 const processScreening = () =>
   new Promise(async (resolve, reject) => {
@@ -36,7 +36,7 @@ const processScreening = () =>
         {
           path: "patientId",
           select:
-            "fName lName gender dob _id createdAt updatedAt createdBy updatedBy consolidatedReportUrl consolidatedReportGeneratedAt uhid villagePinCode labourId",
+            "fName lName gender dob _id createdAt updatedAt createdBy updatedBy consolidatedReportUrl consolidatedReportGeneratedAt uhid villagePinCode labourId mobile",
         },
         {
           path: "campId",

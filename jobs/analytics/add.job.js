@@ -15,7 +15,7 @@ const {
 const util = require("util");
 const moment = require("moment");
 
-const last5Days = moment().subtract(100, "days").toISOString();
+const last5Days = moment().subtract(365, "days").startOf("day").toISOString();
 
 const processScreening = () =>
   new Promise(async (resolve, reject) => {
@@ -26,74 +26,96 @@ const processScreening = () =>
     let screeningCount = 0;
     let moved_actions_ids = [];
     console.log("Processing Screenings --");
-    const screeningCursor = await Screening.find({
-      $or: [
-        { createdAt: { $gte: last5Days } },
-        { updatedAt: { $gte: last5Days } },
-      ],
-    })
-      .populate([
+    const screeningCursor = Screening.aggregate(
+      [
         {
-          path: "patientId",
-          select:
-            "fName lName gender dob _id createdAt updatedAt createdBy updatedBy consolidatedReportUrl consolidatedReportGeneratedAt uhid villagePinCode labourId mobile",
-        },
-        {
-          path: "campId",
-          select: "name villageName villagePinCode talukaName programId _id",
-          populate: {
-            path: "programId",
-            select: "programShortCode programNumber",
+          $match: {
+            $or: [
+              {
+                createdAt: {
+                  $gte: moment().subtract(365, "days").startOf("day").toDate(),
+                },
+              },
+              {
+                updatedAt: {
+                  $gte: moment().subtract(365, "days").startOf("day").toDate(),
+                },
+              },
+            ],
           },
         },
-      ])
-      .cursor();
+        {
+          $addFields: {
+            patient: {
+              $toObjectId: "$patientId",
+            },
+            camp: {
+              $toObjectId: "$campId",
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "patient_records",
+            localField: "patient",
+            foreignField: "_id",
+            as: "patient",
+          },
+        },
+        {
+          $unwind: {
+            path: "$patient",
+            includeArrayIndex: "string",
+            preserveNullAndEmptyArrays: false,
+          },
+        },
+        {
+          $lookup: {
+            from: "camps",
+            localField: "camp",
+            foreignField: "_id",
+            as: "camp",
+          },
+        },
+        {
+          $unwind: {
+            path: "$camp",
+            includeArrayIndex: "string",
+            preserveNullAndEmptyArrays: false,
+          },
+        },
+        {
+          $group: {
+            _id: "$patientId",
+            screenings: {
+              $push: "$$ROOT",
+            },
+          },
+        },
+      ],
+      { allowDiskUse: true }
+    ).cursor();
 
     for (
       let action = await screeningCursor.next();
       action != null;
       action = await screeningCursor.next()
     ) {
-      let actions_json = action.toJSON();
-      moved_actions_ids.push(actions_json.patientId._id);
-      screeningCount++;
       process.stdout.write(".");
 
       let update = screeningForUpdate({
-        screening: actions_json,
-        existingUpdate:
-          processedPatientMap[
-            actions_json.patientId._id + actions_json.campId._id
-          ] || {},
+        group: action,
       });
-      if (
-        processedPatientMap[
-          actions_json.patientId._id + actions_json.campId._id
-        ]
-      ) {
-        moved_actions = moved_actions.map((a) => {
-          if (
-            a.updateOne.update.$setOnInsert["Patient Id"].equals(
-              actions_json.patientId._id
-            )
-          ) {
-            return update;
-          }
-          return a;
-        });
-      } else {
-        moved_actions.push(update);
-      }
 
-      processedPatientMap[
-        actions_json.patientId._id + actions_json.campId._id
-      ] = update;
+      moved_actions.push(update);
+
+      // processedPatientMap[
+      //   actions_json.patientId._id + actions_json.campId._id
+      // ] = update;
 
       // Every 100, stop and wait for them to be done
       if (moved_actions.length > 300) {
         await Analytics.bulkWrite(moved_actions);
-
-        count = count + moved_actions.length;
         process.stdout.write(".");
 
         moved_actions = [];
@@ -102,7 +124,6 @@ const processScreening = () =>
     if (moved_actions.length > 0) {
       await Analytics.bulkWrite(moved_actions);
 
-      count = count + moved_actions.length;
       process.stdout.write(".");
     }
     console.log("Screenings done");
@@ -120,6 +141,7 @@ const processLab = () =>
     const labCursor = await LabItem.find({
       $or: [
         { createdAt: { $gte: last5Days } },
+        { updatedAt: { $gte: last5Days } },
         { "packages.activities.at": { $gte: last5Days } },
       ],
     })
@@ -202,10 +224,9 @@ const processEod = () =>
       for (let patient of actions_json.patients) {
         let update = eodForUpdate({
           patient: { ...patient, campId: actions_json.campId },
-          existingUpdate:
-            processedPatientMap[patient.patientId + actions_json.campId] || {},
+          existingUpdate: processedPatientMap[patient.patientId] || {},
         });
-        if (processedPatientMap[patient.patientId + actions_json.campId]) {
+        if (processedPatientMap[patient.patientId]) {
           moved_actions = moved_actions.map((a) => {
             if (
               a.updateOne.update.$setOnInsert["Patient Id"].equals(
@@ -220,7 +241,7 @@ const processEod = () =>
           moved_actions.push(update);
         }
 
-        processedPatientMap[patient.patientId + actions_json.campId] = update;
+        processedPatientMap[patient.patientId] = update;
       }
       if (moved_actions.length > 300) {
         await Analytics.bulkWrite(moved_actions);

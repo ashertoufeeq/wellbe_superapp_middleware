@@ -103,6 +103,9 @@ const analyticsSchema = new schema(
     "Lab Test Status": {
       type: String,
     },
+    "Lab Clear Reason": {
+      type: String,
+    },
     "Sample Collection Time": {
       type: Date,
     },
@@ -118,6 +121,12 @@ const analyticsSchema = new schema(
     },
     Barcode: {
       type: String,
+    },
+    "Report Distributed": {
+      type: String,
+    },
+    "Report Distribution Time": {
+      type: Date,
     },
   },
   { timestamps: true }

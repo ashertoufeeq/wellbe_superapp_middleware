@@ -1,15 +1,33 @@
 const moment = require("moment");
 
-const getPhlebotomyResponse = ({ screening, existingUpdate }) => {
-  if (
-    existingUpdate["Phlebotomy Response"] === "Yes" ||
-    existingUpdate["Phlebotomy Response"] === "No"
-  ) {
-    return {
-      response: existingUpdate["Phlebotomy Response"],
-      filledBy: existingUpdate["Phlebotomy Done By"],
-    };
+const getCamp = (screenings) => {
+  const campMap = screenings.reduce((acc, curr) => {
+    if (acc[curr.campId]) {
+      acc[curr.campId] = {
+        ...acc[curr.campId],
+        count: acc[curr.campId].count + 1,
+      };
+    } else {
+      acc[curr.campId] = {
+        camp: curr.camp,
+        count: 1,
+      };
+    }
+    return acc;
+  }, {});
+  let max = -1;
+  let selectedCamp = null;
+  const camps = Object.keys(campMap);
+  for (const camp of camps) {
+    if (campMap[camp].count > max) {
+      max = campMap[camp].count;
+      selectedCamp = campMap[camp].camp;
+    }
   }
+  return selectedCamp;
+};
+
+const getPhlebotomyResponse = ({ screening }) => {
   const labScreening = screening.formsDetails?.find(
     (f) => f.formId === "63b555281d69946e4e49e091"
   );
@@ -26,23 +44,7 @@ const getPhlebotomyResponse = ({ screening, existingUpdate }) => {
   }
 };
 
-const getFormStatus = ({
-  screening,
-  existingUpdate,
-  formId,
-  filledByKey,
-  statusKey,
-}) => {
-  if (existingUpdate[statusKey] === "Done") {
-    return {
-      status: existingUpdate[statusKey],
-      filledBy: existingUpdate[filledByKey],
-      ...(formId === "6389026cc59c8aa15e498ae0" && {
-        otologyStatus:
-          existingUpdate["Otology Status"] === "Yes" ? "Done" : "Not Done",
-      }),
-    };
-  }
+const getFormStatus = ({ screening, formId, filledByKey, statusKey }) => {
   const healthScreening = screening.formsDetails?.find(
     (f) => f.formId === formId
   );
@@ -71,43 +73,68 @@ const getFormStatus = ({
   }
 };
 
-exports.screeningForUpdate = ({ screening, existingUpdate: existing }) => {
-  const existingUpdate = existing?.updateOne?.update?.$set || {};
-  const age = moment().diff(moment(screening.patientId.dob), "years");
-  const phlebotomyResponse = getPhlebotomyResponse({
-    screening,
-    existingUpdate,
-  });
-  const basicHealth = getFormStatus({
-    screening,
-    existingUpdate,
-    formId: "63b021a27e77bb4d6248b203",
-    statusKey: "Basic Health Checkup Status",
-    filledByKey: "Basic Health Checkup Done By",
-  });
-  const optometry = getFormStatus({
-    screening,
-    existingUpdate,
-    formId: "638b2a3c97c0192b1659257d",
-    statusKey: "Optometry Status",
-    filledByKey: "Optometry Done By",
-  });
-  const audiometry = getFormStatus({
-    screening,
-    existingUpdate,
-    formId: "6389026cc59c8aa15e498ae0",
-    statusKey: "Audiometry Status",
-    filledByKey: "Audiometry Done By",
-  });
+exports.screeningForUpdate = ({ group }) => {
+  const screening = group.screenings[0];
+  const age = moment().diff(moment(screening.patient.dob), "years");
+  const screenings = group.screenings.sort((a, b) =>
+    moment(b.createdAt).diff(a.createdAt)
+  );
+  let phlebotomyResponse = {
+    response: "No Data",
+    filledBy: "-",
+  };
+  let basicHealth = {
+    Status: "Not Done",
+    filledBy: "-",
+  };
+  let optometry = {
+    Status: "Not Done",
+    filledBy: "-",
+  };
+  let audiometry = {
+    Status: "Not Done",
+    filledBy: "-",
+  };
+  for (const s of screenings) {
+    if (phlebotomyResponse.response === "No Data") {
+      phlebotomyResponse = getPhlebotomyResponse({ screening: s });
+    }
+    if (basicHealth.Status === "Not Done") {
+      basicHealth = getFormStatus({
+        screening: s,
+        formId: "63b021a27e77bb4d6248b203",
+        statusKey: "Basic Health Checkup Status",
+        filledByKey: "Basic Health Checkup Done By",
+      });
+    }
+    if (optometry.Status === "Not Done") {
+      optometry = getFormStatus({
+        screening: s,
+        formId: "638b2a3c97c0192b1659257d",
+        statusKey: "Optometry Status",
+        filledByKey: "Optometry Done By",
+      });
+    }
+    if (audiometry.Status === "Not Done") {
+      audiometry = getFormStatus({
+        screening: s,
+        formId: "6389026cc59c8aa15e498ae0",
+        statusKey: "Audiometry Status",
+        filledByKey: "Audiometry Done By",
+      });
+    }
+  }
+
+  const camp = getCamp(screenings);
+
   const newScreening = {
-    ...existingUpdate,
-    "First Name": screening.patientId?.fName,
-    "Last Name": screening.patientId?.lName,
-    Mobile: screening.patientId?.mobile,
-    Gender: screening.patientId?.gender,
-    DOB: screening.patientId?.dob,
+    "First Name": screening.patient?.fName,
+    "Last Name": screening.patient?.lName,
+    Mobile: screening.patient?.mobile,
+    Gender: screening.patient?.gender,
+    DOB: screening.patient?.dob,
     Age: age,
-    UHID: screening.patientId.uhid,
+    UHID: screening.patient.uhid,
     "Age Group":
       age < 15
         ? "0-15 Years"
@@ -118,14 +145,14 @@ exports.screeningForUpdate = ({ screening, existingUpdate: existing }) => {
         : age < 65
         ? "40-65 Years"
         : "65 years and Above",
-    Camp: screening.campId.name,
-    Village: screening.campId.villageName,
-    Taluka: screening.campId.talukaName,
-    "Pin Code": screening.campId.villagePinCode,
-    "Work Order Number": screening.campId.programId?.programNumber,
-    "Work Order Short Code": screening.campId.programId?.programShortCode,
+    Camp: camp.name,
+    Village: camp.villageName,
+    Taluka: camp.talukaName,
+    "Pin Code": camp.villagePinCode,
+    "Work Order Number": camp.programId?.programNumber,
+    "Work Order Short Code": camp.programId?.programShortCode,
     "Screening Date": screening.createdAt,
-    "Registration Done By": screening.patientId.createdBy,
+    "Registration Done By": screening.patient.createdBy,
     "Basic Health Checkup Status": basicHealth.status || "Not Done",
     "Basic Health Checkup Done By": basicHealth.filledBy,
     "Phlebotomy Response": phlebotomyResponse.response || "No Data",
@@ -135,12 +162,14 @@ exports.screeningForUpdate = ({ screening, existingUpdate: existing }) => {
     "Otology Status": audiometry.otologyStatus || "Not Done",
     "Optometry Status": optometry.status || "Not Done",
     "Optometry Done By": optometry.filledBy,
-    "Report Generated": screening.patientId.consolidatedReportUrl
-      ? "Yes"
-      : "No",
-    "Report URL": screening.patientId.consolidatedReportUrl || "-",
-    "Report Sent At": screening.patientId.consolidatedReportGeneratedAt,
-    "Labour Id": screening.patientId.labourId,
+    "Report Generated": screening.patient.consolidatedReportUrl ? "Yes" : "No",
+    "Report URL": screening.patient.consolidatedReportUrl || "-",
+    "Report Sent At": screening.patient.consolidatedReportGeneratedAt,
+    "Report Distributed": screening.patient.isReportDistributed ? "Yes" : "No",
+    ...(screening.patient.reportDistributionTime && {
+      "Report Distribution Time": screening.patient.reportDistributionTime,
+    }),
+    "Labour Id": screening.patient.labourId,
   };
   let usersInvolved = [];
   if (
@@ -172,14 +201,13 @@ exports.screeningForUpdate = ({ screening, existingUpdate: existing }) => {
   return {
     updateOne: {
       filter: {
-        "Patient Id": screening.patientId?._id,
-        campId: screening.campId._id,
+        "Patient Id": screening.patient?._id,
       },
       update: {
         $set: { ...newScreening, "Users Involved": usersInvolved },
         $setOnInsert: {
-          "Patient Id": screening.patientId?._id,
-          campId: screening.campId._id,
+          "Patient Id": screening.patient?._id,
+          campId: camp._id,
         },
       },
       upsert: true,
@@ -212,16 +240,20 @@ exports.labForUpdate = ({ lab, existingUpdate: existing }) => {
   const updateTime = getLabCompletionTime(lab);
   const update = {
     Barcode: lab.billId.billNumber,
-    "Lab Test Status":
-      existingUpdate["Lab Test Status"] === "Completed"
-        ? "Completed"
-        : (lab.packages || []).every((p) => !!p.reportUrl)
-        ? "Completed"
-        : "Pending",
+    "Lab Test Status": lab.cleared
+      ? "Cleared"
+      : existingUpdate["Lab Test Status"] === "Completed"
+      ? "Completed"
+      : (lab.packages || []).every((p) => !!p.reportUrl)
+      ? "Completed"
+      : (lab.packages || []).some((p) => !!p.reportData?.parameters.length > 0)
+      ? "Processed In Machine"
+      : "Pending",
     ...(updateTime && { "Lab Result Completion Time": updateTime }),
+    "Lab Clear Reason": lab.clearReason || "-",
   };
   return {
-    updateOne: {
+    updateMany: {
       filter: { "Patient Id": lab.patientId },
       update: { $set: update, $setOnInsert: { "Patient Id": lab.patientId } },
     },
@@ -253,10 +285,14 @@ exports.patientForUpdate = ({ patient }) => {
     "Report Generated": patient.consolidatedReportUrl ? "Yes" : "No",
     "Report URL": patient.consolidatedReportUrl || "-",
     "Report Sent At": patient.consolidatedReportGeneratedAt,
+    "Report Distributed": patient.isReportDistributed ? "Yes" : "No",
+    ...(patient.reportDistributionTime && {
+      "Report Distribution Time": patient.reportDistributionTime,
+    }),
   };
 
   return {
-    updateOne: {
+    updateMany: {
       filter: { "Patient Id": patient._id },
       update: { $set: update },
     },

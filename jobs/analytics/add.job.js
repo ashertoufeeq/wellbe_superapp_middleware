@@ -293,8 +293,8 @@ const processPatients = () =>
   });
 
 module.exports = async () => {
-  // await processScreening();
-  await processLab();
-  await processEod();
-  await processPatients();
+  await processScreening();
+  // await processLab();
+  // await processEod();
+  // await processPatients();
 };

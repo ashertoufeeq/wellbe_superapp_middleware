@@ -27,7 +27,7 @@ console.log(
   express.static(path.join(__dirname, "public"))
 );
 
-const ConsolidatedReport = require("./routes/printConsolidatedReport");
+const rootRouter = require("./routes");
 
 // const agenda = new Agenda({
 //   db: {
@@ -43,7 +43,7 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
+  .then(async () => {
     console.log("db connected");
     jobs.analytics.add();
     // jobs.sendMessages();
@@ -110,9 +110,9 @@ app.listen(process.env.PORT || 4000, async () => {
 //     done();
 //   }
 // });
-app.use("/patient", async (req, res) => {
-  await jobs.generateConsolidatedReport(req, res);
-});
+
+app.use('/', rootRouter)
+
 
 function time() {
   return new Date().toTimeString().split(" ")[0];

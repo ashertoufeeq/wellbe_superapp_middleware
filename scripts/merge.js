@@ -1,7 +1,7 @@
 const { pdfMerge, getFileBufferFromUrl } = require("../utils/pdfMerge");
 const sendMessageBird = require("../utils/message");
 
-module.exports = async  (urls) => {
+module.exports = async  (urls, send= true) => {
     let i =  1   
     const pdfLinks = [];
     for(const url of urls){
@@ -10,9 +10,9 @@ module.exports = async  (urls) => {
         pdfLinks.push(buffer);
         if(i === urls.length){
         const { mergedUrl, error } =
-           await pdfMerge({pdfLinks})
+           await pdfMerge({pdfLinks});
            console.log({mergedUrl,error });
-           if(!error){
+           if(!error && send){
             await sendMessageBird({
                 toMultiple: false,
                 to: '9557807977',
@@ -21,6 +21,7 @@ module.exports = async  (urls) => {
                 templateId: "healthreport",
               });
             }
+            return mergedUrl;
         }
         i=i+1
     }

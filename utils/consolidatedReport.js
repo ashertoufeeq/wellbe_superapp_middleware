@@ -1,6 +1,8 @@
 const moment = require("moment");
 const { calculateAge } = require("./index");
 
+
+
 const getRandomFloots = (min, max) => {
     const randomNumber = min + Math.random() * (max - min);
     return Number(randomNumber.toFixed(2));
@@ -513,7 +515,6 @@ const spirometryPrediction = (
 
     const {fev1, fev6} = vitalographValues;
 
-    console.log({fev1, fev6});
     const ratio =
         resultsObject?.fev1 && resultsObject?.fev6
             ? Number((Number(fev1) / Number(fev6)).toFixed(2))
@@ -627,8 +628,6 @@ const spirometryPrediction = (
                 (lungAge < 0 || fev6 > (predictedFev6 + 3) || fev6 < (predictedFev6 - 3))
                     ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2))
                     : fev6;
-
-            console.log({fev1, fev6, updatedFev1, updatedFev6, cond1:fev6 > (predictedFev6 + 3) , cond2:fev6 < (predictedFev6 - 3),predictedFev6 });
             
             const percentagePredictedFev1 =
                 updatedFev1 && predictedFev1
@@ -979,6 +978,16 @@ const tranformerConsolidatedReportData = ({
         ...patientData,
     };
 };
+
+const reportGenerationStatus = {
+    generated: 'Generated',
+    reportSent: 'Report Sent',
+    labReportPending: 'Lab Report Pending',
+    missingScreenings: 'Missing Screenings',
+    notProcessed: 'Not Processed',
+};
+
 module.exports = {
     tranformerConsolidatedReportData,
+    reportGenerationStatus
 };

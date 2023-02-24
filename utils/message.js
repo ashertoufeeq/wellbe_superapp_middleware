@@ -117,7 +117,7 @@ const sendMessageBird = async ({
     const smsText = _smsText ? await shortenURLsInText(_smsText) : Promise.resolve(_smsText);
     console.log({ smsText, smsParameters });
     await sendSMSCountry({ smsText, to });
-
+    
     return axios.post(`https://conversations.messagebird.com/v1/send`, body, {
       httpsAgent: agent,
       headers: { Authorization: `AccessKey ${process.env.MESSAGE_BIRD_KEY}` },

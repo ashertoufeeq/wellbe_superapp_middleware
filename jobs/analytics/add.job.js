@@ -15,7 +15,7 @@ const {
 const util = require("util");
 const moment = require("moment");
 
-const last5Days = moment().subtract(50, "days").toISOString();
+const last5Days = moment().subtract(100, "days").toISOString();
 
 const processScreening = () =>
   new Promise(async (resolve, reject) => {
@@ -118,10 +118,10 @@ const processLab = () =>
     let moved_actions_ids = [];
     console.log("Processing Lab --");
     const labCursor = await LabItem.find({
-      packages: {
-        $not: { $elemMatch: { reportUrl: { $exists: false }, cleared: false } },
-      },
-      "packages.activities.at": { $gte: last5Days },
+      $or: [
+        { createdAt: { $gte: last5Days } },
+        { "packages.activities.at": { $gte: last5Days } },
+      ],
     })
       .populate("billId", "billNumber")
       .cursor();
@@ -293,8 +293,8 @@ const processPatients = () =>
   });
 
 module.exports = async () => {
-  await processScreening();
+  // await processScreening();
   await processLab();
-  await processEod();
-  await processPatients();
+  // await processEod();
+  // await processPatients();
 };

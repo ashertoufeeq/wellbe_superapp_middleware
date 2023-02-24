@@ -45,9 +45,9 @@ mongoose
   })
   .then(async () => {
     console.log("db connected");
-    // jobs.analytics.add();
+    jobs.analytics.add();
     // jobs.sendMessages();
-    jobs.generateConsolidatedReport();
+    // jobs.generateConsolidatedReport();
   })
   .catch((err) => console.warn(err));
 
@@ -111,8 +111,7 @@ app.listen(process.env.PORT || 4000, async () => {
 //   }
 // });
 
-app.use('/', rootRouter)
-
+app.use("/", rootRouter);
 
 function time() {
   return new Date().toTimeString().split(" ")[0];

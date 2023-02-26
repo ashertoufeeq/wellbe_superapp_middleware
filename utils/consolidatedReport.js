@@ -1,6 +1,6 @@
 const moment = require("moment");
 const { calculateAge } = require("./index");
-
+const ScreeningModel = require('../models/campScreening.model')
 
 
 const getRandomFloots = (min, max) => {
@@ -987,7 +987,132 @@ const reportGenerationStatus = {
     notProcessed: 'Not Processed',
 };
 
+
+const getFormDetailFromScreening = ({ screening, formId }) => {
+    const healthScreening = screening.formsDetails?.find(
+      (f) => f.formId === formId
+    );
+    if (healthScreening) {
+      return {
+        healthScreening,
+        status:
+          Object.keys(healthScreening.results || {}).length > 0
+            ? "Done"
+            : "Not Done",
+        screeningId: screening?._id,
+        campId: screening?.campId,
+        createdAt: screening?.createdAt,    
+        filledBy:
+          Object.keys(healthScreening.results || {}).length > 0
+            ? screening.createdBy?.name || "-"
+            : "",
+        ...(formId === "6389026cc59c8aa15e498ae0" && {
+          otologyStatus:
+            healthScreening.results || {}.Is_Otology_Completed_ === "Yes"
+              ? "Done"
+              : "Not Done",
+        }),
+      };
+    } else {
+      return null
+    }
+  };
+
+const getResults = async ({screenings = [], campId, debug}) => {
+    const forms = [{
+        formId: "63b021a27e77bb4d6248b203",
+        name: "Basic Health Checkup",
+    },{
+        formId: "638b2a3c97c0192b1659257d",
+        statusKey: "Optometry Status",
+        
+    }, {
+        formId: "6389026cc59c8aa15e498ae0",
+        statusKey: "Audiometry Status",
+    }];
+
+    let screeningsByFormId = {
+
+    };
+    
+    for(let screening of screenings){
+        for(let form of forms){
+            const details = getFormDetailFromScreening({screening, formId: form.formId});
+            if(details){
+                screeningsByFormId = { 
+                    ...screeningsByFormId, 
+                    [form.formId]: [ ...(screeningsByFormId[form.formId] || []), details]
+                }
+            }
+        }
+    }
+    let results = {}
+    process.stdout.write("screeningsByFormId");
+    console.log(screeningsByFormId,'screeningsByFormId', campId)
+
+    if(
+        screeningsByFormId['63b021a27e77bb4d6248b203'] &&  (screeningsByFormId['63b021a27e77bb4d6248b203']).length > 0
+        && screeningsByFormId['638b2a3c97c0192b1659257d'] &&  (screeningsByFormId['638b2a3c97c0192b1659257d']).length > 0
+        && screeningsByFormId['6389026cc59c8aa15e498ae0'] &&  (screeningsByFormId['6389026cc59c8aa15e498ae0']).length > 0
+    ){
+        const formIdsArray = Object.keys(screeningsByFormId)
+        for(const formId of formIdsArray){
+            const items = screeningsByFormId[formId];
+            const len = (screeningsByFormId[formId]||[]).length
+            if(len === 1){
+                if(items[0]?.campId === campId){
+                    results = {...results, ...(items[0]?.healthScreening?.results||{})}
+                }
+                else{
+                    if(!debug){
+                        await ScreeningModel.findByIdAndUpdate(
+                        items[0]?.healthScreening?.screeningId,
+                        {
+                          $set: {
+                            campId: campId,
+                          }
+                        },
+                        { new: true }
+                      );
+                    console.log('Risk Mode 7');
+                    }else{
+                        console.log('Debug Mode 7');
+                    }
+                    results = {...results, ...(items[0]?.healthScreening?.results||{})};     
+                }
+            }else{
+                const preferredItem = items.find(
+                    (f) => f.campId === campId
+                  );
+                  if(preferredItem){
+                    results = {...results, ...(preferredItem?.healthScreening?.results||{})}
+                  }else{
+                    if(!debug){
+                    await ScreeningModel.findByIdAndUpdate(
+                        items[0]?.healthScreening?.screeningId,
+                        {
+                          $set: {
+                            campId: campId,
+                          }
+                        },
+                        { new: true }
+                      );
+                    console.log('Risk Mode 8');
+                    }else{
+                        console.log('Debug Mode 8');
+                    }
+                    results = {...results, ...(items[0]?.healthScreening?.results||{})}
+                  }
+            }
+        }
+        return results;
+    }else{
+        return null
+    }
+}
+
 module.exports = {
     tranformerConsolidatedReportData,
-    reportGenerationStatus
+    reportGenerationStatus,
+    getResults
 };

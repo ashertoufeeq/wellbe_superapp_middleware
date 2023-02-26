@@ -3,7 +3,6 @@ const moment = require("moment");
 const ejs = require("ejs");
 const fs = require("fs");
 const path = require("path");
-const sendMessageBird = require("../utils/message");
 
 const ScreeningModel = require("../models/campScreening.model");
 const Patient = require("../models/patientRecord");
@@ -17,6 +16,8 @@ const {
 const campsModel = require("../models/camps.model");
 const mergeByUrl = require("../scripts/merge");
 const ObjectId = require("mongoose").Types.ObjectId;
+const {getCamp} = require('../jobs/analytics/helper')
+
 
 const renderHTML = fs.readFileSync(
   path.resolve(__dirname, "../views/consolidatedReport.ejs"),
@@ -30,360 +31,363 @@ const sendToMe = false;
 
 module.exports = async (req, res) => {
   console.log("Consolidated Report Fetching");
-
   try {
-    let skippedUhid = {};
-    let labItemsMap = {};
-    let detailsMap = {};
-    const patientIds = [];
     let uhidMap = {};
-
-    const labs = await labItemModel.aggregate([
-      {
-        $match: {
-          packages: {
-            $not: {
-              $elemMatch: { reportUrl: { $exists: false }, cleared: false },
-            },
+    const labAggregateQuery = [{
+      $match: {
+        packages: {
+          $not: {
+            $elemMatch: { reportUrl: { $exists: false }, cleared: false },
           },
-          ...(!req
-            ? {
-                isProcessed: {
-                  $ne: true,
-                },
-              }
-            : {}),
-          ...(req && req?.body.patientId
-            ? {
-                patientId: ObjectId(req?.body.patientId),
-              }
-            : {}),
         },
+        ...(!req
+          ? {
+              isProcessed: {
+                $ne: true,
+              },
+            }
+          : {}),
+        ...(req && req?.body.patientId
+          ? {
+              patientId: ObjectId(req?.body.patientId),
+            }
+          : {}),
       },
-      {
-        $lookup: {
-          from: "patient_records",
-          localField: "patientId",
-          foreignField: "_id",
-          as: "patient",
+    },
+    {
+      $lookup: {
+        from: "patient_records",
+        localField: "patientId",
+        foreignField: "_id",
+        as: "patient",
+      },
+    },
+    {
+      $unwind: {
+        path: "$patient",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        package: { $first: "$packages" },
+        patientUhid: "$patient.uhid",
+        patientId: "$patient._id",
+        isReportSent: "$patient.isReportSent",
+      },
+    },
+    {
+      $addFields: {
+        reportUrl: "$package.reportUrl",
+      },
+    },
+    {
+      $project: {
+        reportUrl: "$reportUrl",
+        uhid: "$patientUhid",
+        patientId: "$patientId",
+        isReportSent: "$isReportSent",
+      },
+    },
+    {
+      $group: {
+        _id: "$patientId",
+        labItems: {
+          $push: "$$ROOT",
         },
-      },
-      {
-        $unwind: {
-          path: "$patient",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $addFields: {
-          package: { $first: "$packages" },
-          patientUhid: "$patient.uhid",
-          patientId: "$patient._id",
-          isReportSent: "$patient.isReportSent",
-        },
-      },
-      {
-        $addFields: {
-          reportUrl: "$package.reportUrl",
-        },
-      },
-      {
-        $project: {
-          reportUrl: "$reportUrl",
-          uhid: "$patientUhid",
-          patientId: "$patientId",
-          isReportSent: "$isReportSent",
-        },
-      },
-    ]);
+    }
+    }];
 
-    console.log(
-      labs.length,
-      labs.filter((i) => i.reportUrl).length,
-      "labs length"
+    const labCount = await labItemModel.aggregate([
+      ...labAggregateQuery,
+      {"$count": 'total'}
+    ],{ allowDiskUse: true }
     );
 
-    if ((labs || []).length > 0) {
-      for (const item of labs) {
-        const uhid = item?.uhid;
-        if (item?.reportUrl) {
-          if (!(patientIds || []).includes(item?.patientId)) {
-            patientIds.push(item?.patientId);
-          }
-          labItemsMap = {
-            ...labItemsMap,
-            [uhid]: [...(labItemsMap[uhid] || []), item],
-          };
-        }
-      }
-    }
+    const labCursor = labItemModel.aggregate(labAggregateQuery,{ allowDiskUse: true }
+    ).cursor();
 
-    const screenings = await ScreeningModel.find({
-      patientId: { $in: patientIds },
-    })
-      .populate([{ path: "patientId" }, { path: "campId" }])
-      .sort({ createdAt: "asc" })
-      .exec();
-
-    console.log(screenings.length, "screenings");
-
-    if (screenings) {
-      for (const screening of screenings) {
-        const uhid = screening?.patientId?.uhid;
-        const campId = screening.campId?._id;
-        detailsMap = {
-          ...detailsMap,
-          [campId]: {
-            ...(detailsMap[campId] || {}),
-            [uhid]: {
-              ...(detailsMap[campId] ? detailsMap[campId][uhid] : {}),
-              campId: screening?.campId,
-              state: screening?.campId?.stateName,
-              district: screening?.campId?.villageName,
-              location: `${screening?.campId?.talukaName},${screening?.campId?.villageName}(${screening?.campId?.villagePinCode})`,
-              patient: screening?.patientId,
-              screeningDate: screening?.createdAt,
-              screenings: [
-                ...((detailsMap[campId] ? detailsMap[campId][uhid] : {})
-                  ?.screenings || []),
-                ...(screening?.campId?._id === campId ? [screening] : []),
-              ],
-              labItems: labItemsMap[uhid],
-            },
-          },
-        };
-      }
-    }
-
-    const campIdArray = Object.keys(detailsMap);
-    let campCounter = 1;
     let globalCount = 1;
-
-    if(campIdArray.length === 0){
-      if (req?.body && res) {          
-          await Patient.findByIdAndUpdate(
-            req?.body.patientId,
+    
+    for(
+      let action = await labCursor.next();
+      action != null;
+      action = await labCursor.next()
+      ){
+        console.log(globalCount, labCount)
+       if((action.labItems || []).some(item => item.reportUrl)){
+        const screenings = await ScreeningModel.aggregate(
+          [
             {
-              consolidatedReportStatus: reportGenerationStatus.labReportPending
-            },
-            { new: true }
-          );
-          res.status(500).json(reportGenerationStatus.labReportPending);
-      }
-    }
-
-    for (const campId of campIdArray) {
-      console.log("Camp Count: ", campCounter, campIdArray.length);
-      const uhidArray = Object.keys(detailsMap[campId]);
-      let pdfLinks = [];
-      let interation = 1;
-
-      for (const uhid of uhidArray) {
-        console.log(globalCount, labs.length);
-        const details = detailsMap[campId][uhid];
-        if (((details || {}).screenings || []).length > 3) {
-          if (
-            details?.patient?.consolidatedReportUrl &&
-            (!req || (req && (!req?.body.regenerate)))
-          ) {
-            console.log("Report already generated for :", uhid);
-            uhidMap = {
-              ...uhidMap,
-              [uhid]: details?.patient?.consolidatedReportUrl,
-            };
-          } else {
-            let labReportGenerated = false;
-            let screeningReportGenerated = false;
-            let results = {};
-
-            ((details || {}).screenings || []).map((screening) => {
-              if (screening.formsDetails) {
-                (screening.formsDetails || []).map((item) => {
-                  results = { ...results, ...(item.results || {}) };
-                });
-              }
-            });
-
-            const buffer = await getEjsFile({
-              render,
-              data: tranformerConsolidatedReportData({
-                patient: details?.patient,
-                resultsObject: results,
-                screeningDate: details?.screeningDate,
-                location: details?.campId?.name,
-                district: details.district,
-                state: details.state,
-              }),
-              fileName: "consolidated-report" + Date.now(),
-            });
-            pdfLinks.push(buffer);
-            screeningReportGenerated = !!buffer;
-            console.log(details.labItems, "lab items");
-            for (const lab of details.labItems || []) {
-              if (lab && lab?.reportUrl) {
-                const labBuffer = await getFileBufferFromUrl(lab?.reportUrl);
-                pdfLinks.push(labBuffer);
-                labReportGenerated = true;
-              }
-            }
-
-            console.log({ labReportGenerated, screeningReportGenerated });
-
-            if (labReportGenerated && screeningReportGenerated) {
-              const camp = await campsModel.findOne({
-                _id: details?.campId._id,
-              });
-              console.log({
-                previousReportUrl: camp?.reportUrl,
-                _id: camp?._id,
-              });
-              const globalReportBuffer = camp?.reportUrl
-                ? await getFileBufferFromUrl(camp?.reportUrl)
-                : undefined;
-              console.log("global buffer", !!globalReportBuffer, camp?.reportUrl);
-              const { mergedUrl, error: mergeError } = await pdfMerge({
-                pdfLinks,
-              });
-
-              const { mergedUrl: globalReportUrl, error: globalMergeError } =
-                camp?.reportUrl
-                  ? await pdfMerge({
-                      pdfLinks: [globalReportBuffer, ...pdfLinks],
-                    })
-                  : { mergedUrl: null, error: null };
-
-              console.log(globalReportUrl, "global", globalMergeError);
-              if (mergeError) {
-                console.log(mergeError);
-                continue;
-              } else {
-                const patient = await Patient.findByIdAndUpdate(
-                  details?.patient?._id,
+              $match: {
+                $or: [
                   {
-                  ...((!req || (req && !req?.body.regenerate)) ? { consolidatedReportStatus: reportGenerationStatus.reportSent}:{}),
-                    consolidatedReportUrl: mergedUrl,
-                    consolidatedReportCampId: details?.campId?._id,
-                    consolidatedReportGeneratedAt: moment()
-                      .tz(timezone)
-                      .toISOString(),
+                    createdAt: {
+                      $gte: moment().subtract(365, "days").startOf("day").toDate(),
+                    },
                   },
-                  { new: true }
-                );
+                  {
+                    updatedAt: {
+                      $gte: moment().subtract(365, "days").startOf("day").toDate(),
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $addFields: {
+                patient: {
+                  $toObjectId: "$patientId",
+                },
+                camp: {
+                  $toObjectId: "$campId",
+                },
+              },
+            },
+            {
+              $match: {
+                patient:  action._id ,
+              }
+            },
+            {
+              $lookup: {
+                from: "patient_records",
+                localField: "patient",
+                foreignField: "_id",
+                as: "patient",
+              },
+            },
+            {
+              $unwind: {
+                path: "$patient",
+                includeArrayIndex: "string",
+                preserveNullAndEmptyArrays: false,
+              },
+            },
+            {
+              $lookup: {
+                from: "camps",
+                localField: "camp",
+                foreignField: "_id",
+                as: "camp",
+              },
+            },
+            {
+              $unwind: {
+                path: "$camp",
+                includeArrayIndex: "string",
+                preserveNullAndEmptyArrays: false,
+              },
+            }
+          ]
+        );  
 
-                if (!req || (req && !req?.body.regenerate)) {
-                  console.log("updating camp");
+        console.log(screenings.length, "screenings");
 
-                  const campUpdated = await campsModel.findByIdAndUpdate(
-                    details?.campId?._id,
+      if (screenings && screenings?.length) {
+          let pdfLinks = [];
+          const camp =  getCamp(screenings);
+          const patient  = screenings[0]?screenings[0].patient : null;
+          const uhid  = patient?.uhid;
+          const date  = screenings[0]?screenings[0].createdAt : null;
+          console.log(patient.uhid,'Test');
+
+          if(camp && patient){
+            const details = {
+              campId: camp,
+                  state: camp?.stateName,
+                  district: camp?.villageName,
+                  location: `${camp?.talukaName},${camp?.villageName}(${camp?.villagePinCode})`,
+                  patient: patient,
+                  screeningDate: camp?.screeningStartDate || date,
+                  screenings: screenings,
+                  labItems: action.labItems,
+            } 
+            if (patient?.consolidatedReportUrl && (!req || (req && (!req?.body.regenerate)))) {
+              console.log("Report already generated for :", uhid);
+              uhidMap = {
+                ...uhidMap,
+                [uhid]: details?.patient?.consolidatedReportUrl,
+              };
+            } else {
+              let labReportGenerated = false;
+              let screeningReportGenerated = false;
+              let results = {};
+
+              (screenings || []).map((screening) => {
+                if (screening.formsDetails) {
+                  (screening.formsDetails || []).map((item) => {
+                    results = { ...results, ...(item.results || {}) };
+                  });
+                }
+              });
+  
+              const buffer = await getEjsFile({
+                render,
+                data: tranformerConsolidatedReportData({
+                  patient,
+                  resultsObject: results,
+                  screeningDate: details?.screeningDate,
+                  location: details?.campId?.name,
+                  district: details.district,
+                  state: details.state,
+                }),
+                fileName: "consolidated-report" + Date.now(),
+              });
+
+              pdfLinks.push(buffer);
+              screeningReportGenerated = !!buffer;
+              console.log(details.labItems, "lab items");
+
+              for (const lab of details.labItems || []) {
+                if (lab && lab?.reportUrl) {
+                  const labBuffer = await getFileBufferFromUrl(lab?.reportUrl);
+                  pdfLinks.push(labBuffer);
+                  labReportGenerated = true;
+                }
+              }
+
+              console.log({ labReportGenerated, screeningReportGenerated });
+
+              if(labReportGenerated && screeningReportGenerated){
+                const updateCamp = await campsModel.findOne({
+                  _id: details?.campId._id,
+                });
+
+                console.log({
+                  previousReportUrl: updateCamp?.reportUrl,
+                  _id: updateCamp?._id,
+                });
+                const globalReportBuffer = updateCamp?.reportUrl
+                  ? await getFileBufferFromUrl(updateCamp?.reportUrl)
+                  : undefined;
+
+                console.log("global buffer", !!globalReportBuffer, updateCamp?.reportUrl);
+                
+                const { mergedUrl, error: mergeError } = await pdfMerge({
+                  pdfLinks,
+                });
+  
+                const { mergedUrl: globalReportUrl, error: globalMergeError } =
+                  updateCamp?.reportUrl
+                    ? await pdfMerge({
+                        pdfLinks: [globalReportBuffer, ...pdfLinks],
+                      })
+                    : { mergedUrl: null, error: null };
+
+                console.log(globalReportUrl, "global", globalMergeError);
+
+                if (mergeError) {
+                  console.log(mergeError);
+                  continue;
+                } else {
+
+                  await Patient.findByIdAndUpdate(
+                    patient?._id,
                     {
-                      $set: {
-                        reportUrl: globalReportUrl
-                          ? globalReportUrl
-                          : mergedUrl,
-                      },
-                      $inc: {
-                        numberOfConsolidatedReportGenerated: 1,
-                      },
-                      reportGeneratedAt: moment()
-                      .tz(timezone)
-                      .toISOString(),
+                    ...((!req || (req && !req?.body.regenerate)) ? { consolidatedReportStatus: reportGenerationStatus.reportSent}:{}),
+                      consolidatedReportUrl: mergedUrl,
+                      consolidatedReportCampId: camp?._id,
+                      consolidatedReportGeneratedAt: moment()
+                        .tz(timezone)
+                        .toISOString(),
                     },
                     { new: true }
                   );
-
-                  console.log(campUpdated.reportUrl, details?.campId?._id);
-
-                  const updatedLab = await labItemModel.updateMany(
-                    {
-                      _id: {
-                        $in: (details.labItems || []).map((item) => item?._id),
+  
+                  if (!req || false && (req && !req?.body.regenerate)) {
+                    console.log("updating camp");
+  
+                    const campUpdated = await campsModel.findByIdAndUpdate(
+                      camp?._id,
+                      {
+                        $set: {
+                          reportUrl: globalReportUrl
+                            ? globalReportUrl
+                            : mergedUrl,
+                        },
+                        $inc: {
+                          numberOfConsolidatedReportGenerated: 1,
+                        },
+                        reportGeneratedAt: moment()
+                        .tz(timezone)
+                        .toISOString(),
                       },
-                    },
-                    {
-                      $set: {
-                        isProcessed: true,
+                      { new: true }
+                    );
+  
+                    console.log(campUpdated.reportUrl, camp?._id);
+  
+                    const updatedLab = await labItemModel.updateMany(
+                      {
+                        _id: {
+                          $in: (details.labItems || []).map((item) => item?._id),
+                        },
                       },
-                    }
-                  );
-
-                  const res = await sendMessageBird({
-                    toMultiple: false,
-                    to: details?.patient?.mobile,
-                    media: { url: mergedUrl },
-                    smsParameters: [mergedUrl],
-                    templateId: "healthreport",
-                  });
-
-                  const res2 = await sendMessageBird({
-                    toMultiple: false,
-                    to: details?.patient?.mobile,
-                    media: { url: mergedUrl },
-                    languageCode: "kn",
-                    smsParameters: [mergedUrl],
-                    templateId: "healthreportkannada",
-                  });
+                      {
+                        $set: {
+                          isProcessed: true,
+                        },
+                      }
+                    );
+                  }
+  
+                  uhidMap = { ...uhidMap, [uhid]: mergedUrl };
+  
+                  console.log({
+                    uhidMap,
+                    mergedUrl,
+                    globalCount,
+                    globalReportUrl,
+                    campId: camp?._id,
+                  });  
                 }
-
-                uhidMap = { ...uhidMap, [uhid]: mergedUrl };
-
-                console.log({
-                  uhidMap,
-                  mergedUrl,
-                  interation,
-                  globalReportUrl,
-                  uhidLength: uhidArray.length,
-                  campId: details?.campId?._id,
-                });
-
-                interation = interation + 1;
-                globalCount = globalCount + 1;
-              }
-            } else {
-              pdfLinks = [];
-              await Patient.findByIdAndUpdate(
+                pdfLinks = [];
+              }else{
+                pdfLinks = [];
+                await Patient.findByIdAndUpdate(
                   details?.patient?._id,
                   { 
                     consolidatedReportStatus: !labReportGenerated? reportGenerationStatus.labReportPending: reportGenerationStatus.missingScreenings
                   },
                   { new: true }
-              )
+                )
+              }
             }
+          } else{
+            pdfLinks = [];
+            console.log('Camp not found!', camp?._id);
           }
-        } else {
-          console.log(
-            "Skipping because number of screening less than 4",
-            details?.campId?._id,
-            uhid
-          );
-          await Patient.findByIdAndUpdate(
-                  details?.patient?._id,
-                  {
-                    consolidatedReportStatus: reportGenerationStatus.missingScreenings
-                  },
-                  { new: true }
-            );
-          skippedUhid = { ...skippedUhid, [uhid]: details?.campId?._id };
-        }
-        pdfLinks = [];
+          pdfLinks = [];
+        }else {
+        await Patient.findByIdAndUpdate(
+          details?.patient?._id,
+          {
+            consolidatedReportStatus: reportGenerationStatus.missingScreenings
+          },
+          { new: true }
+        );
+        console.log('Screenings not found for ', screenings[0]? screenings[0]?.patientId: null);
       }
-
-      if (campCounter === campIdArray.length) {
-        console.log("last iterations");
-        if(sendToMe){
-          await mergeByUrl(Object.values(uhidMap));
-        }
-        const uhidMapLen = Object.values(uhidMap).length;
-        console.log("-------------------------", uhidMapLen);
-        if (req?.body && res) {
-          if (uhidMapLen > 0) {
-            res.status(200).json(uhidMap);
-          } else {
-            res.status(500).json("Report not generated");
-          }
-        }
-      }
-      campCounter = campCounter + 1;
     }
+
+      if(globalCount === (labCount  && labCount[0] && labCount[0]?.total) ){
+        console.log('last Iteration');
+         if(sendToMe){
+        await mergeByUrl(Object.values(uhidMap));
+      }
+      const uhidMapLen = Object.values(uhidMap).length;
+      console.log("-------------------------", uhidMapLen);
+      if (req?.body && res) {
+        if (uhidMapLen > 0) {
+            res.status(200).json(uhidMap);
+        } else {
+          res.status(500).json("Report not generated");
+        }
+      }
+      }
+      globalCount = globalCount + 1;
+  }
   } catch (e) {
     console.log(e);
   }

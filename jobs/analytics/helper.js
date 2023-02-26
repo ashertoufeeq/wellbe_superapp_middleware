@@ -298,3 +298,5 @@ exports.patientForUpdate = ({ patient }) => {
     },
   };
 };
+
+exports.getCamp = getCamp;

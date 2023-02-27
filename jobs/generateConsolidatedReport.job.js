@@ -27,7 +27,7 @@ const timezone = "Asia/Kolkata";
 
 const render = ejs.compile(renderHTML);
 
-const debug = true;
+const debug = false;
 const sendToMe = false;
 
 module.exports = async (req, res) => {
@@ -278,6 +278,7 @@ module.exports = async (req, res) => {
                 console.log({
                   previousReportUrl: updateCamp?.reportUrl,
                   _id: updateCamp?._id,
+                  pdfLinks
                 });
                 const globalReportBuffer = updateCamp?.reportUrl
                   ? await getFileBufferFromUrl(updateCamp?.reportUrl)
@@ -286,7 +287,7 @@ module.exports = async (req, res) => {
                 const { mergedUrl, error: mergeError } = await pdfMerge({
                   pdfLinks,
                 });
-
+                console.log({mergedUrl, mergeError})
                 const { mergedUrl: globalReportUrl, error: globalMergeError } =
                   updateCamp?.reportUrl
                     ? await pdfMerge({
@@ -297,7 +298,10 @@ module.exports = async (req, res) => {
                 console.log(globalReportUrl, "global", globalMergeError);
 
                 if (mergeError) {
-                  console.log(mergeError);
+                  console.log(mergeError, 'merge error');
+                  if(req){
+                    res.status(500).json('Something went wrong')
+                  }
                   continue;
                 } else {
                   if (!debug) {
@@ -450,5 +454,8 @@ module.exports = async (req, res) => {
     }
   } catch (e) {
     console.log(e);
+    if(req){
+      res.status(500).json('Something went wrong')
+    }
   }
 };

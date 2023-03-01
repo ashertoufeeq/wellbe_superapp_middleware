@@ -66,7 +66,10 @@ const getFormStatus = ({ screening, formId, filledByKey, statusKey }) => {
       }),
     };
   } else {
-    return null
+    return {
+      Status: "Not Done",
+      filledBy: "-",
+    };
   }
 };
 

@@ -373,7 +373,9 @@
         Systolic
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= systolic %> mmHg
+        <%= systolic %> <% if (systolic !== "-") { %>
+          mmHg
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= systolicStatus %>
@@ -416,7 +418,9 @@
         Diastolic
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= diastolic %> mmHg
+        <%= diastolic %> <% if (diastolic !== "-") { %>
+          mmHg
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= diastolicStatus %>
@@ -461,7 +465,9 @@
         Temperature
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
-        <%= temperature %> F
+        <%= temperature %> <% if (temperature !== "-") { %>
+          F
+          <% } else { %> <% } %>
       </td>
       <td class="t-c n-b" style="width: 15%; background-color: #f2f2f2">
         <%= temperatureStatus %>

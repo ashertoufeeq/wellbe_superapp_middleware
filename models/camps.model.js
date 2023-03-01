@@ -228,7 +228,10 @@ const itemSchema = new schema(
         },
         reportGeneratedAt: {
             type: Date
-        }
+        },
+        reportSentAt: {
+            type: Date,
+        },
     },
     { timestamps: true },
 );

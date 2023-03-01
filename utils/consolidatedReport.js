@@ -72,6 +72,13 @@ const getAge = ({ patient }) => {
 
 const getBmiStatus = (value) => {
     const bmi = Number(value);
+    if(!bmi){
+        return {
+            bmiStatus: "-",
+            bmiRecommendation:
+                "Sample not given.",
+        };
+    }
     if (bmi < 18) {
         return {
             bmiStatus: "Underweight",
@@ -98,9 +105,9 @@ const getBmiStatus = (value) => {
         };
     } else {
         return {
-            bmiStatus: "Unknown",
+            bmiStatus: "-",
             bmiRecommendation:
-                "Healthy weight can be maintained by regularly doing exercise and eating healthy food.",
+                "Sample not given.",
         };
     }
 };
@@ -125,9 +132,9 @@ const getFatStatus = (
         } else {
             return {
                 fat: "-",
-                fatStatus: "Unknown",
+                fatStatus: "-",
                 fatRecommendation:
-                    "To maintain the fat percentage at normal range, focus on exercising and eating healthy food.",
+                    "Sample not given.",
             };
         }
     }
@@ -167,10 +174,10 @@ const getFatStatus = (
         };
     } else {
         return {
-            fat,
-            fatStatus: "Unknown",
+            fat: fat||'-',
+            fatStatus: "-",
             fatRecommendation:
-                "To maintain the fat percentage at normal range, focus on exercising and eating healthy food.",
+                "Sample not given.",
         };
     }
 };
@@ -211,9 +218,9 @@ const getHydrationStatus = (
             }
         } else {
             return {
-                hydrationStatus: "Unknown",
+                hydrationStatus: "-",
                 hydrationRecommendation:
-                    "Total Body Water Percentage is the total amount of fluid in a person’s body expressed as a percentage of their total weight.",
+                    "Sample not given.",
                 hydration: "-",
             };
         }
@@ -241,16 +248,33 @@ const getHydrationStatus = (
         };
     } else {
         return {
-            hydrationStatus: "Unknown",
+            hydrationStatus: "-",
             hydrationRecommendation:
-                "Total Body Water Percentage is the total amount of fluid in a person’s body expressed as a percentage of their total weight.",
-            hydration,
+                "Sample not given.",
+            hydration: hydration || '-',
         };
     }
 };
 
-const getBonemassStatus = (value) => {
-    const boneMass = value ? Number(value) : getRandomFloots(3, 5);
+const getBonemassStatus = ({value, isEmptyData, resultsObject}) => {
+    const height = resultsObject.Height?.value ||
+    resultsObject.Height ||
+    resultsObject?.height;
+    const weight = resultsObject.Weight?.value ||
+    resultsObject.Weight ||
+    resultsObject.weight;
+
+    const boneMass = value ? Number(value) : (height && weight && !isEmptyData)? getRandomFloots(3, 5) : null;
+    
+    if(!boneMass){
+        return {
+            boneMass: boneMass || '-',
+            boneStatus: "-",
+            bonemassRecommendation:
+                "Sample not given.",
+        };
+    };
+
     if (boneMass < 3.4) {
         return {
             boneStatus: "Low",
@@ -274,16 +298,32 @@ const getBonemassStatus = (value) => {
         };
     } else {
         return {
-            boneMass,
-            boneStatus: "Unknown",
+            boneMass: boneMass || '-',
+            boneStatus: "-",
             bonemassRecommendation:
-                "Usually athletes and people doing high intensity workout has high bone mass, however if its related to an underlying cause, please consult doctor.",
+                "Sample not given.",
         };
     }
 };
 
-const getMusclesStaus = (muscle) => {
-    const value = muscle ? Number(muscle) : getRandomFloots(44, 56);
+const getMusclesStaus = ({value: muscle, resultsObject, isEmptyData}) => {
+    const height = resultsObject.Height?.value ||
+    resultsObject.Height ||
+    resultsObject?.height;
+    const weight = resultsObject.Weight?.value ||
+    resultsObject.Weight ||
+    resultsObject.weight;
+
+    const value = muscle ? Number(muscle) : (height && weight && !isEmptyData)? getRandomFloots(44, 56): null;
+    
+    if(!value){
+        return {
+            muscle: '-',
+            muscleStatus: "-",
+            muscleRecommendation:
+                "Sample not given.",
+        };
+    };
 
     if (value < 43.1) {
         return {
@@ -308,16 +348,31 @@ const getMusclesStaus = (muscle) => {
         };
     } else {
         return {
-            muscle: value,
-            muscleStatus: "Unknown",
+            muscle: value || '-',
+            muscleStatus: "-",
             muscleRecommendation:
-                "This is an indication of a fit body. Normal muscle mass is usually present in people doing normal workout.",
+                "Sample not given.",
         };
     }
 };
 
-const getVFatStatus = (vFat) => {
-    const value = vFat ? Number(vFat) : getRandomFloots(0, 13);
+const getVFatStatus = ({value: vFat, resultsObject, isEmptyData}) => {
+    const height = resultsObject.Height?.value ||
+    resultsObject.Height ||
+    resultsObject?.height;
+    const weight = resultsObject.Weight?.value ||
+    resultsObject.Weight ||
+    resultsObject.weight;
+
+    const value = vFat ? Number(vFat) : (height && weight && !isEmptyData)? getRandomFloots(0, 13):null;
+    if(!value){
+        return {
+            visceralFat: '-',
+            visceralFatStatus: "-",
+            visceralFatRecommendation:
+                "Sample not given.",
+        };
+    }
     if (value < 13) {
         return {
             visceralFat: value,
@@ -334,10 +389,10 @@ const getVFatStatus = (vFat) => {
         };
     } else {
         return {
-            visceralFat: value,
-            visceralFatStatus: "Unknown",
+            visceralFat: value || '-',
+            visceralFatStatus: "-",
             visceralFatRecommendation:
-                "Visceral fat is the fat that is in the internal abdominal cavity, surrounding the vital organs.Continue monitoring to ensure that it stays within this healthy range.",
+                "Sample not given.",
         };
     }
 };
@@ -361,9 +416,9 @@ const getMetabolicAgeStaus = ({ resultsObject, patient }) => {
         };
     } else {
         return {
-            metablicStatus: "Unknown",
+            metablicStatus: "-",
             metabolicAgeRecommendation:
-                "A low basal metabolic rate makes it harder to lose body fat and overall weight.",
+                "Sample not given.",
             metabolicAge: "-",
         };
     }
@@ -397,9 +452,9 @@ const getSystolicStatus = (sys) => {
         };
     } else {
         return {
-            systolicStatus: "Unknown",
+            systolicStatus: "-",
             systolicRecommendation:
-                "Maintain healthy lifestyle with regular exercise and eating a healthy diet.",
+                "Sample not given.",
         };
     }
 };
@@ -432,36 +487,31 @@ const getDiastolicStatus = (dia) => {
         };
     } else {
         return {
-            diastolicStatus: "Unknown",
+            diastolicStatus: "-",
             diastolicRecommendation:
-                "Maintain healthy lifestyle with regular exercise and eating a healthy diet.",
+                "Sample not given.",
         };
     }
 };
 
 const getTemperatureStatus = ({ resultsObject, patient }) => {
+    const tempValue = (resultsObject?.Temperature?.value ||
+        resultsObject?.Temperature ||
+        resultsObject?.temp ||
+        0); 
     const isCelcius =
-        (resultsObject?.Temperature?.value ||
-            resultsObject?.Temperature ||
-            resultsObject?.temp ||
-            0) < 50;
+    tempValue < 50;
 
     const value = isCelcius
         ? Number(
             (
-                (resultsObject?.Temperature?.value ||
-                    resultsObject?.Temperature ||
-                    resultsObject?.temp ||
-                    0) *
+                tempValue *
                 1.8 +
                 32
             ).toFixed(2)
         )
         : Number(
-            resultsObject?.Temperature?.value ||
-            resultsObject?.Temperature ||
-            resultsObject?.temp ||
-            0
+            tempValue
         );
 
     if (value >= 93 && value <= 99) {
@@ -469,11 +519,14 @@ const getTemperatureStatus = ({ resultsObject, patient }) => {
     } else if (value > 99) {
         return { temperatureStatus: "High", temperature: value };
     } else {
-        return { temperatureStatus: "Unknown", temperature: value };
+        return { temperatureStatus: "-", temperature: '-' };
     }
 };
 
 const getSpo2Status = (value) => {
+    if(!value){
+        return "-";
+    }
     if (value < 90) {
         return "Low";
     } else if (value >= 90 && value <= 100) {
@@ -481,11 +534,18 @@ const getSpo2Status = (value) => {
     } else if (value > 100) {
         return "Good";
     } else {
-        return "Unknown";
+        return "-";
     }
 };
 
 const getPulseStatus = (value) => {
+    if(!value){
+        return {
+            pulseStatus: "-",
+            pulseRecommendation:
+                "Sample not given.",
+        };
+    }
     if (value < 60) {
         return { pulseStatus: "Low", pulseRecommendation: "Get regular exercise and eat a healthy diet" };
     } else if (value >= 60 && value <= 90) {
@@ -498,9 +558,9 @@ const getPulseStatus = (value) => {
         };
     } else {
         return {
-            pulseStatus: "Unknown",
+            pulseStatus: "-",
             pulseRecommendation:
-                "Maintain healthy lifestyle with regular exercise and eating a healthy diet.",
+                "Sample not given.",
         };
     }
 };
@@ -752,6 +812,7 @@ const tranformerConsolidatedReportData = ({
     resultsObject,
     screeningDate,
 }) => {
+    const isEmptyData = Object.keys(resultsObject||{}).length === 0;
     const patientData = {
         patientUhid: patient.uhid,
         patientLabourId: patient.labourId,
@@ -776,9 +837,11 @@ const tranformerConsolidatedReportData = ({
     const metabolicData = getMetabolicAgeStaus({ resultsObject, patient });
     const vitalographValues = spirometryPrediction({ resultsObject, patient });
     const boneData = getBonemassStatus(
-        resultsObject?.bonemass?.value ||
+        {value: resultsObject?.bonemass?.value ||
         resultsObject?.bonemass ||
-        resultsObject?.bone
+        resultsObject?.bone,
+        resultsObject,
+        isEmptyData}
     );
     const page2 = {
         shrutiLogo:
@@ -812,11 +875,11 @@ const tranformerConsolidatedReportData = ({
         ...getHydrationStatus({ resultsObject, patient }),
         ...getFatStatus({ resultsObject, patient }),
         ...boneData,
-        ...getMusclesStaus(resultsObject?.muscle?.value || resultsObject?.muscle),
+        ...getMusclesStaus({value: resultsObject?.muscle?.value || resultsObject?.muscle, resultsObject, isEmptyData}),
         ...getVFatStatus(
-            resultsObject?.vFat?.value ||
+            {value:resultsObject?.vFat?.value ||
             resultsObject?.vFat ||
-            resultsObject?.viscIndex
+            resultsObject?.viscIndex, resultsObject, isEmptyData}
         ),
         ...metabolicData,
         systolic:
@@ -840,10 +903,10 @@ const tranformerConsolidatedReportData = ({
             resultsObject?.dia
         ),
         ...getTemperatureStatus({ resultsObject }),
-        pulse: resultsObject?.pulse_bpm?.value || resultsObject?.pulse,
+        pulse: resultsObject?.pulse_bpm?.value || resultsObject?.pulse || '-',
         ...getPulseStatus(resultsObject?.pulse?.value || resultsObject?.pulse),
         oxygenSat:
-            resultsObject?.Spo2?.value || resultsObject?.Spo2 || resultsObject?.spo2,
+            resultsObject?.Spo2?.value || resultsObject?.Spo2 || resultsObject?.spo2 || '-',
         oxygenSatStatus: getSpo2Status(
             resultsObject?.Spo2?.value || resultsObject?.Spo2 || resultsObject?.spo2
         ),
@@ -852,8 +915,8 @@ const tranformerConsolidatedReportData = ({
 
     //fix -3
     const page3 = {
-        metabloicRangeRecommendation: "Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body fat. A low basal metabolism rate makes it harder to lose body fat and overall weight",
-        muscleQualityScoreRecommendation: "The muscle of young people or those who exercise regularly is normally in good state",
+        metabloicRangeRecommendation: Object.keys(resultsObject||{}).length === 0?'Sample not given.': "Having a higher basal metabolism increases the number of calories used and helps decrease the amount of body fat. A low basal metabolism rate makes it harder to lose body fat and overall weight",
+        muscleQualityScoreRecommendation:  Object.keys(resultsObject||{}).length === 0?'Sample not given.': "The muscle of young people or those who exercise regularly is normally in good state",
     };
     const page4 = {
         stethoscopyResults: [
@@ -892,7 +955,7 @@ const tranformerConsolidatedReportData = ({
                 test1: vitalographValues?.fev1 || "-",
                 test2: "",
                 test3: "",
-                best: vitalographValues?.fev1,
+                best: vitalographValues?.fev1 || '-',
                 pred: vitalographValues?.percentagePredictedFev1 || "-",
             },
             {

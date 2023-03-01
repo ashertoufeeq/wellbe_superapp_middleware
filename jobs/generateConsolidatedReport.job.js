@@ -28,7 +28,6 @@ const timezone = "Asia/Kolkata";
 const render = ejs.compile(renderHTML);
 
 const debug = false;
-const sendToMe = false;
 
 module.exports = async (req, res) => {
   console.log("Consolidated Report Fetching");
@@ -101,11 +100,6 @@ module.exports = async (req, res) => {
       },
     ];
 
-    const labCount = await labItemModel.aggregate(
-      [...labAggregateQuery, { $count: "total" }],
-      { allowDiskUse: true }
-    );
-
     const labCursor = labItemModel
       .aggregate(labAggregateQuery, { allowDiskUse: true })
       .cursor();
@@ -114,10 +108,28 @@ module.exports = async (req, res) => {
 
     for (
       let action = await labCursor.next();
-      action != null;
+      true;
       action = await labCursor.next()
     ) {
-      console.log(globalCount, labCount);
+      if(!action){
+          console.log("last Iteration");
+          // if (sendToMe && !debug) {
+          //   await mergeByUrl(Object.values(uhidMap));
+          // } else {
+          //   console.log("Debug Mode 5");
+          // }
+          const uhidMapLen = Object.values(uhidMap).length;
+          console.log("-------------------------", uhidMapLen);
+          if (req?.body && res) {
+            if (uhidMapLen > 0) {
+              res.status(200).json(uhidMap);
+            } else {
+              res.status(500).json("Report not generated");
+            }
+          }
+          break;
+      };
+      console.log(globalCount);
       if ((action.labItems || []).some((item) => item.reportUrl)) {
         const screenings = await ScreeningModel.aggregate([
           {
@@ -214,26 +226,24 @@ module.exports = async (req, res) => {
               patient?.consolidatedReportUrl &&
               (!req || (req && !req?.body.regenerate))
             ) {
-              console.log("Report already generated for :", uhid);
-              uhidMap = {
-                ...uhidMap,
-                [uhid]: details?.patient?.consolidatedReportUrl,
-              };
+              console.log("Report already generated for :", uhid, uhidMap);
             } else {
               let labReportGenerated = false;
               let screeningReportGenerated = false;
+
+            
+
               let results = await getResults({
                 screenings,
                 campId: camp?._id?.toString(),
                 debug,
               });
 
-              if (results) {
                 const buffer = await getEjsFile({
                   render,
                   data: tranformerConsolidatedReportData({
                     patient,
-                    resultsObject: results,
+                    resultsObject: results || {},
                     screeningDate: details?.screeningDate,
                     location: details?.campId?.name,
                     district: details.district,
@@ -244,30 +254,16 @@ module.exports = async (req, res) => {
 
                 pdfLinks.push(buffer);
                 screeningReportGenerated = !!buffer;
-              } else {
-                console.log("Results Not Found ", patient?.uhid);
-                if (!debug) {
-                  await Patient.findByIdAndUpdate(
-                    details?.patient?._id,
-                    {
-                      consolidatedReportStatus: reportGenerationStatus.missingScreenings
-                    },
-                    { new: true }
-                  );
-                  console.log("Risk Mode 6");
-                } else {
-                  console.log("Debug Mode 6");
+                for (const lab of details.labItems || []) {
+                  if (lab && lab?.reportUrl && (lab.reportUrl||'').includes('.pdf')) {
+                    console.log(lab, lab.reportUrl,'report url');
+                    
+                    const labBuffer = await getFileBufferFromUrl(lab?.reportUrl);
+                    pdfLinks.push(labBuffer);
+                    labReportGenerated = true;
+                    break;
+                  }
                 }
-              }
-
-              for (const lab of details.labItems || []) {
-                if (lab && lab?.reportUrl) {
-                  const labBuffer = await getFileBufferFromUrl(lab?.reportUrl);
-                  pdfLinks.push(labBuffer);
-                  labReportGenerated = true;
-                }
-              }
-
               console.log({ labReportGenerated, screeningReportGenerated });
 
               if (labReportGenerated && screeningReportGenerated) {
@@ -430,24 +426,6 @@ module.exports = async (req, res) => {
             "Screenings not found for ",
             action.labItems[0] ? action.labItems[0]?.uhid:null
           );
-        }
-      }
-
-      if (globalCount === (labCount && labCount[0] && labCount[0]?.total)) {
-        console.log("last Iteration");
-        if (sendToMe && !debug) {
-          await mergeByUrl(Object.values(uhidMap));
-        } else {
-          console.log("Debug Mode 5");
-        }
-        const uhidMapLen = Object.values(uhidMap).length;
-        console.log("-------------------------", uhidMapLen);
-        if (req?.body && res) {
-          if (uhidMapLen > 0) {
-            res.status(200).json(uhidMap);
-          } else {
-            res.status(500).json("Report not generated");
-          }
         }
       }
       globalCount = globalCount + 1;

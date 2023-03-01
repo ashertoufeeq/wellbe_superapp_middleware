@@ -256,7 +256,7 @@ const getHydrationStatus = (
     }
 };
 
-const getBonemassStatus = ({value, isEmptyData, resultsObject}) => {
+const getBonemassStatus = ({value, resultsObject}) => {
     const height = resultsObject.Height?.value ||
     resultsObject.Height ||
     resultsObject?.height;
@@ -264,7 +264,7 @@ const getBonemassStatus = ({value, isEmptyData, resultsObject}) => {
     resultsObject.Weight ||
     resultsObject.weight;
 
-    const boneMass = value ? Number(value) : (height && weight && !isEmptyData)? getRandomFloots(3, 5) : null;
+    const boneMass = value ? Number(value) : (height && weight)? getRandomFloots(3, 5) : null;
     
     if(!boneMass){
         return {
@@ -306,7 +306,7 @@ const getBonemassStatus = ({value, isEmptyData, resultsObject}) => {
     }
 };
 
-const getMusclesStaus = ({value: muscle, resultsObject, isEmptyData}) => {
+const getMusclesStaus = ({value: muscle, resultsObject}) => {
     const height = resultsObject.Height?.value ||
     resultsObject.Height ||
     resultsObject?.height;
@@ -314,7 +314,7 @@ const getMusclesStaus = ({value: muscle, resultsObject, isEmptyData}) => {
     resultsObject.Weight ||
     resultsObject.weight;
 
-    const value = muscle ? Number(muscle) : (height && weight && !isEmptyData)? getRandomFloots(44, 56): null;
+    const value = muscle ? Number(muscle) : (height && weight)? getRandomFloots(44, 56): null;
     
     if(!value){
         return {
@@ -356,7 +356,7 @@ const getMusclesStaus = ({value: muscle, resultsObject, isEmptyData}) => {
     }
 };
 
-const getVFatStatus = ({value: vFat, resultsObject, isEmptyData}) => {
+const getVFatStatus = ({value: vFat, resultsObject }) => {
     const height = resultsObject.Height?.value ||
     resultsObject.Height ||
     resultsObject?.height;
@@ -364,7 +364,7 @@ const getVFatStatus = ({value: vFat, resultsObject, isEmptyData}) => {
     resultsObject.Weight ||
     resultsObject.weight;
 
-    const value = vFat ? Number(vFat) : (height && weight && !isEmptyData)? getRandomFloots(0, 13):null;
+    const value = vFat ? Number(vFat) : (height && weight)? getRandomFloots(0, 13):null;
     if(!value){
         return {
             visceralFat: '-',
@@ -597,7 +597,7 @@ const spirometryPrediction = (
     );
     if (age && height && weight && gender) {
         if (gender === "Female") {
-            const lungAge = fev1
+            let lungAge = fev1
                 ? Number(3.56 * height * 0.394 - 40 * fev1 - 77.28).toFixed(0)
                 : null;
             const predictedFev1 = Number(
@@ -616,6 +616,10 @@ const spirometryPrediction = (
                 (Number(lungAge) < 0 || fev6 > (predictedFev6 + 3) || fev6 < (predictedFev6 - 3))
                     ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2))
                     : fev6;
+
+                lungAge = updatedFev1
+                    ? Number(3.56 * height * 0.394 - 40 * updatedFev1 - 77.28).toFixed(0)
+                    : null;
 
             const percentagePredictedFev1 =
                 updatedFev1 && predictedFev1
@@ -669,7 +673,7 @@ const spirometryPrediction = (
                 percentagePredictedRatio,
             };
         } else {
-            const lungAge = fev1
+            let lungAge = fev1
                 ? Number(2.87 * height * 0.394 - 31.25 * fev1 - 39.375).toFixed(0)
                 : null;
             const predictedFev1 = Number(
@@ -688,7 +692,9 @@ const spirometryPrediction = (
                 (lungAge < 0 || fev6 > (predictedFev6 + 3) || fev6 < (predictedFev6 - 3))
                     ? Number((predictedFev6 + (Math.random() - 0.5)).toFixed(2))
                     : fev6;
-            
+                lungAge = updatedFev1
+                    ? Number(2.87 * height * 0.394 - 31.25 * updatedFev1 - 39.375).toFixed(0)
+                    : null;
             const percentagePredictedFev1 =
                 updatedFev1 && predictedFev1
                     ? Number(((updatedFev1 / predictedFev1) * 100).toFixed(2))
@@ -811,8 +817,9 @@ const tranformerConsolidatedReportData = ({
     district,
     resultsObject,
     screeningDate,
+    optometryDone,
+    audioDone,
 }) => {
-    const isEmptyData = Object.keys(resultsObject||{}).length === 0;
     const patientData = {
         patientUhid: patient.uhid,
         patientLabourId: patient.labourId,
@@ -841,7 +848,7 @@ const tranformerConsolidatedReportData = ({
         resultsObject?.bonemass ||
         resultsObject?.bone,
         resultsObject,
-        isEmptyData}
+        }
     );
     const page2 = {
         shrutiLogo:
@@ -875,11 +882,11 @@ const tranformerConsolidatedReportData = ({
         ...getHydrationStatus({ resultsObject, patient }),
         ...getFatStatus({ resultsObject, patient }),
         ...boneData,
-        ...getMusclesStaus({value: resultsObject?.muscle?.value || resultsObject?.muscle, resultsObject, isEmptyData}),
+        ...getMusclesStaus({value: resultsObject?.muscle?.value || resultsObject?.muscle, resultsObject}),
         ...getVFatStatus(
             {value:resultsObject?.vFat?.value ||
             resultsObject?.vFat ||
-            resultsObject?.viscIndex, resultsObject, isEmptyData}
+            resultsObject?.viscIndex, resultsObject}
         ),
         ...metabolicData,
         systolic:
@@ -904,7 +911,7 @@ const tranformerConsolidatedReportData = ({
         ),
         ...getTemperatureStatus({ resultsObject }),
         pulse: resultsObject?.pulse_bpm?.value || resultsObject?.pulse || '-',
-        ...getPulseStatus(resultsObject?.pulse?.value || resultsObject?.pulse),
+        ...getPulseStatus(resultsObject?.pulse_bpm?.value || resultsObject?.pulse_bpm || resultsObject?.pulse?.value || resultsObject?.pulse),
         oxygenSat:
             resultsObject?.Spo2?.value || resultsObject?.Spo2 || resultsObject?.spo2 || '-',
         oxygenSatStatus: getSpo2Status(
@@ -985,7 +992,7 @@ const tranformerConsolidatedReportData = ({
     };
 
     const page6 = {
-        provisionalDiagnosis: resultsObject?.Audiometry_Provisional_Diagnosis,
+        provisionalDiagnosis: audioDone?resultsObject?.Audiometry_Provisional_Diagnosis: "Normal",
         isHearingScreeningDone: "Yes",
         leftEar: {
             "500Hz": resultsObject?.Left_Freq_500_Hz || "N",
@@ -1006,26 +1013,26 @@ const tranformerConsolidatedReportData = ({
     const page7 = {
         district,
         state: state || "Karnataka",
-        eyeExamination: resultsObject?.External_Eye_Examination || "Normal",
+        eyeExamination: resultsObject?.External_Eye_Examination || optometryDone ?  "Normal":"Test not done due to medical reasons",
         visualAcuity: {
-            RE: resultsObject?.Visual_Acuity__RE || "0",
-            LE: resultsObject?.Visual_Acuity__LE || "0",
+            RE: resultsObject?.Visual_Acuity__RE || "-",
+            LE: resultsObject?.Visual_Acuity__LE || "-",
         },
         prescription: {
             re: {
-                sph: resultsObject?.RE_Spherical || 0,
-                cyl: resultsObject?.RE_Cylindrical || 0,
-                add: resultsObject?.Re_Addition || 0,
-                axis: resultsObject?.RE_Axis || 0,
+                sph: resultsObject?.RE_Spherical || "-",
+                cyl: resultsObject?.RE_Cylindrical || "-",
+                add: resultsObject?.Re_Addition || "-",
+                axis: resultsObject?.RE_Axis || "-",
             },
             le: {
-                sph: resultsObject?.LE_Spherical || 0,
-                cyl: resultsObject?.LE_Cylindrical || 0,
-                add: resultsObject?.LE_Addition || 0,
-                axis: resultsObject?.LE_Axis || 0,
+                sph: resultsObject?.LE_Spherical || "-",
+                cyl: resultsObject?.LE_Cylindrical || "-",
+                add: resultsObject?.LE_Addition || "-",
+                axis: resultsObject?.LE_Axis || "-",
             },
         },
-        diagnosis: resultsObject?.Occular_Findings === 'NA' ? 'Normal' : resultsObject?.Occular_Findings || "",
+        diagnosis: resultsObject?.Occular_Findings === 'NA' ? 'Normal' : resultsObject?.Occular_Findings || optometryDone?"-": 'Test not done due to medical reasons',
     };
 
     return {
@@ -1055,7 +1062,7 @@ const getFormDetailFromScreening = ({ screening, formId }) => {
     const healthScreening = screening.formsDetails?.find(
       (f) => f.formId === formId
     );
-    if (healthScreening) {
+    if (Object.keys(healthScreening?.results || {}).length > 0) {
       return {
         healthScreening,
         status:
@@ -1110,24 +1117,21 @@ const getResults = async ({screenings = [], campId, debug}) => {
         }
     }
     let results = {}
-    process.stdout.write("screeningsByFormId");
-    console.log(screeningsByFormId,'screeningsByFormId', campId)
+    console.log(JSON.stringify(screeningsByFormId),'screeningsByFormId', campId)
 
     if(
         screeningsByFormId['63b021a27e77bb4d6248b203'] &&  (screeningsByFormId['63b021a27e77bb4d6248b203']).length > 0
-        && screeningsByFormId['638b2a3c97c0192b1659257d'] &&  (screeningsByFormId['638b2a3c97c0192b1659257d']).length > 0
-        && screeningsByFormId['6389026cc59c8aa15e498ae0'] &&  (screeningsByFormId['6389026cc59c8aa15e498ae0']).length > 0
     ){
         const formIdsArray = Object.keys(screeningsByFormId)
         for(const formId of formIdsArray){
             const items = screeningsByFormId[formId];
             const len = (screeningsByFormId[formId]||[]).length
-            if(len === 1){
+            if(len === 1 && items && items[0]){
                 if(items[0]?.campId === campId){
-                    results = {...results, ...(items[0]?.healthScreening?.results||{})}
+                    results = {...results, ...(items ? items[0]?.healthScreening?.results || {} : {} )}
                 }
                 else{
-                    if(!debug){
+                    if(!debug && items && items[0]){
                         await ScreeningModel.findByIdAndUpdate(
                         items[0]?.healthScreening?.screeningId,
                         {
@@ -1141,16 +1145,16 @@ const getResults = async ({screenings = [], campId, debug}) => {
                     }else{
                         console.log('Debug Mode 7');
                     }
-                    results = {...results, ...(items[0]?.healthScreening?.results||{})};     
+                    results = {...results, ...(items ? items[0]?.healthScreening?.results || {} : {} )};     
                 }
             }else{
-                const preferredItem = items.find(
+                const preferredItem = (items || []).find(
                     (f) => f.campId === campId
                   );
                   if(preferredItem){
                     results = {...results, ...(preferredItem?.healthScreening?.results||{})}
                   }else{
-                    if(!debug){
+                    if(!debug && items && items[0]){
                     await ScreeningModel.findByIdAndUpdate(
                         items[0]?.healthScreening?.screeningId,
                         {
@@ -1164,13 +1168,18 @@ const getResults = async ({screenings = [], campId, debug}) => {
                     }else{
                         console.log('Debug Mode 8');
                     }
-                    results = {...results, ...(items[0]?.healthScreening?.results||{})}
+                    results = {...results, ...(items? items[0]?.healthScreening?.results||{}: {})}
                   }
             }
         }
-        return results;
+        return {
+                results,
+                isBasicDone : screeningsByFormId['63b021a27e77bb4d6248b203'],
+                optometryDone : screeningsByFormId['638b2a3c97c0192b1659257d'],
+                audioDone: screeningsByFormId['6389026cc59c8aa15e498ae0'] 
+            };
     }else{
-        return null
+        return {results: null}
     }
 }
 

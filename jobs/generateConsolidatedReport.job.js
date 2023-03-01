@@ -103,9 +103,9 @@ module.exports = async (req, res) => {
     const labCursor = labItemModel
       .aggregate(labAggregateQuery, { allowDiskUse: true })
       .cursor();
-
+   
     let globalCount = 1;
-
+    console.log(globalCount);
     for (
       let action = await labCursor.next();
       true;
@@ -113,11 +113,11 @@ module.exports = async (req, res) => {
     ) {
       if(!action){
           console.log("last Iteration");
-          // if (sendToMe && !debug) {
-          //   await mergeByUrl(Object.values(uhidMap));
-          // } else {
-          //   console.log("Debug Mode 5");
-          // }
+          if (sendToMe && !debug) {
+            await mergeByUrl(Object.values(uhidMap));
+          } else {
+            console.log("Debug Mode 5");
+          }
           const uhidMapLen = Object.values(uhidMap).length;
           console.log("-------------------------", uhidMapLen);
           if (req?.body && res) {
@@ -222,48 +222,63 @@ module.exports = async (req, res) => {
               screenings: screenings,
               labItems: action.labItems,
             };
-            if (
-              patient?.consolidatedReportUrl &&
-              (!req || (req && !req?.body.regenerate))
+            if (patient?.consolidatedReportUrl &&
+              (false && (!req || (req && !req?.body.regenerate)))
             ) {
               console.log("Report already generated for :", uhid, uhidMap);
             } else {
               let labReportGenerated = false;
               let screeningReportGenerated = false;
 
-            
-
-              let results = await getResults({
+              let {
+                results,
+                isBasicDone,
+                optometryDone,
+                audioDone
+              } = await getResults({
                 screenings,
                 campId: camp?._id?.toString(),
                 debug,
               });
 
-                const buffer = await getEjsFile({
-                  render,
-                  data: tranformerConsolidatedReportData({
-                    patient,
-                    resultsObject: results || {},
-                    screeningDate: details?.screeningDate,
-                    location: details?.campId?.name,
-                    district: details.district,
-                    state: details.state,
-                  }),
-                  fileName: "consolidated-report" + Date.now(),
-                });
+                if(results && isBasicDone){
+                  const buffer = await getEjsFile({
+                    render,
+                    data: tranformerConsolidatedReportData({
+                      patient,
+                      resultsObject: results || {},
+                      screeningDate: details?.screeningDate,
+                      location: details?.campId?.name,
+                      district: details.district,
+                      state: details.state,
+                      optometryDone,
+                      audioDone
+                    }),
+                    fileName: "consolidated-report" + Date.now(),
+                  });
 
-                pdfLinks.push(buffer);
-                screeningReportGenerated = !!buffer;
+                  pdfLinks.push(buffer);
+                  screeningReportGenerated = !!buffer;
+                }else{
+                  await Patient.findByIdAndUpdate(
+                    details?.patient?._id,
+                    {
+                      consolidatedReportStatus: reportGenerationStatus.missingScreenings,
+                    },
+                    { new: true }
+                  );
+                }
+                
                 for (const lab of details.labItems || []) {
-                  if (lab && lab?.reportUrl && (lab.reportUrl||'').includes('.pdf')) {
+                  if (lab && lab?.reportUrl && (lab.reportUrl || '').includes('.pdf')) {
                     console.log(lab, lab.reportUrl,'report url');
-                    
                     const labBuffer = await getFileBufferFromUrl(lab?.reportUrl);
                     pdfLinks.push(labBuffer);
                     labReportGenerated = true;
                     break;
                   }
                 }
+
               console.log({ labReportGenerated, screeningReportGenerated });
 
               if (labReportGenerated && screeningReportGenerated) {
@@ -276,6 +291,7 @@ module.exports = async (req, res) => {
                   _id: updateCamp?._id,
                   pdfLinks
                 });
+
                 const globalReportBuffer = updateCamp?.reportUrl
                   ? await getFileBufferFromUrl(updateCamp?.reportUrl)
                   : undefined;
@@ -283,7 +299,9 @@ module.exports = async (req, res) => {
                 const { mergedUrl, error: mergeError } = await pdfMerge({
                   pdfLinks,
                 });
-                console.log({mergedUrl, mergeError})
+                
+                console.log({mergedUrl, mergeError});
+
                 const { mergedUrl: globalReportUrl, error: globalMergeError } =
                   updateCamp?.reportUrl
                     ? await pdfMerge({
@@ -379,6 +397,7 @@ module.exports = async (req, res) => {
                 if (!debug) {
                   await Patient.findByIdAndUpdate(
                     details?.patient?._id,
+                    
                     {
                       consolidatedReportStatus: !labReportGenerated
                         ? reportGenerationStatus.labReportPending
@@ -396,7 +415,7 @@ module.exports = async (req, res) => {
             pdfLinks = [];
             if (!debug) {
               await Patient.findByIdAndUpdate(
-                details?.patient?._id,
+                action?._id,
                 {
                   consolidatedReportStatus: reportGenerationStatus.missingScreenings
                 },
@@ -412,7 +431,7 @@ module.exports = async (req, res) => {
         } else {
           if (!debug) {
             await Patient.findByIdAndUpdate(
-              details?.patient?._id,
+              action?._id,
               {
                 consolidatedReportStatus: reportGenerationStatus.missingScreenings
               },

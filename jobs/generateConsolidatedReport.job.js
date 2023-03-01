@@ -223,7 +223,7 @@ module.exports = async (req, res) => {
               labItems: action.labItems,
             };
             if (patient?.consolidatedReportUrl &&
-              (false && (!req || (req && !req?.body.regenerate)))
+              (!req || (req && !req?.body.regenerate))
             ) {
               console.log("Report already generated for :", uhid, uhidMap);
             } else {

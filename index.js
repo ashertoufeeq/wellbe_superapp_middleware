@@ -90,7 +90,7 @@ app.use((req, res, next) => {
 });
 
 app.listen(process.env.PORT || 4000, async () => {
-  console.log("Running server... http://localhost:4000");
+  console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);
 });
 
 app.use("/", rootRouter);

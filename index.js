@@ -12,7 +12,7 @@ const patientRecord = require("./models/patientRecord");
 const campScreening = require("./models/campScreening.model");
 const Program = require("./models/program.model");
 const labItem = require("./models/labItem");
-const mergeByUrl = require("./scripts/index");
+const scrips = require("./scripts/index");
 
 const app = express();
 const jobs = require("./jobs");
@@ -47,7 +47,6 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(async () => {
-    jobs.analytics.add();
     console.log("db connected");
   })
   .catch((err) => console.warn(err));

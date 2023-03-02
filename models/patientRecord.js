@@ -327,6 +327,9 @@ const patientRecordSchema = new schema(
     reportDistributionTime: {
       type: Date,
     },
+    consolidatedReportCampId: {
+      type: schema.Types.ObjectId
+    }
   },
   { timestamps: true }
 );

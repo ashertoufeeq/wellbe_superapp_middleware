@@ -29,14 +29,16 @@ console.log(
 
 const rootRouter = require("./routes");
 
-const agenda = new Agenda({
-  db: {
-    address: process.env.MONGO_URI,
-  },
-  defaultLockLifetime: 240000,
-  defaultConcurrency: 100,
-});
-
+if (!process.env.NO_JOB) {
+  const agenda = new Agenda({
+    db: {
+      address: process.env.MONGO_URI,
+    },
+    defaultLockLifetime: 240000,
+    defaultConcurrency: 100,
+  });
+  app.use("/dash", Agendash(agenda));
+}
 mongoose.set("strictQuery", false);
 mongoose
   .connect(process.env.MONGO_URI, {
@@ -44,11 +46,10 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(async () => {
+    jobs.analytics.add();
     console.log("db connected");
   })
   .catch((err) => console.warn(err));
-
-app.use("/dash", Agendash(agenda));
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
@@ -92,47 +93,51 @@ app.listen(process.env.PORT || 4000, async () => {
   console.log("Running server... http://localhost:4000");
 });
 
-agenda.define("Run Analytics", { concurrency: 10 }, async (job, done) => {
-  console.log("running Run Analytics -> ", new Date());
-  try {
-    await jobs.analytics.add();
-    done();
-  } catch (err) {
-    console.log(err, "Failed -> Run Analytics");
-    done();
-  }
-});
-
-
-agenda.define("Run Consolidated Report", { concurrency: 10 }, async (job, done) => {
-  console.log("running Run Consolidated Report -> ", new Date());
-  try {
-    await jobs.generateConsolidatedReport();
-    done();
-  } catch (err) {
-    console.log(err, "Failed -> Run Consolidated Report");
-    done();
-  }
-});
-
-
 app.use("/", rootRouter);
 
 function time() {
   return new Date().toTimeString().split(" ")[0];
 }
 
-(async function () {
-  await agenda.start();
-  await agenda.every("*/10 * * * *", "Run Analytics");
-  await agenda.every("0 0 * * *", "Run Consolidated Report");
-  agenda.on("start", (job) => {
-    console.log(time(), `Job <${job.attrs.name}> starting`);
+if (!process.env.NO_JOB) {
+  agenda.define("Run Analytics", { concurrency: 10 }, async (job, done) => {
+    console.log("running Run Analytics -> ", new Date());
+    try {
+      await jobs.analytics.add();
+      done();
+    } catch (err) {
+      console.log(err, "Failed -> Run Analytics");
+      done();
+    }
   });
-  agenda.on("success", (job) => {
-    console.log(time(), `Job <${job.attrs.name}> succeeded`);
-  });
-  agenda.on("fail", (error, job) => {
-    console.log(time(), `Job <${job.attrs.name}> failed:`, error);
-  });
-})();
+
+  agenda.define(
+    "Run Consolidated Report",
+    { concurrency: 10 },
+    async (job, done) => {
+      console.log("running Run Consolidated Report -> ", new Date());
+      try {
+        await jobs.generateConsolidatedReport();
+        done();
+      } catch (err) {
+        console.log(err, "Failed -> Run Consolidated Report");
+        done();
+      }
+    }
+  );
+
+  (async function () {
+    await agenda.start();
+    await agenda.every("*/10 * * * *", "Run Analytics");
+    // await agenda.every("0 0 * * *", "Run Consolidated Report");
+    agenda.on("start", (job) => {
+      console.log(time(), `Job <${job.attrs.name}> starting`);
+    });
+    agenda.on("success", (job) => {
+      console.log(time(), `Job <${job.attrs.name}> succeeded`);
+    });
+    agenda.on("fail", (error, job) => {
+      console.log(time(), `Job <${job.attrs.name}> failed:`, error);
+    });
+  })();
+}

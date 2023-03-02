@@ -29,8 +29,9 @@ console.log(
 
 const rootRouter = require("./routes");
 
+let agenda;
 if (!process.env.NO_JOB) {
-  const agenda = new Agenda({
+  agenda = new Agenda({
     db: {
       address: process.env.MONGO_URI,
     },

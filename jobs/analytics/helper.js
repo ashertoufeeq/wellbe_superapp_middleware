@@ -67,7 +67,7 @@ const getFormStatus = ({ screening, formId, filledByKey, statusKey }) => {
     };
   } else {
     return {
-      Status: "Not Done",
+      status: "Not Done",
       filledBy: "-",
     };
   }
@@ -84,22 +84,22 @@ exports.screeningForUpdate = ({ group }) => {
     filledBy: "-",
   };
   let basicHealth = {
-    Status: "Not Done",
+    status: "Not Done",
     filledBy: "-",
   };
   let optometry = {
-    Status: "Not Done",
+    status: "Not Done",
     filledBy: "-",
   };
   let audiometry = {
-    Status: "Not Done",
+    status: "Not Done",
     filledBy: "-",
   };
   for (const s of screenings) {
     if (phlebotomyResponse.response === "No Data") {
       phlebotomyResponse = getPhlebotomyResponse({ screening: s });
     }
-    if (basicHealth.Status === "Not Done") {
+    if (basicHealth.status === "Not Done") {
       basicHealth = getFormStatus({
         screening: s,
         formId: "63b021a27e77bb4d6248b203",
@@ -107,7 +107,7 @@ exports.screeningForUpdate = ({ group }) => {
         filledByKey: "Basic Health Checkup Done By",
       });
     }
-    if (optometry.Status === "Not Done") {
+    if (optometry.status === "Not Done") {
       optometry = getFormStatus({
         screening: s,
         formId: "638b2a3c97c0192b1659257d",
@@ -115,7 +115,7 @@ exports.screeningForUpdate = ({ group }) => {
         filledByKey: "Optometry Done By",
       });
     }
-    if (audiometry.Status === "Not Done") {
+    if (audiometry.status === "Not Done") {
       audiometry = getFormStatus({
         screening: s,
         formId: "6389026cc59c8aa15e498ae0",
@@ -126,6 +126,34 @@ exports.screeningForUpdate = ({ group }) => {
   }
 
   const camp = getCamp(screenings);
+
+  const update = {
+    ...(basicHealth.status === "Done" && {
+      "Basic Health Checkup Status": basicHealth.status || "Not Done",
+      "Basic Health Checkup Done By": basicHealth.filledBy,
+    }),
+    ...(phlebotomyResponse.response !== "No Data" && {
+      "Phlebotomy Response": phlebotomyResponse.response || "No Data",
+      "Phlebotomy Done By": phlebotomyResponse.filledBy,
+    }),
+    ...(audiometry.status === "Done" && {
+      "Audiometry Status": audiometry.status || "Not Done",
+      "Audiometry Done By": audiometry.filledBy,
+      "Otology Status": audiometry.otologyStatus || "Not Done",
+    }),
+    ...(optometry.status === "Done" && {
+      "Optometry Done By": optometry.filledBy,
+      "Optometry Status": optometry.status || "Not Done",
+    }),
+    "Report Generated": screening.patient.consolidatedReportUrl ? "Yes" : "No",
+    "Report URL": screening.patient.consolidatedReportUrl || "-",
+    "Report Sent At": screening.patient.consolidatedReportGeneratedAt,
+    "Report Distributed": screening.patient.isReportDistributed ? "Yes" : "No",
+    ...(screening.patient.reportDistributionTime && {
+      "Report Distribution Time": screening.patient.reportDistributionTime,
+    }),
+    "Labour Id": screening.patient.labourId,
+  };
 
   const newScreening = {
     "First Name": screening.patient?.fName,
@@ -153,23 +181,24 @@ exports.screeningForUpdate = ({ group }) => {
     "Work Order Short Code": camp.programId?.programShortCode,
     "Screening Date": screening.createdAt,
     "Registration Done By": screening.patient.createdBy,
-    "Basic Health Checkup Status": basicHealth.status || "Not Done",
-    "Basic Health Checkup Done By": basicHealth.filledBy,
-    "Phlebotomy Response": phlebotomyResponse.response || "No Data",
-    "Phlebotomy Done By": phlebotomyResponse.filledBy,
-    "Audiometry Status": audiometry.status || "Not Done",
-    "Audiometry Done By": audiometry.filledBy,
-    "Otology Status": audiometry.otologyStatus || "Not Done",
-    "Optometry Status": optometry.status || "Not Done",
-    "Optometry Done By": optometry.filledBy,
-    "Report Generated": screening.patient.consolidatedReportUrl ? "Yes" : "No",
-    "Report URL": screening.patient.consolidatedReportUrl || "-",
-    "Report Sent At": screening.patient.consolidatedReportGeneratedAt,
-    "Report Distributed": screening.patient.isReportDistributed ? "Yes" : "No",
-    ...(screening.patient.reportDistributionTime && {
-      "Report Distribution Time": screening.patient.reportDistributionTime,
+
+    ...(basicHealth.status !== "Done" && {
+      "Basic Health Checkup Status": basicHealth.status || "Not Done",
+      "Basic Health Checkup Done By": basicHealth.filledBy,
     }),
-    "Labour Id": screening.patient.labourId,
+    ...(phlebotomyResponse.response === "No Data" && {
+      "Phlebotomy Response": phlebotomyResponse.response || "No Data",
+      "Phlebotomy Done By": phlebotomyResponse.filledBy,
+    }),
+    ...(audiometry.status !== "Done" && {
+      "Audiometry Status": audiometry.status || "Not Done",
+      "Audiometry Done By": audiometry.filledBy,
+      "Otology Status": audiometry.otologyStatus || "Not Done",
+    }),
+    ...(optometry.status !== "Done" && {
+      "Optometry Done By": optometry.filledBy,
+      "Optometry Status": optometry.status || "Not Done",
+    }),
   };
   let usersInvolved = [];
   if (
@@ -198,16 +227,31 @@ exports.screeningForUpdate = ({ group }) => {
   ) {
     usersInvolved = usersInvolved.concat(newScreening["Optometry Done By"]);
   }
+  if (
+    update["Basic Health Checkup Done By"] &&
+    update["Basic Health Checkup Done By"] != "-"
+  ) {
+    usersInvolved = usersInvolved.concat(
+      update["Basic Health Checkup Done By"]
+    );
+  }
+  if (update["Phlebotomy Done By"] && update["Phlebotomy Done By"] != "-") {
+    usersInvolved = usersInvolved.concat(update["Phlebotomy Done By"]);
+  }
+  if (update["Optometry Done By"] && update["Optometry Done By"] != "-") {
+    usersInvolved = usersInvolved.concat(update["Optometry Done By"]);
+  }
   return {
     updateOne: {
       filter: {
         "Patient Id": screening.patient?._id,
       },
       update: {
-        $set: { ...newScreening, "Users Involved": usersInvolved },
+        $set: { ...update, "Users Involved": usersInvolved },
         $setOnInsert: {
           "Patient Id": screening.patient?._id,
           campId: camp._id,
+          ...newScreening,
         },
       },
       upsert: true,

@@ -15,7 +15,7 @@ const {
 const util = require("util");
 const moment = require("moment");
 
-const last5Days = moment().subtract(365, "days").startOf("day").toISOString();
+const last5Days = moment().subtract(15, "minutes").toISOString();
 
 const processScreening = () =>
   new Promise(async (resolve, reject) => {
@@ -33,12 +33,12 @@ const processScreening = () =>
             $or: [
               {
                 createdAt: {
-                  $gte: moment().subtract(365, "days").startOf("day").toDate(),
+                  $gte: moment().subtract(15, "minutes").toDate(),
                 },
               },
               {
                 updatedAt: {
-                  $gte: moment().subtract(365, "days").startOf("day").toDate(),
+                  $gte: moment().subtract(15, "minutes").toDate(),
                 },
               },
             ],

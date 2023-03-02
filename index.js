@@ -29,13 +29,13 @@ console.log(
 
 const rootRouter = require("./routes");
 
-// const agenda = new Agenda({
-//   db: {
-//     address: process.env.MONGO_URI,
-//   },
-//   defaultLockLifetime: 240000,
-//   defaultConcurrency: 100,
-// });
+const agenda = new Agenda({
+  db: {
+    address: process.env.MONGO_URI,
+  },
+  defaultLockLifetime: 240000,
+  defaultConcurrency: 100,
+});
 
 mongoose.set("strictQuery", false);
 mongoose
@@ -45,13 +45,10 @@ mongoose
   })
   .then(async () => {
     console.log("db connected");
-    // jobs.analytics.add();
-    // jobs.sendMessages();
-    jobs.generateConsolidatedReport();
   })
   .catch((err) => console.warn(err));
 
-// app.use("/dash", Agendash(agenda));
+app.use("/dash", Agendash(agenda));
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
@@ -93,23 +90,31 @@ app.use((req, res, next) => {
 
 app.listen(process.env.PORT || 4000, async () => {
   console.log("Running server... http://localhost:4000");
-
-  // jobs.addShrutiPatient();
 });
 
-// agenda.define("Get Patients", { concurrency: 10 }, async (job, done) => {
-//   if (!connection) {
-//     connection = await connectDB();
-//   }
-//   console.log("running Get patients -> ", new Date());
-//   try {
-//     await PatientJobs.add(connection);
-//     done();
-//   } catch (err) {
-//     console.log(err, "Failed -> Get Patients");
-//     done();
-//   }
-// });
+agenda.define("Run Analytics", { concurrency: 10 }, async (job, done) => {
+  console.log("running Run Analytics -> ", new Date());
+  try {
+    await jobs.analytics.add();
+    done();
+  } catch (err) {
+    console.log(err, "Failed -> Run Analytics");
+    done();
+  }
+});
+
+
+agenda.define("Run Consolidated Report", { concurrency: 10 }, async (job, done) => {
+  console.log("running Run Consolidated Report -> ", new Date());
+  try {
+    await jobs.generateConsolidatedReport();
+    done();
+  } catch (err) {
+    console.log(err, "Failed -> Run Consolidated Report");
+    done();
+  }
+});
+
 
 app.use("/", rootRouter);
 
@@ -117,21 +122,17 @@ function time() {
   return new Date().toTimeString().split(" ")[0];
 }
 
-// (async function () {
-//   await agenda.start();
-//   await agenda.every("*/2 * * * *", [
-//     "Get Patients",
-//     "Get Consultations (cuddles)",
-//     "Get Consultations (kondapur)",
-//   ]);
-//   await agenda.every("0 0 * * *", "Get Patients (end of day)");
-//   agenda.on("start", (job) => {
-//     console.log(time(), `Job <${job.attrs.name}> starting`);
-//   });
-//   agenda.on("success", (job) => {
-//     console.log(time(), `Job <${job.attrs.name}> succeeded`);
-//   });
-//   agenda.on("fail", (error, job) => {
-//     console.log(time(), `Job <${job.attrs.name}> failed:`, error);
-//   });
-// })();
+(async function () {
+  await agenda.start();
+  await agenda.every("*/10 * * * *", "Run Analytics");
+  await agenda.every("0 0 * * *", "Run Consolidated Report");
+  agenda.on("start", (job) => {
+    console.log(time(), `Job <${job.attrs.name}> starting`);
+  });
+  agenda.on("success", (job) => {
+    console.log(time(), `Job <${job.attrs.name}> succeeded`);
+  });
+  agenda.on("fail", (error, job) => {
+    console.log(time(), `Job <${job.attrs.name}> failed:`, error);
+  });
+})();

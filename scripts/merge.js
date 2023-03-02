@@ -15,7 +15,7 @@ module.exports = async  (urls, send= true) => {
            if(!error && send){
             await sendMessageBird({
                 toMultiple: false,
-                to: '9557807977',
+                to: process.env.REPORT_SEND_TO,
                 media: { url: mergedUrl },
                 smsParameters: [mergedUrl],
                 templateId: "healthreport",

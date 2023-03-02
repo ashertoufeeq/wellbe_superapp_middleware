@@ -28,7 +28,6 @@ const timezone = "Asia/Kolkata";
 const render = ejs.compile(renderHTML);
 
 const debug = false;
-const sendToMe = true;
 
 module.exports = async (req, res) => {
   console.log("Consolidated Report Fetching");
@@ -113,7 +112,7 @@ module.exports = async (req, res) => {
     ) {
       if(!action){
           console.log("last Iteration");
-          if (sendToMe && !debug) {
+          if (process.env.REPORT_SEND_TO && !debug) {
             await mergeByUrl(Object.values(uhidMap));
           } else {
             console.log("Debug Mode 5");

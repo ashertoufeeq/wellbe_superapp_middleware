@@ -128,7 +128,7 @@ if (!process.env.NO_JOB) {
   (async function () {
     await agenda.start();
     await agenda.every("*/10 * * * *", "Run Analytics");
-    // await agenda.every("0 0 * * *", "Run Consolidated Report");
+    await agenda.every("0 0 * * *", "Run Consolidated Report");
     agenda.on("start", (job) => {
       console.log(time(), `Job <${job.attrs.name}> starting`);
     });

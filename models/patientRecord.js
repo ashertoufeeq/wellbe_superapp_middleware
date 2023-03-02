@@ -252,6 +252,11 @@ const patientRecordSchema = new schema(
     consolidatedReportStatus: {
       type: String,
     },
+
+    consolidatedReportSentAt: {
+      type: Date,
+    },
+  
     partnerOrganization: {
       type: schema.Types.ObjectId,
       ref: "partner_organization",

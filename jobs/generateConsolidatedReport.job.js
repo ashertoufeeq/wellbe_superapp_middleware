@@ -18,7 +18,7 @@ const campsModel = require("../models/camps.model");
 const mergeByUrl = require("../scripts/merge");
 const ObjectId = require("mongoose").Types.ObjectId;
 const { getCamp } = require("../jobs/analytics/helper");
-
+const sendMessage = require('../utils/message')
 const renderHTML = fs.readFileSync(
   path.resolve(__dirname, "../views/consolidatedReport.ejs"),
   "utf8"
@@ -28,6 +28,7 @@ const timezone = "Asia/Kolkata";
 const render = ejs.compile(renderHTML);
 
 const debug = false;
+const sendToMe = true;
 
 module.exports = async (req, res) => {
   console.log("Consolidated Report Fetching");
@@ -105,7 +106,6 @@ module.exports = async (req, res) => {
       .cursor();
    
     let globalCount = 1;
-    console.log(globalCount);
     for (
       let action = await labCursor.next();
       true;
@@ -376,6 +376,34 @@ module.exports = async (req, res) => {
                           isProcessed: true,
                         },
                       }
+                    );
+                    
+                    await sendMessage({
+                      toMultiple: false,
+                      to:  details?.patient?.mobile,
+                      email: details?.patient?.email,
+                      media: { url: mergedUrl },
+                      smsParameters: [mergedUrl],
+                      templateId: 'healthreport',
+                    });
+                  
+                    await sendMessage({
+                      toMultiple: false,
+                      to: details?.patient?.mobile,
+                      email: details?.patient?.email,
+                      media: { url: mergedUrl },
+                      smsParameters: [mergedUrl],
+                      languageCode: 'kn',
+                      templateId: 'healthreportkannada',
+                    });
+                  
+                    const patient = await Patient.findByIdAndUpdate(
+                      details?.patient?._id,
+                      {
+                        consolidatedReportStatus: 'Report Sent',
+                        consolidatedReportSentAt: moment().tz(timezone).toISOString(),
+                      },
+                      { new: true },
                     );
                   } else {
                     console.log("Debug Mode 2");

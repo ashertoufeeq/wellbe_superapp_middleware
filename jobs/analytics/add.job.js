@@ -38,7 +38,7 @@ const processScreening = () =>
               },
               {
                 updatedAt: {
-                  $gte: moment().subtract(1, "minutes").toDate(),
+                  $gte: moment().subtract(15, "minutes").toDate(),
                 },
               },
             ],

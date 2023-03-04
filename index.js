@@ -48,7 +48,6 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(async () => {
-    // jobs.analytics.add();
     console.log("db connected");
   })
   .catch((err) => console.warn(err));
@@ -105,10 +104,54 @@ if (!process.env.NO_JOB) {
   agenda.define("Run Analytics", { concurrency: 10 }, async (job, done) => {
     console.log("running Run Analytics -> ", new Date());
     try {
-      await jobs.analytics.add();
+      await jobs.analytics.add.processAll();
       done();
     } catch (err) {
       console.log(err, "Failed -> Run Analytics");
+      done();
+    }
+  });
+
+  agenda.define("Process Screening", { concurrency: 10 }, async (job, done) => {
+    console.log("running Process Screening -> ", new Date());
+    try {
+      await jobs.analytics.add.processScreening();
+      done();
+    } catch (err) {
+      console.log(err, "Failed -> Process Screening");
+      done();
+    }
+  });
+
+  agenda.define("Process Lab", { concurrency: 10 }, async (job, done) => {
+    console.log("running Process Lab -> ", new Date());
+    try {
+      await jobs.analytics.add.processLab();
+      done();
+    } catch (err) {
+      console.log(err, "Failed -> Process Lab");
+      done();
+    }
+  });
+
+  agenda.define("Process Eod", { concurrency: 10 }, async (job, done) => {
+    console.log("running Process Eod -> ", new Date());
+    try {
+      await jobs.analytics.add.processEod();
+      done();
+    } catch (err) {
+      console.log(err, "Failed -> Process Eod");
+      done();
+    }
+  });
+
+  agenda.define("Process Patients", { concurrency: 10 }, async (job, done) => {
+    console.log("running Process Patients -> ", new Date());
+    try {
+      await jobs.analytics.add.processPatients();
+      done();
+    } catch (err) {
+      console.log(err, "Failed -> Process Patients");
       done();
     }
   });
@@ -130,8 +173,16 @@ if (!process.env.NO_JOB) {
 
   (async function () {
     await agenda.start();
-    await agenda.every("*/10 * * * *", "Run Analytics");
-    await agenda.every("0 0 * * *", "Run Consolidated Report");
+    await agenda.every("*/10 * * * *", [
+      "Process Screening",
+      "Process Lab",
+      "Process Eod",
+      "Process Patients",
+    ]);
+    await agenda.every("0 0 * * *", [
+      "Run Consolidated Report",
+      "Run Analytics",
+    ]);
     agenda.on("start", (job) => {
       console.log(time(), `Job <${job.attrs.name}> starting`);
     });

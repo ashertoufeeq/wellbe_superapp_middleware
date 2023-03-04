@@ -15,9 +15,10 @@ const {
 const util = require("util");
 const moment = require("moment");
 
-const last5Days = moment().subtract(15, "minutes").toISOString();
+const last15Minutes = moment().subtract(15, "minutes").toDate();
+const lastDay = moment().subtract(1, "day").startOf("day").toDate();
 
-const processScreening = () =>
+exports.processScreening = (isEod) =>
   new Promise(async (resolve, reject) => {
     let moved_actions = [];
     let count = 0;
@@ -33,12 +34,12 @@ const processScreening = () =>
             $or: [
               {
                 createdAt: {
-                  $gte: moment().subtract(15, "minutes").toDate(),
+                  $gte: isEod ? lastDay : last15Minutes,
                 },
               },
               {
                 updatedAt: {
-                  $gte: moment().subtract(15, "minutes").toDate(),
+                  $gte: isEod ? lastDay : last15Minutes,
                 },
               },
             ],
@@ -131,7 +132,7 @@ const processScreening = () =>
     resolve();
   });
 
-const processLab = () =>
+exports.processLab = (isEod) =>
   new Promise(async (resolve, reject) => {
     let moved_actions = [];
     let count = 0;
@@ -140,9 +141,9 @@ const processLab = () =>
     console.log("Processing Lab --");
     const labCursor = await LabItem.find({
       $or: [
-        { createdAt: { $gte: last5Days } },
-        { updatedAt: { $gte: last5Days } },
-        { "packages.activities.at": { $gte: last5Days } },
+        { createdAt: { $gte: isEod ? lastDay : last15Minutes } },
+        { updatedAt: { $gte: isEod ? lastDay : last15Minutes } },
+        { "packages.activities.at": { $gte: isEod ? lastDay : last15Minutes } },
       ],
     })
       .populate("billId", "billNumber")
@@ -198,7 +199,7 @@ const processLab = () =>
     resolve();
   });
 
-const processEod = () =>
+exports.processEod = (isEod) =>
   new Promise(async (resolve, reject) => {
     let moved_actions = [];
     let count = 0;
@@ -207,8 +208,8 @@ const processEod = () =>
     console.log("Processing Eod --");
     const eodCursor = await Eod.find({
       $or: [
-        { createdAt: { $gte: last5Days } },
-        { updatedAt: { $gte: last5Days } },
+        { createdAt: { $gte: isEod ? lastDay : last15Minutes } },
+        { updatedAt: { $gte: isEod ? lastDay : last15Minutes } },
       ],
     }).cursor();
 
@@ -263,7 +264,7 @@ const processEod = () =>
     resolve();
   });
 
-const processPatients = () =>
+exports.processPatients = (isEod) =>
   new Promise(async (resolve, reject) => {
     let moved_actions = [];
     let count = 0;
@@ -272,8 +273,8 @@ const processPatients = () =>
     console.log("Processing Patients --");
     const patientCursor = await Patient.find({
       $or: [
-        { createdAt: { $gte: last5Days } },
-        { updatedAt: { $gte: last5Days } },
+        { createdAt: { $gte: isEod ? lastDay : last15Minutes } },
+        { updatedAt: { $gte: isEod ? lastDay : last15Minutes } },
       ],
     }).cursor();
 
@@ -313,9 +314,9 @@ const processPatients = () =>
     resolve();
   });
 
-module.exports = async () => {
-  await processScreening();
-  await processLab();
-  await processEod();
-  await processPatients();
+exports.processAll = async () => {
+  await processScreening(true);
+  await processLab(true);
+  await processEod(true);
+  await processPatients(true);
 };

@@ -315,8 +315,8 @@ exports.processPatients = (isEod) =>
   });
 
 exports.processAll = async () => {
-  await processScreening(true);
-  await processLab(true);
-  await processEod(true);
-  await processPatients(true);
+  await this.processScreening(true);
+  await this.processLab(true);
+  await this.processEod(true);
+  await this.processPatients(true);
 };

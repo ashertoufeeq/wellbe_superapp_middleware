@@ -48,6 +48,7 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(async () => {
+    // jobs.analytics.add.processAll();
     console.log("db connected");
   })
   .catch((err) => console.warn(err));

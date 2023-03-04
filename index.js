@@ -34,6 +34,7 @@ if (!process.env.NO_JOB) {
   agenda = new Agenda({
     db: {
       address: process.env.MONGO_URI,
+      collection: "wellbemiddleware",
     },
     defaultLockLifetime: 240000,
     defaultConcurrency: 100,
@@ -47,6 +48,7 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(async () => {
+    // jobs.analytics.add();
     console.log("db connected");
   })
   .catch((err) => console.warn(err));

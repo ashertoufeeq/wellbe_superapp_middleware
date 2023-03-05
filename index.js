@@ -174,9 +174,38 @@ if (!process.env.NO_JOB) {
 
   (async function () {
     await agenda.start();
-    await agenda.every("*/10 * * * *", ["Process Screening"]);
-    await agenda.every("0 0 * * *", ["Run Analytics"]);
-    await agenda.every("0 3 * * *", ["Run Consolidated Report"]);
+    await agenda.every(
+      "*/10 * * * *",
+      ["Process Screening"],
+      {},
+      {
+        timezone: "Asia/Kolkata",
+      }
+    );
+    await agenda.every(
+      "0 0 * * *",
+      ["Run Analytics"],
+      {},
+      {
+        timezone: "Asia/Kolkata",
+      }
+    );
+    await agenda.every(
+      "0 2 * * *",
+      ["Run Consolidated Report"],
+      {},
+      {
+        timezone: "Asia/Kolkata",
+      }
+    );
+    await agenda.every(
+      "0 5 * * *",
+      ["Run Analytics"],
+      {},
+      {
+        timezone: "Asia/Kolkata",
+      }
+    );
 
     agenda.on("start", (job) => {
       console.log(time(), `Job <${job.attrs.name}> starting`);

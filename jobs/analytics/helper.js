@@ -300,6 +300,7 @@ exports.labForUpdate = ({ lab, existingUpdate: existing }) => {
     updateMany: {
       filter: { "Patient Id": lab.patientId },
       update: { $set: update, $setOnInsert: { "Patient Id": lab.patientId } },
+      upsert: true,
     },
   };
 };
@@ -320,6 +321,7 @@ exports.eodForUpdate = ({ patient, existingUpdate: existing }) => {
         $set: update,
         $setOnInsert: { "Patient Id": patient.patientId },
       },
+      upsert: true,
     },
   };
 };
@@ -339,6 +341,7 @@ exports.patientForUpdate = ({ patient }) => {
     updateMany: {
       filter: { "Patient Id": patient._id },
       update: { $set: update },
+      upsert: true,
     },
   };
 };

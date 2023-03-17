@@ -198,6 +198,30 @@ if (!process.env.NO_JOB) {
       }
     );
     await agenda.every(
+      "0 14 * * *",
+      ["Run Consolidated Report"],
+      {},
+      {
+        timezone: "Asia/Kolkata",
+      }
+    );
+    await agenda.every(
+      "0 17 * * *",
+      ["Run Consolidated Report"],
+      {},
+      {
+        timezone: "Asia/Kolkata",
+      }
+    );
+    await agenda.every(
+      "0 20 * * *",
+      ["Run Consolidated Report"],
+      {},
+      {
+        timezone: "Asia/Kolkata",
+      }
+    );
+    await agenda.every(
       "0 0 * * *",
       ["Run Analytics"],
       {},

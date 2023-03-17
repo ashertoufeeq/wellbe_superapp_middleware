@@ -128,6 +128,49 @@ if (!process.env.NO_JOB) {
     }
   );
 
+  agenda.define(
+    "Run Analytics Night 1",
+    { concurrency: 10 },
+    async (job, done) => {
+      console.log("running Run Analytics -> ", new Date());
+      try {
+        await jobs.analytics.add.processAll();
+        done();
+      } catch (err) {
+        console.log(err, "Failed -> Run Analytics");
+        done();
+      }
+    }
+  );
+  agenda.define(
+    "Run Analytics Night 2",
+    { concurrency: 10 },
+    async (job, done) => {
+      console.log("running Run Analytics -> ", new Date());
+      try {
+        await jobs.analytics.add.processAll();
+        done();
+      } catch (err) {
+        console.log(err, "Failed -> Run Analytics");
+        done();
+      }
+    }
+  );
+  agenda.define(
+    "Run Analytics Night 3",
+    { concurrency: 10 },
+    async (job, done) => {
+      console.log("running Run Analytics -> ", new Date());
+      try {
+        await jobs.analytics.add.processAll();
+        done();
+      } catch (err) {
+        console.log(err, "Failed -> Run Analytics");
+        done();
+      }
+    }
+  );
+
   agenda.define("Process Screening", { concurrency: 10 }, async (job, done) => {
     console.log("running Process Screening -> ", new Date());
     try {
@@ -199,7 +242,7 @@ if (!process.env.NO_JOB) {
     );
     await agenda.every(
       "0 14 * * *",
-      ["Run Consolidated Report"],
+      ["Run Consolidated Report 1"],
       {},
       {
         timezone: "Asia/Kolkata",
@@ -207,7 +250,7 @@ if (!process.env.NO_JOB) {
     );
     await agenda.every(
       "0 17 * * *",
-      ["Run Consolidated Report"],
+      ["Run Consolidated Report 2"],
       {},
       {
         timezone: "Asia/Kolkata",
@@ -215,7 +258,7 @@ if (!process.env.NO_JOB) {
     );
     await agenda.every(
       "0 20 * * *",
-      ["Run Consolidated Report"],
+      ["Run Consolidated Report 3"],
       {},
       {
         timezone: "Asia/Kolkata",

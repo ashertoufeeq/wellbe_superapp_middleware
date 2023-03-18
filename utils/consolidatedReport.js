@@ -1055,6 +1055,7 @@ const reportGenerationStatus = {
     labReportPending: 'Lab Report Pending',
     missingScreenings: 'Missing Screenings',
     notProcessed: 'Not Processed',
+    unknown: 'Unknown Error'
 };
 
 

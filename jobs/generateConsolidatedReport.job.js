@@ -239,25 +239,50 @@ module.exports = async (req, res) => {
                 campId: camp?._id?.toString(),
                 debug,
               });
-
                 if(results && isBasicDone){
-                  const buffer = await getEjsFile({
-                    render,
-                    data: tranformerConsolidatedReportData({
-                      patient,
-                      resultsObject: results || {},
-                      screeningDate: details?.screeningDate,
-                      location: details?.campId?.name,
-                      district: details.district,
-                      state: details.state,
-                      optometryDone,
-                      audioDone
-                    }),
-                    fileName: "consolidated-report" + Date.now(),
-                  });
-
-                  pdfLinks.push(buffer);
-                  screeningReportGenerated = !!buffer;
+                  try{
+                    const buffer = await getEjsFile({
+                      render,
+                      data: tranformerConsolidatedReportData({
+                        patient,
+                        resultsObject: results || {},
+                        screeningDate: details?.screeningDate,
+                        location: details?.campId?.name,
+                        district: details.district,
+                        state: details.state,
+                        optometryDone,
+                        audioDone
+                      }),
+                      fileName: "consolidated-report" + Date.now(),
+                    });
+                    pdfLinks.push(buffer);
+                    screeningReportGenerated = !!buffer;
+                  }catch(e){
+                    console.log(e);
+                    await Patient.findByIdAndUpdate(
+                      details?.patient?._id,
+                      {
+                        consolidatedReportStatus: reportGenerationStatus.unknown,
+                      },
+                      { new: true }
+                    );
+                    const updatedLab = await labItemModel.updateMany(
+                      {
+                        _id: {
+                          $in: (details.labItems || []).map(
+                            (item) => item?._id
+                          ),
+                        },
+                      },
+                      {
+                        $set: {
+                          isProcessed: true,
+                        },
+                      }
+                    );
+                    console.log('unknown error', details?.patient?._id );
+                    continue;
+                  } 
                 }else{
                   await Patient.findByIdAndUpdate(
                     details?.patient?._id,
@@ -265,6 +290,20 @@ module.exports = async (req, res) => {
                       consolidatedReportStatus: reportGenerationStatus.missingScreenings,
                     },
                     { new: true }
+                  );
+                  const updatedLab = await labItemModel.updateMany(
+                    {
+                      _id: {
+                        $in: (details.labItems || []).map(
+                          (item) => item?._id
+                        ),
+                      },
+                    },
+                    {
+                      $set: {
+                        isProcessed: true,
+                      },
+                    }
                   );
                 }
                 
@@ -432,6 +471,20 @@ module.exports = async (req, res) => {
                     },
                     { new: true }
                   );
+                  const updatedLab = await labItemModel.updateMany(
+                    {
+                      _id: {
+                        $in: (details.labItems || []).map(
+                          (item) => item?._id
+                        ),
+                      },
+                    },
+                    {
+                      $set: {
+                        isProcessed: true,
+                      },
+                    }
+                  );
                   console.log("Risk Mode 3");
                 } else {
                   console.log("Debug Mode 3");
@@ -448,6 +501,20 @@ module.exports = async (req, res) => {
                 },
                 { new: true }
               );
+              const updatedLab = await labItemModel.updateMany(
+                {
+                  _id: {
+                    $in: (action.labItems || []).map(
+                      (item) => item?._id
+                    ),
+                  },
+                },
+                {
+                  $set: {
+                    isProcessed: true,
+                  },
+                }
+              );
               console.log("Risk Mode 9");
             } else {
               console.log("Debug Mode 9");
@@ -463,6 +530,20 @@ module.exports = async (req, res) => {
                 consolidatedReportStatus: reportGenerationStatus.missingScreenings
               },
               { new: true }
+            );
+            const updatedLab = await labItemModel.updateMany(
+              {
+                _id: {
+                  $in: (action?.labItems || []).map(
+                    (item) => item?._id
+                  ),
+                },
+              },
+              {
+                $set: {
+                  isProcessed: true,
+                },
+              }
             );
             console.log("Risk Mode 4");
           } else {

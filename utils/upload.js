@@ -59,29 +59,35 @@ const uploadEJSPDF = ({ render, data, fileName }) =>
 
 const getEjsFile = ({ render, data, fileName }) =>
   new Promise((resolve, reject) => {
-    const html = render(data);
-    pdf.create(html, {
-      childProcessOptions: {
-        env: {
-          OPENSSL_CONF: '/dev/null',
-        },
-      }
-    }).toFile((err, file) => {
-      if (err) {
-        console.log("error generating pdf ->", err);
-        reject("error");
-      } else {
-        fs.readFile(file.filename, async function (err1, data) {
-          if (err1) {
-            console.log(err1);
-            res.status(500).json({ err: "Could not read file " });
-          } else {
-            await fs.unlinkSync(file.filename);
-            resolve(data);
-          }
-        });
-      }
-    });
+    try{
+      const html = render(data);
+      pdf.create(html, {
+        childProcessOptions: {
+          env: {
+            OPENSSL_CONF: '/dev/null',
+          },
+        }
+      }).toFile((err, file) => {
+        if (err) {
+          console.log("error generating pdf ->", err);
+          reject("error");
+        } else {
+          fs.readFile(file.filename, async function (err1, data) {
+            if (err1) {
+              console.log(err1);
+              reject('error')
+            } else {
+              await fs.unlinkSync(file.filename);
+              resolve(data);
+            }
+          });
+        }
+      });
+    }
+    catch(e){
+      console.log(e,'error is here');
+      reject('error');
+    }
   });
 
 module.exports = {

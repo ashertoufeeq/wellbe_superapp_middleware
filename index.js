@@ -53,10 +53,6 @@ mongoose
   })
   .catch((err) => console.warn(err));
 
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
-app.use(bodyParser.json({ limit: "100mb" }));
-
 app.use((req, res, next) => {
   const oldWrite = res.write;
   const oldEnd = res.end;
@@ -90,6 +86,11 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
+app.use(bodyParser.json({ limit: "100mb" }));
+
+app.use(cors());
 
 app.listen(process.env.PORT || 4000, async () => {
   console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);

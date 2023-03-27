@@ -1032,9 +1032,9 @@ const tranformerConsolidatedReportData = ({
                 axis: resultsObject?.LE_Axis || "-",
             },
         },
-        diagnosis: resultsObject?.Comment === 'NA' ? 'Normal' : resultsObject?.Comment || optometryDone?"-": 'Test not done due to medical reasons',
+        diagnosis: resultsObject?.Comment === 'NA' ? 'Normal' : resultsObject?.Comment ? resultsObject?.Comment : (optometryDone?"-": 'Test not done due to medical reasons'),
     };
-
+    
     return {
         ...indexPage,
         ...resultsObject,

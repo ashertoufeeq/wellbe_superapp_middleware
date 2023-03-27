@@ -48,7 +48,6 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(async () => {
-    // jobs.analytics.add.processAll();
     console.log("db connected");
   })
   .catch((err) => console.warn(err));
@@ -93,6 +92,8 @@ app.use(bodyParser.json({ limit: "100mb" }));
 app.use(cors());
 
 app.listen(process.env.PORT || 4000, async () => {
+  // jobs.generateConsolidatedReport();
+
   console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);
 });
 

@@ -36,15 +36,15 @@ module.exports = async (req, res) => {
     const labAggregateQuery = [
       {
         $match: {
-          packages: {
-            $not: {
-              $elemMatch: { reportUrl: { $exists: false }, cleared: false },
-            },
-          },
           ...(!req
             ? {
                 isProcessed: {
                   $ne: true,
+                },
+                packages: {
+                  $not: {
+                    $elemMatch: { reportUrl: { $exists: false }, cleared: false },
+                  },
                 },
               }
             : {}),
@@ -71,6 +71,8 @@ module.exports = async (req, res) => {
       },
       {
         $addFields: {
+          cleared: "$cleared",
+          clearReason: "$clearReason",
           package: { $first: "$packages" },
           patientUhid: "$patient.uhid",
           patientId: "$patient._id",
@@ -88,6 +90,8 @@ module.exports = async (req, res) => {
           uhid: "$patientUhid",
           patientId: "$patientId",
           isReportSent: "$isReportSent",
+          cleared: "$cleared",
+          clearReason: "$clearReason",
         },
       },
       {
@@ -306,9 +310,9 @@ module.exports = async (req, res) => {
                     }
                   );
                 }
-                
+                console.log(details.labItems,'some console');
                 for (const lab of details.labItems || []) {
-                  if (lab && lab?.reportUrl && (lab.reportUrl || '').includes('.pdf')) {
+                  if (lab && !lab?.cleared && lab?.reportUrl && (lab.reportUrl || '').includes('.pdf')) {
                     console.log(lab, lab.reportUrl,'report url');
                     const labBuffer = await getFileBufferFromUrl(lab?.reportUrl);
                     pdfLinks.push(labBuffer);
@@ -463,14 +467,17 @@ module.exports = async (req, res) => {
                 if (!debug) {
                   await Patient.findByIdAndUpdate(
                     details?.patient?._id,
-                    
                     {
                       consolidatedReportStatus: !labReportGenerated
                         ? reportGenerationStatus.labReportPending
                         : reportGenerationStatus.missingScreenings,
+                      ...(!labReportGenerated && (details?.labItems || []).some(item => item.clearReason) ? {
+                        labClearReason: (details?.labItems || []).filter(item => item.clearReason)[0]?.clearReason || ''
+                      } :{})    
                     },
                     { new: true }
                   );
+                  
                   const updatedLab = await labItemModel.updateMany(
                     {
                       _id: {
@@ -485,6 +492,7 @@ module.exports = async (req, res) => {
                       },
                     }
                   );
+
                   console.log("Risk Mode 3");
                 } else {
                   console.log("Debug Mode 3");
@@ -554,6 +562,31 @@ module.exports = async (req, res) => {
             action.labItems[0] ? action.labItems[0]?.uhid:null
           );
         }
+      }else{
+        await Patient.findByIdAndUpdate(
+          action?._id,
+          {
+            consolidatedReportStatus: reportGenerationStatus.labReportPending,
+            ...((action?.labItems || []).some(item => item.clearReason) ? {
+              labClearReason: (action?.labItems || []).filter(item => item.clearReason)[0]?.clearReason || ''
+            } :{})    
+          },
+          { new: true }
+        );
+        const updatedLab = await labItemModel.updateMany(
+          {
+            _id: {
+              $in: (action?.labItems || []).map(
+                (item) => item?._id
+              ),
+            },
+          },
+          {
+            $set: {
+              isProcessed: true,
+            },
+          }
+        );
       }
       globalCount = globalCount + 1;
     }

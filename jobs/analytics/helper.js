@@ -181,31 +181,31 @@ exports.screeningForUpdate = ({ group }) => {
   };
 
   const newScreening = {
-    "First Name": screening.patient?.fName,
-    "Last Name": screening.patient?.lName,
-    Mobile: screening.patient?.mobile,
-    Gender: screening.patient?.gender,
-    DOB: screening.patient?.dob,
-    Age: age,
-    UHID: screening.patient.uhid,
-    "Age Group":
-      age < 15
-        ? "0-15 Years"
-        : age < 20
-        ? "15-20 Years"
-        : age < 40
-        ? "20-40 Years"
-        : age < 65
-        ? "40-65 Years"
-        : "65 years and Above",
-    Camp: camp.name,
-    Village: camp.villageName,
-    Taluka: camp.talukaName,
-    "Pin Code": camp.villagePinCode,
-    "Work Order Number": camp.programId?.programNumber,
-    "Work Order Short Code": camp.programId?.programShortCode,
-    "Screening Date": screening.createdAt,
-    "Registration Done By": screening.patient.createdBy,
+    // "First Name": screening.patient?.fName,
+    // "Last Name": screening.patient?.lName,
+    // Mobile: screening.patient?.mobile,
+    // Gender: screening.patient?.gender,
+    // DOB: screening.patient?.dob,
+    // Age: age,
+    // UHID: screening.patient.uhid,
+    // "Age Group":
+    //   age < 15
+    //     ? "0-15 Years"
+    //     : age < 20
+    //     ? "15-20 Years"
+    //     : age < 40
+    //     ? "20-40 Years"
+    //     : age < 65
+    //     ? "40-65 Years"
+    //     : "65 years and Above",
+    // Camp: camp.name,
+    // Village: camp.villageName,
+    // Taluka: camp.talukaName,
+    // "Pin Code": camp.villagePinCode,
+    // "Work Order Number": camp.programId?.programNumber,
+    // "Work Order Short Code": camp.programId?.programShortCode,
+    // "Screening Date": screening.createdAt,
+    // "Registration Done By": screening.patient.createdBy,
 
     ...(basicHealth.status !== "Done" && {
       "Basic Health Checkup Status": basicHealth.status || "Not Done",

@@ -64,27 +64,32 @@ const analyticsSchema = new schema(
     },
     "Basic Health Checkup Status": {
       type: String,
+      default: "Not Done",
     },
     "Basic Health Checkup Done By": {
       type: String,
     },
     "Phlebotomy Response": {
       type: String,
+      default: "No Data",
     },
     "Phlebotomy Done By": {
       type: String,
     },
     "Audiometry Status": {
       type: String,
+      default: "Not Done",
     },
     "Audiometry Done By": {
       type: String,
     },
     "Otology Status": {
       type: String,
+      default: "Not Done",
     },
     "Optometry Status": {
       type: String,
+      default: "Not Done",
     },
 
     "Optometry Done By": {
@@ -102,6 +107,7 @@ const analyticsSchema = new schema(
     },
     "Lab Test Status": {
       type: String,
+      default: "Pending",
     },
     "Lab Clear Reason": {
       type: String,

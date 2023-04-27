@@ -34,7 +34,7 @@ const analyticsSchema = new schema(
     },
     Camp: {
       type: String,
-      default: null,
+      default: "No Data",
     },
     "Labour Id": { type: String },
     campId: {
@@ -43,6 +43,7 @@ const analyticsSchema = new schema(
     },
     Village: {
       type: String,
+      default: "No Data",
     },
     Taluka: {
       type: String,

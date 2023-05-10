@@ -15,7 +15,7 @@ const {
 const util = require("util");
 const moment = require("moment");
 
-const last15Minutes = moment().subtract(15, "minutes").toDate();
+const last15Minutes = moment().subtract(10, "minutes").toDate();
 const lastDay = moment().subtract(1, "day").startOf("day").toDate();
 
 exports.processScreening = (isEod) =>

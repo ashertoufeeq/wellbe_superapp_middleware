@@ -192,7 +192,7 @@ if (!process.env.NO_JOB) {
   (async function () {
     await agenda.start();
     await agenda.every(
-      "*/10 * * * *",
+      "*/4 * * * *",
       ["Process Screening"],
       {},
       {

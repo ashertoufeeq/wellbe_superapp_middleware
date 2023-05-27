@@ -32,7 +32,17 @@ const debug = false;
 module.exports = async (req, res) => {
   try {
     const screeningAggregation = [
-      { $match: { isProcessed: { $ne: true } } },
+      {
+        $match: {
+          isProcessed: { $ne: true },
+          ...(req && req?.body.patientId
+            ? {
+                patientId: ObjectId(req?.body.patientId),
+              }
+            : {}),
+        },
+      },
+
       {
         $lookup: {
           from: "patient_records",

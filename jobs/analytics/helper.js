@@ -58,7 +58,7 @@ const getFormStatus = ({ screening, formId, filledByKey, statusKey }) => {
         Object.keys(healthScreening.results || {}).length > 0
           ? screening.createdBy?.name || "-"
           : "",
-      ...(formId === "6389026cc59c8aa15e498ae0" && {
+      ...(formId === "64dc6efdd03d703c5e8b9d01" && {
         otologyStatus:
           healthScreening.results || {}.Is_Otology_Completed_ === "Yes"
             ? "Done"
@@ -118,7 +118,7 @@ exports.screeningForUpdate = ({ group }) => {
     if (audiometry.status === "Not Done") {
       audiometry = getFormStatus({
         screening: s,
-        formId: "6389026cc59c8aa15e498ae0",
+        formId: "64dc6efdd03d703c5e8b9d01",
         statusKey: "Audiometry Status",
         filledByKey: "Audiometry Done By",
       });

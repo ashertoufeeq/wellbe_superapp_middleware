@@ -956,6 +956,17 @@ const tranformerConsolidatedReportData = ({
     dermascopyResult: (resultsObject?.uvcData || [])
       .filter((i) => i.comment)
       .map((item) => item.comment),
+      otoScopeImage1:  ((resultsObject?.otoscopeData || []) &&
+      (resultsObject?.otoscopeData || [])[0] &&
+      (resultsObject?.otoscopeData || [])[0]?.fileUrl) ||
+      (resultsObject?.otoscopeData || [])[0]?.imageUrl,
+      otoScopeImage2:  ((resultsObject?.otoscopeData || []).length > 1 &&
+          (resultsObject?.otoscopeData || [])[1] &&
+          (resultsObject?.otoscopeData || [])[1]?.fileUrl) ||
+      (resultsObject?.otoscopeData || [])[1]?.imageUrl,
+      otoScopeResult: (resultsObject?.otoscopeData || []).filter(i => i.comment).map(
+          (item) => item.comment
+      ),
   };
   const page5 = {
     lungIcon:

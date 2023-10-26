@@ -127,3 +127,36 @@
   </div>
   <% } %>
 
+  <% if (otoScopeImage1) { %>
+    <div class="my-3">
+      <div>
+      <h4>Otoscopy</h4>
+      <div>
+        <table class="n-b w-100">
+          <tr class="n-b">
+            <td class="n-b">
+              <img src="<%= otoScopeImage1 %>"  height="250px" width="250" style="margin-right: 2px"/>
+            </td>
+            <% if (otoScopeImage2) { %>
+            <td class="n-b">
+              <img src="<%= otoScopeImage2 %>"  height="250px" width="250" style="margin-right: 2px"/>
+            </td>
+            <% } %>
+            <td class="n-b w-100" style="vertical-align: top !important;" colspan="2">
+              <% otoScopeResult.forEach(function(item,i) { %>
+                <p class="ml-4 text-left"><%= i+1 %>. <%= item %> </p>
+                <% }); %>
+            </td>     
+          </tr>
+        </table>
+      </div>
+      </div>
+    </div>   
+  <% } else { %> 
+    <div class="my-3">
+      <h4>Otoscopy</h4>
+      <div>
+       Sample not given.
+      </div>
+    </div>
+    <% } %>

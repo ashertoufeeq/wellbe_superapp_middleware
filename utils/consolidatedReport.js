@@ -1,6 +1,9 @@
-const moment = require("moment");
+const moment = require('moment-timezone');
 const { calculateAge } = require("./index");
 const ScreeningModel = require("../models/campScreening.model");
+
+const timezone = process.env.TIMEZONE || 'Asia/Kolkata';
+
 
 const getRandomFloots = (min, max) => {
   const randomNumber = min + Math.random() * (max - min);
@@ -66,7 +69,7 @@ const calculateBmi = ({ resultsObject }) => {
 const getAge = ({ patient }) => {
   const { dob } = patient;
   const ts = Date.parse(dob);
-  return moment().diff(ts, "years");
+  return moment().tz(timezone).diff(ts, "years");
 };
 
 const getBmiStatus = (value) => {
@@ -579,7 +582,7 @@ const spirometryPrediction = (
 
   const { dob, gender } = patient;
   const ts = Date.parse(dob);
-  let age = moment().diff(ts, "years");
+  let age = moment().tz(timezone).diff(ts, "years");
 
   const height = Number(
     resultsObject.Height?.value || resultsObject.Height || resultsObject?.height
@@ -1025,19 +1028,19 @@ const tranformerConsolidatedReportData = ({
       : "Normal",
     isHearingScreeningDone: "Yes",
     leftEar: {
-      "500Hz": resultsObject?.Left_Freq_500_Hz || "N",
-      "1000Hz": resultsObject?.Left_Freq_1_KHZ || "N",
-      "2000Hz": resultsObject?.Left_Freq_2_KHZ || "N",
-      "4000Hz": resultsObject?.Left_Freq_4_KHZ || "N",
+      "500Hz": resultsObject?.Left_Freq_500_Hz || resultsObject?.left_freq_500 || "N",
+      "1000Hz": resultsObject?.Left_Freq_1_KHZ || resultsObject?.left_freq_1000|| "N",
+      "2000Hz": resultsObject?.Left_Freq_2_KHZ || resultsObject?.left_freq_2000 ||"N",
+      "4000Hz": resultsObject?.Left_Freq_4_KHZ ||  resultsObject?.left_freq_4000 ||"N",
     },
     rightEar: {
-      "500Hz": resultsObject?.Right_Freq_500_Hz || "N",
-      "1000Hz": resultsObject?.Right_Freq_1_KHZ || "N",
-      "2000Hz": resultsObject?.Right_Freq_2_KHZ || "N",
-      "4000Hz": resultsObject?.Right_Freq_4_KHZ || "N",
+      "500Hz": resultsObject?.Right_Freq_500_Hz || resultsObject?.right_freq_500|| "N",
+      "1000Hz": resultsObject?.Right_Freq_1_KHZ || resultsObject?.right_freq_1000|| "N",
+      "2000Hz": resultsObject?.Right_Freq_2_KHZ ||  resultsObject?.right_freq_2000||"N",
+      "4000Hz": resultsObject?.Right_Freq_4_KHZ ||  resultsObject?.right_freq_4000||"N",
     },
     screeingAddress: location,
-    screenDate: moment(screeningDate).format("lll"),
+    screenDate: moment(screeningDate).tz(timezone).format("lll"),
   };
 
   const page7 = {
@@ -1078,7 +1081,7 @@ const tranformerConsolidatedReportData = ({
   return {
     ...indexPage,
     ...resultsObject,
-    date: moment(screeningDate).format("ll"),
+    date: moment(screeningDate).tz(timezone).format("ll"),
     ...page2,
     ...page3,
     ...page4,

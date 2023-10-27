@@ -23,7 +23,7 @@ const renderHTML = fs.readFileSync(
   path.resolve(__dirname, "../views/consolidatedReport.ejs"),
   "utf8"
 );
-const timezone = "Asia/Kolkata";
+const timezone = process.env.TIMEZONE || 'Asia/Kolkata';
 
 const render = ejs.compile(renderHTML);
 

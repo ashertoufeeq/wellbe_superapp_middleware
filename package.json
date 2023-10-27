@@ -25,6 +25,7 @@
     "https": "^1.0.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
     "mongoose": "^6.8.3",
     "mongoose-double": "0.0.1",
     "nodemon": "^2.0.20",

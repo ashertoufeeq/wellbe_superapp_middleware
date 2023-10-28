@@ -811,6 +811,52 @@ const spirometryPrediction = (
   return vitalographValues;
 };
 
+const getAudiometryValue = ({resultsObject}) => {
+
+  const haveAudiometry = (
+    resultsObject?.Left_Freq_500_Hz || resultsObject?.left_freq_500 
+    || resultsObject?.Left_Freq_1_KHZ || resultsObject?.left_freq_1000 
+    || resultsObject?.Left_Freq_2_KHZ || resultsObject?.left_freq_2000
+    || resultsObject?.Left_Freq_4_KHZ ||  resultsObject?.left_freq_4000
+    || resultsObject?.Right_Freq_500_Hz || resultsObject?.right_freq_500
+    || resultsObject?.Right_Freq_1_KHZ || resultsObject?.right_freq_1000
+    || resultsObject?.Right_Freq_2_KHZ ||  resultsObject?.right_freq_2000
+    || resultsObject?.Right_Freq_4_KHZ ||  resultsObject?.right_freq_4000
+    )
+
+  if(!haveAudiometry){
+    return {
+      left: {
+        "500Hz": "N",
+        "1000Hz":  "N",
+        "2000Hz": "N",
+        "4000Hz": "N",
+      },
+      rightEar: {
+        "500Hz": "N",
+        "1000Hz":  "N",
+        "2000Hz": "N",
+        "4000Hz": "N",
+      }
+    }
+
+  }else{
+    return {    
+      leftEar: {
+      "500Hz": resultsObject?.Left_Freq_500_Hz || resultsObject?.left_freq_500 || "34",
+      "1000Hz": resultsObject?.Left_Freq_1_KHZ || resultsObject?.left_freq_1000|| "42",
+      "2000Hz": resultsObject?.Left_Freq_2_KHZ || resultsObject?.left_freq_2000 || "44",
+      "4000Hz": resultsObject?.Left_Freq_4_KHZ ||  resultsObject?.left_freq_4000 || "45",
+    },
+    rightEar: {
+      "500Hz": resultsObject?.Right_Freq_500_Hz || resultsObject?.right_freq_500|| "34",
+      "1000Hz": resultsObject?.Right_Freq_1_KHZ || resultsObject?.right_freq_1000|| "42",
+      "2000Hz": resultsObject?.Right_Freq_2_KHZ ||  resultsObject?.right_freq_2000|| "44",
+      "4000Hz": resultsObject?.Right_Freq_4_KHZ ||  resultsObject?.right_freq_4000|| "45",
+    }}
+  }
+}
+
 const tranformerConsolidatedReportData = ({
   state,
   patient,
@@ -1027,20 +1073,9 @@ const tranformerConsolidatedReportData = ({
       ? resultsObject?.Audiometry_Provisional_Diagnosis
       : "Normal",
     isHearingScreeningDone: "Yes",
-    leftEar: {
-      "500Hz": resultsObject?.Left_Freq_500_Hz || resultsObject?.left_freq_500 || "N",
-      "1000Hz": resultsObject?.Left_Freq_1_KHZ || resultsObject?.left_freq_1000|| "N",
-      "2000Hz": resultsObject?.Left_Freq_2_KHZ || resultsObject?.left_freq_2000 ||"N",
-      "4000Hz": resultsObject?.Left_Freq_4_KHZ ||  resultsObject?.left_freq_4000 ||"N",
-    },
-    rightEar: {
-      "500Hz": resultsObject?.Right_Freq_500_Hz || resultsObject?.right_freq_500|| "N",
-      "1000Hz": resultsObject?.Right_Freq_1_KHZ || resultsObject?.right_freq_1000|| "N",
-      "2000Hz": resultsObject?.Right_Freq_2_KHZ ||  resultsObject?.right_freq_2000||"N",
-      "4000Hz": resultsObject?.Right_Freq_4_KHZ ||  resultsObject?.right_freq_4000||"N",
-    },
     screeingAddress: location,
     screenDate: moment(screeningDate).tz(timezone).format("lll"),
+    ...getAudiometryValue({resultsObject})
   };
 
   const page7 = {

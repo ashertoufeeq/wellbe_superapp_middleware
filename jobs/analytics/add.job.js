@@ -1,6 +1,6 @@
 const Screening = require("../../models/campScreening.model");
 const AnalyticsCollection = require("../../models/analytics.model");
-const { analyticsDb } = require("../../index");
+const analyticsDb = require("../../index");
 const Patient = require("../../models/patientRecord");
 const Camp = require("../../models/camps.model");
 const Program = require("../../models/program.model");

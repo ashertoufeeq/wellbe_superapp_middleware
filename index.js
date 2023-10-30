@@ -14,9 +14,10 @@ const Program = require("./models/program.model");
 const labItem = require("./models/labItem");
 const scrips = require("./scripts/index");
 
+let analyticsDb = (module.exports = new mongoose.Mongoose());
+
 const app = express();
 const jobs = require("./jobs");
-let analyticsDb = new mongoose.Mongoose();
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -248,7 +249,3 @@ if (!process.env.NO_JOB) {
     });
   })();
 }
-
-module.exports = {
-  analyticsDb,
-};

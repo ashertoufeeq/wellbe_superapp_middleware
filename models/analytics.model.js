@@ -135,8 +135,18 @@ const analyticsSchema = new schema(
     "Report Distribution Time": {
       type: Date,
     },
+    sourceName: {
+      type: String,
+      ...(process.env.SOURCE && { default: process.env.SOURCE }),
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("custom_analytics_screenings", analyticsSchema);
+module.exports = {
+  analyticsSchema,
+  analyticsModel: mongoose.model(
+    "custom_analytics_screenings",
+    analyticsSchema
+  ),
+};

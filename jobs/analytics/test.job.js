@@ -1,5 +1,6 @@
 const Screening = require("../../models/campScreening.model");
-const Analytics = require("../../models/analytics.model");
+const AnalyticsCollection = require("../../models/analytics.model");
+const { analyticsDb } = require("../../index");
 const Patient = require("../../models/patientRecord");
 const Camp = require("../../models/camps.model");
 const Program = require("../../models/program.model");
@@ -7,6 +8,16 @@ const LabItem = require("../../models/labItem");
 const Eod = require("../../models/eod.model");
 const { screeningForUpdate, labForUpdate, eodForUpdate } = require("./helper");
 const util = require("util");
+
+let Analytics;
+if (process.env.ANALYTICS_DB) {
+  Analytics = analyticsDb.model(
+    "custom_analytics_screenings",
+    AnalyticsCollection.analyticsSchema
+  );
+} else {
+  Analytics = AnalyticsCollection.analyticsModel;
+}
 
 const processLab = () =>
   new Promise(async (resolve, reject) => {

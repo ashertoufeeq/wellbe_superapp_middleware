@@ -1,5 +1,6 @@
 const Screening = require("../../models/campScreening.model");
-const Analytics = require("../../models/analytics.model");
+const AnalyticsCollection = require("../../models/analytics.model");
+const { analyticsDb } = require("../../index");
 const Patient = require("../../models/patientRecord");
 const Camp = require("../../models/camps.model");
 const Program = require("../../models/program.model");
@@ -14,6 +15,16 @@ const {
 } = require("./helper");
 const util = require("util");
 const moment = require("moment");
+
+let Analytics;
+if (process.env.ANALYTICS_DB) {
+  Analytics = analyticsDb.model(
+    "custom_analytics_screenings",
+    AnalyticsCollection.analyticsSchema
+  );
+} else {
+  Analytics = AnalyticsCollection.analyticsModel;
+}
 
 const last15Minutes = moment().subtract(10, "minutes").toDate();
 const lastDay = moment().subtract(1, "day").startOf("day").toDate();

@@ -16,6 +16,7 @@ const scrips = require("./scripts/index");
 
 const app = express();
 const jobs = require("./jobs");
+let analyticsDb = new mongoose.Mongoose();
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -49,6 +50,17 @@ mongoose
   })
   .then(async () => {
     console.log("db connected");
+    if (process.env.ANALYTICS_DB) {
+      return analyticsDb.connect(process.env.ANALYTICS_DB, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+    } else {
+      return Promise.resolve(true);
+    }
+  })
+  .then(() => {
+    console.log("analytics db connected");
   })
   .catch((err) => console.warn(err));
 
@@ -236,3 +248,7 @@ if (!process.env.NO_JOB) {
     });
   })();
 }
+
+module.exports = {
+  analyticsDb,
+};

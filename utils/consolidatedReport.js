@@ -1052,7 +1052,7 @@ const tranformerConsolidatedReportData = ({
         pred: vitalographValues?.percentagePredictedFev6 || "-",
       },
       {
-        parameter: "FEV1/FEV6 (ration)",
+        parameter: "FEV1/FEV6 (ratio)",
         predicted: vitalographValues?.predictedRatio || "-",
         test1: vitalographValues?.ratio || "-",
         test2: "",

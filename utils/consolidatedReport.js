@@ -826,7 +826,7 @@ const getAudiometryValue = ({resultsObject}) => {
 
   if(!haveAudiometry){
     return {
-      left: {
+      leftEar: {
         "500Hz": "N",
         "1000Hz":  "N",
         "2000Hz": "N",

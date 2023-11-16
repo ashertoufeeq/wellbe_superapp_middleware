@@ -17,16 +17,8 @@ const scrips = require("./scripts/index");
 let analyticsDb = (module.exports = new mongoose.Mongoose());
 
 const app = express();
-app.options('*', cors({
-  origin: (origin, callback) => {
-    callback(null, origin);
-  }
-}));
-app.use(cors({
-  origin: (origin, callback) => {
-    callback(null, origin);
-  }
-}));
+app.options('*', cors());
+app.use(cors());
 
 const jobs = require("./jobs");
 

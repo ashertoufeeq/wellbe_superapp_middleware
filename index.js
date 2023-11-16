@@ -17,6 +17,17 @@ const scrips = require("./scripts/index");
 let analyticsDb = (module.exports = new mongoose.Mongoose());
 
 const app = express();
+app.options('*', cors({
+  origin: (origin, callback) => {
+    callback(null, origin);
+  }
+}));
+app.use(cors({
+  origin: (origin, callback) => {
+    callback(null, origin);
+  }
+}));
+
 const jobs = require("./jobs");
 
 app.set("view engine", "ejs");
@@ -101,8 +112,6 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
 app.use(bodyParser.json({ limit: "100mb" }));
-
-app.use(cors());
 
 app.listen(process.env.PORT || 4000, async () => {
   // jobs.generateConsolidatedReport();

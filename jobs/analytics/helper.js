@@ -168,13 +168,13 @@ exports.screeningForUpdate = ({ group }) => {
     ...(basicHealth.status === "Done" && {
       "Basic Health Checkup Status": basicHealth.status || "Not Done",
       "Basic Health Checkup Done By": basicHealth.filledBy,
-      Height: getValFromScreening(basicHealth?.screeningData, "HEIGHT"),
-      Weight: getValFromScreening(basicHealth?.screeningData, "WEIGHT"),
+      Height: getValFromScreening(basicHealth?.screeningData, "Height"),
+      Weight: getValFromScreening(basicHealth?.screeningData, "Weight"),
       BMI: getValFromScreening(basicHealth?.screeningData, "BMI"),
       Spo2: getValFromScreening(basicHealth?.screeningData, "Spo2"),
       Temperature: getValFromScreening(
         basicHealth?.screeningData,
-        "TEMPERATURE"
+        "Temperature"
       ),
       Systolic_Blood_Pressure: getValFromScreening(
         basicHealth?.screeningData,

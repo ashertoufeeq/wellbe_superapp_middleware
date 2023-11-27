@@ -108,7 +108,9 @@ exports.processScreening = (isEod) =>
         },
       ],
       { allowDiskUse: true }
-    ).cursor();
+    )
+      .cursor()
+      .addCursorFlag("noCursorTimeout", true);
 
     for (
       let action = await screeningCursor.next();
@@ -160,7 +162,8 @@ exports.processLab = (isEod) =>
       ],
     })
       .populate("billId", "billNumber")
-      .cursor();
+      .cursor()
+      .addCursorFlag("noCursorTimeout", true);
 
     for (
       let action = await labCursor.next();
@@ -178,7 +181,7 @@ exports.processLab = (isEod) =>
       if (processedPatientMap[actions_json.patientId]) {
         moved_actions = moved_actions.map((a) => {
           if (
-            a.updateOne.update.$setOnInsert["Patient Id"].equals(
+            a?.updateOne?.update?.$setOnInsert["Patient Id"].equals(
               actions_json.patientId
             )
           ) {
@@ -224,7 +227,9 @@ exports.processEod = (isEod) =>
         { createdAt: { $gte: isEod ? lastDay : last15Minutes } },
         { updatedAt: { $gte: isEod ? lastDay : last15Minutes } },
       ],
-    }).cursor();
+    })
+      .cursor()
+      .addCursorFlag("noCursorTimeout", true);
 
     for (
       let action = await eodCursor.next();

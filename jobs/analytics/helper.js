@@ -1,5 +1,15 @@
 const moment = require("moment");
 
+const getValFromScreening = (screening, dataPoint) => {
+  return typeof screening?.[dataPoint]?.value === "string" ||
+    typeof screening?.[dataPoint]?.value === "number"
+    ? screening?.[dataPoint]?.value
+    : typeof screening?.[dataPoint] === "string" ||
+      typeof screening?.[dataPoint] === "number"
+    ? screening?.[dataPoint]
+    : "-";
+};
+
 const getCamp = (screenings) => {
   const campMap = screenings.reduce((acc, curr) => {
     if (acc[curr.campId]) {
@@ -158,38 +168,23 @@ exports.screeningForUpdate = ({ group }) => {
     ...(basicHealth.status === "Done" && {
       "Basic Health Checkup Status": basicHealth.status || "Not Done",
       "Basic Health Checkup Done By": basicHealth.filledBy,
-      Height:
-        basicHealth?.screeningData?.Height?.value ||
-        basicHealth?.screeningData?.Height ||
-        "-",
-      Weight:
-        basicHealth?.screeningData?.Weight?.value ||
-        basicHealth?.screeningData?.Weight ||
-        "-",
-      BMI:
-        basicHealth?.screeningData?.BMI?.value ||
-        basicHealth?.screeningData?.BMI ||
-        "-",
-      Spo2:
-        basicHealth?.screeningData?.Spo2?.value ||
-        basicHealth?.screeningData?.Spo2 ||
-        "-",
-      Temperature:
-        basicHealth?.screeningData?.Temperature?.value ||
-        basicHealth?.screeningData?.Temperature ||
-        "-",
-      Systolic_Blood_Pressure:
-        basicHealth?.screeningData?.Systolic_Blood_Pressure?.value ||
-        basicHealth?.screeningData?.Systolic_Blood_Pressure ||
-        "-",
-      Diastolic_Blood_Pressure:
-        basicHealth?.screeningData?.Diastolic_Blood_Pressure?.value ||
-        basicHealth?.screeningData?.Diastolic_Blood_Pressure ||
-        "-",
-      pulse:
-        basicHealth?.screeningData?.pulse?.value ||
-        basicHealth?.screeningData?.pulse ||
-        "-",
+      Height: getValFromScreening(basicHealth?.screeningData, "HEIGHT"),
+      Weight: getValFromScreening(basicHealth?.screeningData, "WEIGHT"),
+      BMI: getValFromScreening(basicHealth?.screeningData, "BMI"),
+      Spo2: getValFromScreening(basicHealth?.screeningData, "Spo2"),
+      Temperature: getValFromScreening(
+        basicHealth?.screeningData,
+        "TEMPERATURE"
+      ),
+      Systolic_Blood_Pressure: getValFromScreening(
+        basicHealth?.screeningData,
+        "Systolic_Blood_Pressure"
+      ),
+      Diastolic_Blood_Pressure: getValFromScreening(
+        basicHealth?.screeningData,
+        "Diastolic_Blood_Pressure"
+      ),
+      pulse: getValFromScreening(basicHealth?.screeningData, "pulse"),
     }),
     ...(phlebotomyResponse.response !== "No Data" && {
       "Phlebotomy Response": phlebotomyResponse.response || "No Data",

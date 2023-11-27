@@ -40,6 +40,7 @@ const getPhlebotomyResponse = ({ screening }) => {
     return {
       response: "No Data",
       filledBy: "-",
+      screening:labScreening 
     };
   }
 };
@@ -64,6 +65,7 @@ const getFormStatus = ({ screening, formId, filledByKey, statusKey }) => {
             ? "Done"
             : "Not Done",
       }),
+      screeningData: healthScreening.results || {}
     };
   } else {
     return {
@@ -178,8 +180,8 @@ exports.screeningForUpdate = ({ group }) => {
       "Report Distribution Time": screening.patient.reportDistributionTime,
     }),
     "Labour Id": screening.patient.labourId,
-  };
 
+  };
   const newScreening = {
     // "First Name": screening.patient?.fName,
     // "Last Name": screening.patient?.lName,
@@ -207,9 +209,21 @@ exports.screeningForUpdate = ({ group }) => {
     // "Screening Date": screening.createdAt,
     // "Registration Done By": screening.patient.createdBy,
 
+//systolic blood pressure, diastolic,height, weight ,temperature,SpO2
+
     ...(basicHealth.status !== "Done" && {
       "Basic Health Checkup Status": basicHealth.status || "Not Done",
       "Basic Health Checkup Done By": basicHealth.filledBy,
+    }),
+    ...(basicHealth.status === "Done" && {
+      "Height": basicHealth?.screeningData?.Height?.value || basicHealth?.screeningData?.Height || "-",
+      "Weight": basicHealth?.screeningData?.Weight?.value || basicHealth?.screeningData?.Weight || "-",
+      "BMI": basicHealth?.screeningData?.BMI?.value || basicHealth?.screeningData?.BMI || "-",
+      "Spo2": basicHealth?.screeningData?.Spo2?.value || basicHealth?.screeningData?.Spo2 || "-",
+      "Temperature": basicHealth?.screeningData?.Temperature?.value || basicHealth?.screeningData?.Temperature || "-",
+      "Systolic_Blood_Pressure": basicHealth?.screeningData?.Systolic_Blood_Pressure?.value || basicHealth?.screeningData?.Systolic_Blood_Pressure || "-",
+      "Diastolic_Blood_Pressure": basicHealth?.screeningData?.Diastolic_Blood_Pressure?.value || basicHealth?.screeningData?.Diastolic_Blood_Pressure || "-",
+      "pulse": basicHealth?.screeningData?.pulse?.value || basicHealth?.screeningData?.pulse || "-",
     }),
     ...(phlebotomyResponse.response === "No Data" && {
       "Phlebotomy Response": phlebotomyResponse.response || "No Data",
@@ -304,9 +318,34 @@ const getLabCompletionTime = (lab) => {
   return completedTime;
 };
 
+const getLabParameterWiseResult = (lab) => {
+  let parametersValues = {};
+
+  if (
+    lab.packages &&
+    lab.packages.length > 0 &&
+    (lab.packages || []).every((p) => !!p.reportData)
+  ) {
+    lab.packages.forEach((p) => {
+      (p.reportData?.parameters || []).forEach((a) => {
+        parametersValues = { ...parametersValues, [a.name]: a.value}
+      });
+    });
+  }
+  return parametersValues;
+};
+
 exports.labForUpdate = ({ lab, existingUpdate: existing }) => {
   const existingUpdate = existing?.updateOne?.update?.$set || {};
   const updateTime = getLabCompletionTime(lab);
+  let parametersValues = {};
+
+  if(existingUpdate["Lab Test Status"] === "Completed" || (
+    lab.packages || []).every((p) => !!p.reportUrl)
+   ){
+    parametersValues = getLabParameterWiseResult(lab);
+  }
+
   const update = {
     Barcode: lab.billId.billNumber,
     "Lab Test Status": lab.cleared
@@ -320,6 +359,7 @@ exports.labForUpdate = ({ lab, existingUpdate: existing }) => {
       : "Pending",
     ...(updateTime && { "Lab Result Completion Time": updateTime }),
     "Lab Clear Reason": lab.clearReason || "-",
+    ...parametersValues
   };
   return {
     updateMany: {

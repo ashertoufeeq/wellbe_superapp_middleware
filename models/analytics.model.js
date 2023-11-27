@@ -139,6 +139,95 @@ const analyticsSchema = new schema(
       type: String,
       ...(process.env.SOURCE && { default: process.env.SOURCE }),
     },
+    Height: {
+      type: String
+    },
+    Weight: {
+      type: String
+    },
+    BMI: {
+      type: String
+    },
+    Spo2: {
+      type: String
+    },
+    Temperature: {
+      type: String
+    },
+    Systolic_Blood_Pressure: {
+      type: String
+    },
+    Diastolic_Blood_Pressure: {
+      type: String
+    },
+    pulse: {
+      type: String
+    },
+  
+  //Lab Parameters
+  "BLOOD GROUP AND Rh TYPE": String,
+  "GLUCOSE RANDOM": String,
+  "CREATININE SERUM": String,
+  "UREA": String,
+  "URIC ACID": String,
+  "CHOLESTEROL TOTAL": String,
+  "TRIGLYCERIDES": String,
+  "HDL CHOLESTEROL": String,
+  "VLDL CHOLESTEROL": String,
+  "LDL CHOLESTEROL": String,
+  "CHOLESTEROL / HDL RATIO": String,
+  "TOTAL BILIRUBIN(REFLECTANCE SPECTROPHOTOMETRY)": String,
+  "DIRECT BILIRUBIN(CALCULATED)": String,
+  "INDIRECT BILIRUBIN(REFLECTANCE SPECTROPHOTOMETRY)": String,
+  "ASPARTATE TRANSAMINASE (SGOT) (UV WITH P5P)": String,
+  "ALANINE TRANSAMINASE(SGPT) (UV WITH P5P)": String,
+  "ALKALINE PHOSPHATASE(PNPP)": String,
+  "GGT(G-GLUTAMYL-P-NITROANILIDE)": String,
+  "TOTAL PROTEIN (BIURET)": String,
+  "ALBUMIN (BROMOCRESOL GREEN)": String,
+  "GLOBULIN(CALCULATED)": String,
+  "A/G RATIO(CALCULATED)": String,
+  "VOLUME": String,
+  "APPEARANCE": String,
+  "Sp.GRAVITY": String,
+  "LEUCOCYTES (PUS CELLS)": String,
+  "NITRATE": String,
+  "UROBILINOGEN": String,
+  "PROTEIN": String,
+  "pH": String,
+  "BLOOD": String,
+  "URINE KETONE BODIES": String,
+  "BILIRUBIN": String,
+  "URINE GLUCOSE": String,
+  " HIV HUMAN IMMUNO DEFICIENCY VIRUS HIV I + II": String,
+  "HBsAg - Hepatitis B surface antigen": String,
+  "HCV Ab - Hepatitis C virus Antibody": String,
+  "V.D.R.L": String,
+  "MALARIAL PARASITES": String,
+  "TRIIODOTHYRONINE - T3": String,
+  "THYROXINE - T4": String,
+  "THYROID STIMULATING HORMONE": String,
+  "HAEMOGLOBIN  (COLORIMETRIC METHOD)": String,
+  "RBC (SHEATH FLOW DC DETECTION)": String,
+  "HCT(CALCULATED)": String,
+  "MCV(CALCULATED)": String,
+  "MCH(CALCULATED)": String,
+  "MCHC(CALCULATED)": String,
+  "RDW-CV(CALCULATED)": String,
+  "PLATELET COUNT(SHEATH FLOW DC DETECTION)": String,
+  "TOTAL WBC COUNT": String,
+  "NEUTROPHILS": String,
+  "LYMPHOCYTES": String,
+  "MONOCYTES": String,
+  "EOSINOPHILS": String,
+  "BASOPHILS": String,
+  "PERFORMED : ERYTHROCYTE SEDIMENTATION RATE": String,
+  "ESR": String,
+  "MAGNESIUM": String,
+  "C-REACTIVE PROTEIN": String,
+  "IRON": String,
+  "FERRITIN": String,
+  "HBA1c": String
   },
   { timestamps: true }
 );

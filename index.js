@@ -17,7 +17,7 @@ const scrips = require("./scripts/index");
 let analyticsDb = (module.exports = new mongoose.Mongoose());
 
 const app = express();
-app.options('*', cors());
+app.options("*", cors());
 app.use(cors());
 
 const jobs = require("./jobs");
@@ -63,8 +63,11 @@ mongoose
       return Promise.resolve(true);
     }
   })
-  .then(() => {
+  .then(async () => {
     console.log("analytics db connected");
+    if (process.env.FULL_RECONCILE) {
+      await jobs.analytics.add.processAll();
+    }
   })
   .catch((err) => console.warn(err));
 

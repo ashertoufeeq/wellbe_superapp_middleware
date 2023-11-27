@@ -27,7 +27,9 @@ if (process.env.ANALYTICS_DB) {
 }
 
 const last15Minutes = moment().subtract(10, "minutes").toDate();
-const lastDay = moment().subtract(1, "day").startOf("day").toDate();
+const lastDay = process.env.FULL_RECONCILE
+  ? moment().subtract(3, "months").startOf("day").toDate()
+  : moment().subtract(1, "day").startOf("day").toDate();
 
 exports.processScreening = (isEod) =>
   new Promise(async (resolve, reject) => {

@@ -81,12 +81,13 @@ module.exports = async (req, res) => {
       },
       {
         $addFields: {
-          reportUrl: "$package.reportUrl",
+          reportUrlInner: "$package.reportUrl",
         },
       },
       {
         $project: {
           reportUrl: "$reportUrl",
+          reportUrlInner: "$reportUrlInner",
           uhid: "$patientUhid",
           patientId: "$patientId",
           isReportSent: "$isReportSent",
@@ -133,7 +134,7 @@ module.exports = async (req, res) => {
           break;
       };
       console.log(globalCount);
-      if ((action.labItems || []).some((item) => item.reportUrl)) {
+      if ((action.labItems || []).some((item) => (item.reportUrl || item.reportUrlInner))) {
         const screenings = await ScreeningModel.aggregate([
           {
             $match: {
@@ -312,9 +313,9 @@ module.exports = async (req, res) => {
                 }
                 console.log(details.labItems,'some console');
                 for (const lab of details.labItems || []) {
-                  if (lab && !lab?.cleared && lab?.reportUrl && (lab.reportUrl || '').includes('.pdf')) {
-                    console.log(lab, lab.reportUrl,'report url');
-                    const labBuffer = await getFileBufferFromUrl(lab?.reportUrl);
+                  if (lab && !lab?.cleared && ((lab?.reportUrl && (lab.reportUrl || '').includes('.pdf'))|| (lab?.reportUrlInner && (lab.reportUrlInner || '').includes('.pdf')))) {
+                    console.log(lab, lab.reportUrl,'report url', lab?.reportUrlInner, 'reportUrlInner');
+                    const labBuffer = await getFileBufferFromUrl(lab?.reportUrl || lab?.reportUrlInner);
                     pdfLinks.push(labBuffer);
                     labReportGenerated = true;
                     break;

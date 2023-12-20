@@ -21,7 +21,7 @@ const getFileBufferFromUrl = (file) =>
     }
   });
 
-const pdfMerge = ({ pdfLinks = [] }) =>
+const pdfMerge = ({ pdfLinks = [], fileName }) =>
   new Promise(async (resolve, reject) => {
     const merger = new PDFMerger();
     try {
@@ -33,7 +33,7 @@ const pdfMerge = ({ pdfLinks = [] }) =>
       var params = {
         ACL: "public-read",
         ContentType: "application/pdf",
-        Key: "consolidated_report_" + Date.now() + ".pdf",
+        Key:fileName ? fileName: "consolidated_report_" + Date.now() + ".pdf",
         Body: mergedPdfBuffer,
         Bucket: process.env.BUCKET_NAME,
       };

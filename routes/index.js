@@ -1,4 +1,6 @@
 const Patient = require('../models/patientRecord');
+const CampScreening = require('../models/campScreening.model');
+const Camp = require('../models/camps.model');
 const express = require("express");
 const router = express.Router();
 const sendMessageBird = require("../utils/message");
@@ -51,6 +53,34 @@ router.post("/merge", async (req, res) => {
     const url = await mergeByUrl(req.body.urls||[]);
     console.log('url...', url)
     res.status(200).json(url);
+  }
+  catch(e){
+      res.status(500).json('Something went wrong');
+  }
+});
+
+
+router.post("/merge-by-camp-id", async (req, res) => {
+  try{
+    const { campId } = req.body
+    console.log('called...', campId);
+    const patientIds = await CampScreening.distinct('patientId', {campId: campId });
+    const reportUrls = await Patient.find({_id: patientIds}, {"consolidatedReportUrl": 1});
+    const urls = reportUrls.map(item => item.consolidatedReportUrl);
+
+    const url = await mergeByUrl(urls||[], false);
+    await Camp.findByIdAndUpdate(campId, {"$set": {
+      numberOfConsolidatedReportGenerated: (urls || []).length,
+      reportUrl:url,
+      reportGeneratedAt: moment()
+      .tz(timezone)
+      .toISOString(),
+    }})
+
+    console.log('url...', url)
+    
+    res.status(200).json(url);
+
   }
   catch(e){
       res.status(500).json('Something went wrong');

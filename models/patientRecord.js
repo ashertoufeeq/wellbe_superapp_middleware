@@ -243,6 +243,9 @@ const patientRecordSchema = new schema(
         _id: false,
       },
     ],
+    uploadedOnExternalS3: {
+      type: Boolean
+    },
     consolidatedReportUrl: {
       type: String,
     },

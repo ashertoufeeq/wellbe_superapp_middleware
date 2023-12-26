@@ -55,6 +55,7 @@ module.exports = async () => {
   );
 
   for (acion of patientCursor) {
+    console.log(i, "th iteration");
     if (action && foldersToDistrictMap[action?.camp?.villageName]) {
       console.log(i, action);
       const labourUrl = action.labourIdFile;

@@ -114,6 +114,7 @@ module.exports = async () => {
         { new: true }
       );
     } else {
+      console.log("skipping");
     }
     i = i + 1;
   }

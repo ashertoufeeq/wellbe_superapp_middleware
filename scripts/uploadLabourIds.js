@@ -51,7 +51,9 @@ module.exports = async () => {
       },
     ],
     { allowDiskUse: true }
-  ).cursor();
+  )
+    .cursor()
+    .addCursorFlag("noCursorTimeout", true);
 
   for (
     let action = await patientCursor.next();

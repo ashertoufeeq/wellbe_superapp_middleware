@@ -54,7 +54,7 @@ module.exports = async () => {
     { allowDiskUse: true }
   );
 
-  for (acion of patientCursor) {
+  for (const action of patientCursor) {
     console.log(i, "th iteration");
     if (action && foldersToDistrictMap[action?.camp?.villageName]) {
       console.log(i, action);

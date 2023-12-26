@@ -24,7 +24,8 @@ const cutoff = moment().subtract(3, "months").startOf("day").toDate();
 
 module.exports = async () => {
   i = 1;
-  const patientCursor = Patients.aggregate(
+  console.log("fetching patients");
+  const patientCursor = await Patients.aggregate(
     [
       {
         $match: {
@@ -51,15 +52,9 @@ module.exports = async () => {
       },
     ],
     { allowDiskUse: true }
-  )
-    .cursor()
-    .addCursorFlag("noCursorTimeout", true);
+  );
 
-  for (
-    let action = await patientCursor.next();
-    true;
-    action = await patientCursor.next()
-  ) {
+  for (acion of patientCursor) {
     if (action && foldersToDistrictMap[action?.camp?.villageName]) {
       console.log(i, action);
       const labourUrl = action.labourIdFile;

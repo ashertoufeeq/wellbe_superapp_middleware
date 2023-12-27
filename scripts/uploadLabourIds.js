@@ -102,19 +102,23 @@ module.exports = async () => {
 
         var params = {
           ACL: "public-read",
-          ContentType: `application/pdf`,
+          ContentType: type === "pdf" ? `application/pdf` : `image/${type}`,
           Key: `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-lbr/${
             action?.uhid + "." + type
           }`,
           Body: buffer,
           Bucket: process.env.WELLBE_BUCKET_NAME,
         };
+        newLabourUrl =
+          "https://health-report-wellbe.s3.ap-south-1.amazonaws.com/" +
+          `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-lbr/${
+            action?.uhid + "." + type
+          }`;
         s3.upload(params, (uploaderr, data1) => {
           if (uploaderr) {
             console.log(uploaderr, "error in uploading");
           }
           console.log(data1?.Location, "uploaded");
-          newLabourUrl = data1?.Location;
         });
       } else {
         console.log("No Labour Id", action.uhid);
@@ -133,11 +137,15 @@ module.exports = async () => {
           Body: reportBuffer,
           Bucket: process.env.WELLBE_BUCKET_NAME,
         };
+        newReportUrl =
+          "https://health-report-wellbe.s3.ap-south-1.amazonaws.com/" +
+          `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-rpts/${
+            action?.uhid + "." + type
+          }`;
         s3.upload(params, (uploaderr, data1) => {
           if (uploaderr) {
             console.log(uploaderr, "error in uploading");
           }
-          newReportUrl = console.log(data1?.Location, "uploaded");
         });
       } else {
         console.log("No Report", action.UHID);

@@ -4,6 +4,8 @@ const { analyticsModel } = require("../models/analytics.model");
 const Patients = require("../models/patientRecord");
 const moment = require("moment");
 const aws = require("aws-sdk");
+const _ = require("lodash");
+const data = require("./wellbeaws.json");
 
 const s3 = new aws.S3({
   accessKeyId: process.env.WELLBE_S3_ACCESS_KEY,
@@ -36,74 +38,21 @@ const foldersToDistrictMap = {
 
 const cutoff = moment().subtract(3, "months").startOf("day").toDate();
 
-module.exports = async () => {
+const batchRunner = async (patients, index) => {
   i = 1;
-  console.log("fetching patients");
-  const patientCursor = await Patients.aggregate(
-    [
-      {
-        $match: {
-          labourIdFile: { $exists: true },
-          consolidatedReportCampId: { $exists: true },
-          consolidatedReportUrl: { $exists: true },
-          externalBucketReportUrl: { $exists: false },
-          createdAt: { $gte: cutoff },
-        },
-      },
-      {
-        $lookup: {
-          from: "camps",
-          localField: "consolidatedReportCampId",
-          foreignField: "_id",
-          as: "camp",
-        },
-      },
-      {
-        $unwind: {
-          path: "$camp",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "program_mgmts",
-          localField: "camp.programId",
-          foreignField: "_id",
-          as: "workOrder",
-        },
-      },
-      {
-        $unwind: {
-          path: "$workOrder",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ],
-    { allowDiskUse: true }
-  ).limit(10000);
+  console.log("running script for ->", `[${index}]`);
+  console.log("total ->", patients.length, `[${index}]`);
 
-  const allPatients = process.env.VILLAGE
-    ? patientCursor.filter((p) => p?.camp?.villageName === process.env.VILLAGE)
-    : patientCursor;
-
-  console.log(
-    "total ->",
-    patientCursor.length,
-    "fitlered ->",
-    allPatients.length
-  );
-  delete patientCursor;
-  for (const action of allPatients) {
-    console.log(i, "th iteration");
-    const folderName = foldersToDistrictMap[action?.camp?.villageName]
-      ? foldersToDistrictMap[action?.camp?.villageName]
-      : foldersToDistrictMap[action?.workOrder?.programShortCode];
+  for (const action of patients) {
+    console.log(i, "th iteration", `[${index}]`);
+    const folderName = foldersToDistrictMap[action.villageName]
+      ? foldersToDistrictMap[action.villageName]
+      : foldersToDistrictMap[action.workOrder];
     if (action && folderName) {
-      console.log(i, action);
+      console.log(i, action, `[${index}]`);
       const labourUrl = action.labourIdFile;
       let newReportUrl;
       let newLabourUrl;
-      let bucketName = foldersToDistrictMap[action?.camp?.villageName];
       if (labourUrl) {
         const buffer = await getFileBufferFromUrl(labourUrl);
 
@@ -112,23 +61,21 @@ module.exports = async () => {
         var params = {
           ACL: "public-read",
           ContentType: type === "pdf" ? `application/pdf` : `image/${type}`,
-          Key: `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-lbr/${
-            action?.uhid + "." + type
-          }`,
+          Key: `PHC-03/${folderName}-lbr/${action?.uhid + "." + type}`,
           Body: buffer,
           Bucket: process.env.WELLBE_BUCKET_NAME,
         };
         try {
           const data1 = await s3.upload(params).promise();
-          console.log("uploaded labour ->", data1.Location);
+          console.log("uploaded labour ->", data1.Location, `[${index}]`);
           newLabourUrl = data1.Location;
         } catch (err) {
           console.log(err, "error in uploading");
         }
       } else {
-        console.log("No Labour Id", action.uhid);
+        console.log("No Labour Id", action.uhid, `[${index}]`);
       }
-      const reportUrl = action.consolidatedReportUrl;
+      const reportUrl = action.reportFile;
 
       if (reportUrl) {
         const reportBuffer = await getFileBufferFromUrl(reportUrl);
@@ -136,36 +83,40 @@ module.exports = async () => {
         var params = {
           ACL: "public-read",
           ContentType: `application/pdf`,
-          Key: `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-rpts/${
-            action?.uhid + "." + type
-          }`,
+          Key: `PHC-03/${folderName}-rpts/${action?.uhid + "." + type}`,
           Body: reportBuffer,
           Bucket: process.env.WELLBE_BUCKET_NAME,
         };
         try {
           const data1 = await s3.upload(params).promise();
-          console.log("uploaded report->", data1.Location);
+          console.log("uploaded report->", data1.Location, `[${index}]`);
           newReportUrl = data1.Location;
         } catch (err) {
-          console.log(err, "error in uploading");
+          console.log(err, "error in uploading", `[${index}]`);
         }
       } else {
-        console.log("No Report", action.UHID);
+        console.log("No Report", action.uhid, `[${index}]`);
       }
-      await Patients.findByIdAndUpdate(
-        action?._id,
+      await Patients.findOneAndUpdate(
+        { uhid: action.uhid },
         {
           $set: {
             externalBucketReportUrl: newReportUrl,
             externalBucketLabourUrl: newLabourUrl,
-            externalBucketName: bucketName,
+            externalBucketName: folderName,
           },
         },
         { new: true }
       );
     } else {
-      console.log("skipping");
+      console.log("skipping", `[${index}]`);
     }
     i = i + 1;
   }
+};
+
+const batches = _.chunk(data, 5000);
+module.exports = async () => {
+  await Promise.all(batches.map((batch, index) => batchRunner(batch, index)));
+  console.log("All Done");
 };

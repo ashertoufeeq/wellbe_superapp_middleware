@@ -306,7 +306,13 @@ const main = async () => {
   //   });
   await Promise.all(
     batches.map((batch, index) =>
-      batchRunner({ campscreeninglists, patient_records, db, batch, index })
+      batchRunner({
+        campscreeninglists,
+        patient_records,
+        db,
+        batch,
+        batchIndex: index,
+      })
     )
   );
   console.log("All Done");

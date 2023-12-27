@@ -80,9 +80,18 @@ module.exports = async () => {
       },
     ],
     { allowDiskUse: true }
-  ).limit(10000);
+  );
 
-  for (const action of patientCursor) {
+  const allPatients = process.env.VILLAGE
+    ? patientCursor.filter((p) => p?.camp?.villageName === process.env.VILLAGE)
+    : patientCursor;
+  console.log(
+    "total ->",
+    patientCursor.length,
+    "fitlered ->",
+    allPatients.length
+  );
+  for (const action of allPatients) {
     console.log(i, "th iteration");
     const folderName = foldersToDistrictMap[action?.camp?.villageName]
       ? foldersToDistrictMap[action?.camp?.villageName]

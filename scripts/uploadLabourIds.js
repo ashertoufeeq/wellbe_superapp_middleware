@@ -80,7 +80,7 @@ module.exports = async () => {
       },
     ],
     { allowDiskUse: true }
-  );
+  ).limit(10000);
 
   for (const action of patientCursor) {
     console.log(i, "th iteration");

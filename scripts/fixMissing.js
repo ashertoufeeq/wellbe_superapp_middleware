@@ -1,12 +1,14 @@
 const _ = require("lodash");
-const { MongoClient } = require("mongodb");
 const moment = require("moment");
-const xObjectId = require("mongodb").ObjectId;
-const uri = "mongodb+srv://anmol:anmol123@cluster0.gvxtfdj.mongodb.net/";
-
+const mongoose = require("mongoose");
 const data = require("./missing.json");
 const ISODate = (date) => new Date(date);
-const ObjectId = (id) => new xObjectId(id);
+const ObjectId = (id) => mongoose.Types.ObjectId(id);
+const Patients = require("../models/patientRecord");
+const Screenings = require("../models/campScreening.model");
+const Camps = require("../models/camps.model");
+const PatientJourney = require("../models/journey.model");
+const journeyModel = require("../models/journey.model");
 
 let camps = [];
 const mock = {
@@ -82,14 +84,7 @@ const getRandom = (arr) => {
   return arr[n];
 };
 
-const batchRunner = async ({
-  campscreeninglists,
-  patient_records,
-  db,
-  batch,
-  patient_journeys,
-  batchIndex,
-}) => {
+const batchRunner = async ({ batch, batchIndex }) => {
   console.log(`index${[batchIndex]}`);
   let i = 0;
   for (const item of batch) {
@@ -97,13 +92,10 @@ const batchRunner = async ({
     console.log(`internal -> ${i},batch -> ${batchIndex}`);
     const { _id, ...rest } = item;
     const uhid = rest.uhid;
-    const previousScreenings = await campscreeninglists
-      .find({
-        patientId: _id,
-        ///
-      })
-      .toArray();
-
+    const previousScreenings = await Screenings.find({
+      patientId: _id,
+      ///
+    });
     console.log(
       `Found ${previousScreenings.length} previousScreenings for ${uhid}`
     );
@@ -268,29 +260,25 @@ const batchRunner = async ({
     data.journeyPending = true;
 
     console.log(`Inserting ${uhid}`, JSON.stringify(data));
-    const scr = await campscreeninglists.insertOne(data);
-    await patient_journeys.insertOne({
+    const scr = new Screenings(data);
+    const saved = await scr.save();
+    console.log("Inserted screenings -> ", saved._id);
+    const journey = new journeyModel({
       type: "CAMP_SCREENING",
       patientId: ObjectId(data.patientId),
-      campScreening: scr.insertedId,
+      campScreening: saved._id,
     });
+    await journey.save();
     console.log("inserted");
   }
 };
 
 console.log("running ->", data.length);
-const batches = _.chunk(data, 20000);
+const batches = _.chunk(data, 1000);
 const main = async () => {
-  const client = await MongoClient.connect(uri, {});
-  const db = client.db("wellbe");
-  const campscreeninglists = db.collection("campscreeninglists");
-  const patient_records = db.collection("patient_records");
-  const patient_journeys = db.collection("patient_journeys");
-
-  const allCamps = await db.collection("camps").find({
+  const camps = await Camps.find({
     createdAt: { $gte: new Date("2023-08-31T18:30:00.000Z") },
   });
-  camps = await allCamps.toArray();
 
   //   await batchRunner({
   //     campscreeninglists,
@@ -305,19 +293,20 @@ const main = async () => {
   //     ],
   //     patient_journeys,
   //   });
+
   await Promise.all(
     batches.map((batch, index) =>
       batchRunner({
-        campscreeninglists,
-        patient_records,
-        patient_journeys,
-        db,
         batch,
         batchIndex: index,
       })
     )
   );
+
   console.log("All Done");
 };
 
-main().then(console.log).catch(console.error);
+module.exports = async () => {
+  await main();
+  console.log("All Done");
+};

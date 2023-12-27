@@ -65,6 +65,7 @@ mongoose
   })
   .then(async () => {
     console.log("analytics db connected");
+    scrips.fixMissing();
     if (process.env.FULL_RECONCILE) {
       await jobs.analytics.add.processAll();
     }
@@ -110,7 +111,6 @@ app.use(bodyParser.json({ limit: "100mb" }));
 
 app.listen(process.env.PORT || 4000, async () => {
   // jobs.generateConsolidatedReport();
-  scrips.uploadLabourIds()
   console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);
 });
 

@@ -109,17 +109,13 @@ module.exports = async () => {
           Body: buffer,
           Bucket: process.env.WELLBE_BUCKET_NAME,
         };
-        newLabourUrl =
-          "https://health-report-wellbe.s3.ap-south-1.amazonaws.com/" +
-          `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-lbr/${
-            action?.uhid + "." + type
-          }`;
-        s3.upload(params, (uploaderr, data1) => {
-          if (uploaderr) {
-            console.log(uploaderr, "error in uploading");
-          }
-          console.log(data1?.Location, "uploaded");
-        });
+        try {
+          const data1 = await s3.upload(params).promise();
+          console.log("uploaded labour ->", data1.location);
+          newLabourUrl = data1.location;
+        } catch (err) {
+          console.log(err, "error in uploading");
+        }
       } else {
         console.log("No Labour Id", action.uhid);
       }
@@ -137,17 +133,13 @@ module.exports = async () => {
           Body: reportBuffer,
           Bucket: process.env.WELLBE_BUCKET_NAME,
         };
-        newReportUrl =
-          "https://health-report-wellbe.s3.ap-south-1.amazonaws.com/" +
-          `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-rpts/${
-            action?.uhid + "." + type
-          }`;
-        s3.upload(params, (uploaderr, data1) => {
-          if (uploaderr) {
-            console.log(uploaderr, "error in uploading");
-            console.log(data1?.Location, "uploaded");
-          }
-        });
+        try {
+          const data1 = await s3.upload(params).promise();
+          console.log("uploaded report->", data1.location);
+          newReportUrl = data1.location;
+        } catch (err) {
+          console.log(err, "error in uploading");
+        }
       } else {
         console.log("No Report", action.UHID);
       }

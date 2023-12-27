@@ -18,6 +18,20 @@ const foldersToDistrictMap = {
   Belgaum: "belgavi-01",
   Bellary: "bellary",
   Gulbarga: "kalburgi",
+  Bagalkot: "bagalkot",
+  "Bijapur(KAR)": "bijapur",
+  Hassan: "hassan",
+  Mandya: "mandya",
+  Raichur: "raichur",
+  Ramanagar: "ramanagar",
+  Tumkur: "tumkur",
+  Vijayanagar: "vijaynagara",
+  "hubli-div02": "hubli-div01",
+  "hubli-div01": "hubli-div02",
+  "bnglr - div05": "bengaluru-div05",
+  "bnglr - div03": "bengaluru-div03",
+  "bnglr - div06": "bengaluru-div06",
+  Dharwad: "hubli-div01",
 };
 
 const cutoff = moment().subtract(3, "months").startOf("day").toDate();
@@ -32,7 +46,9 @@ module.exports = async () => {
           labourIdFile: { $exists: true },
           consolidatedReportCampId: { $exists: true },
           consolidatedReportUrl: { $exists: true },
-          uploadedOnExternalS3: { $exists: false },
+          externalBucketReportUrl: { $exists: false },
+          externalBucketLabourUrl: { $exists: false },
+          externalBucketName: { $exists: false },
           createdAt: { $gte: cutoff },
         },
       },
@@ -50,15 +66,35 @@ module.exports = async () => {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: "program_mgmt",
+          localField: "programId",
+          foreignField: "_id",
+          as: "workOrder",
+        },
+      },
+      {
+        $unwind: {
+          path: "$workOrder",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ],
     { allowDiskUse: true }
   );
 
   for (const action of patientCursor) {
     console.log(i, "th iteration");
-    if (action && foldersToDistrictMap[action?.camp?.villageName]) {
+    const folderName = foldersToDistrictMap[action?.camp?.villageName]
+      ? foldersToDistrictMap[action?.camp?.villageName]
+      : foldersToDistrictMap[action?.workOrder?.programShortCode];
+    if (action && folderName) {
       console.log(i, action);
       const labourUrl = action.labourIdFile;
+      let newReportUrl;
+      let newLabourUrl;
+      let bucketName = foldersToDistrictMap[action?.camp?.villageName];
       if (labourUrl) {
         const buffer = await getFileBufferFromUrl(labourUrl);
 
@@ -66,7 +102,7 @@ module.exports = async () => {
 
         var params = {
           ACL: "public-read",
-          // ContentType: `application/${type}`,
+          ContentType: `application/pdf`,
           Key: `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-lbr/${
             action?.uhid + "." + type
           }`,
@@ -78,17 +114,19 @@ module.exports = async () => {
             console.log(uploaderr, "error in uploading");
           }
           console.log(data1?.Location, "uploaded");
+          newLabourUrl = data1?.Location;
         });
       } else {
         console.log("No Labour Id", action.uhid);
       }
       const reportUrl = action.consolidatedReportUrl;
+
       if (reportUrl) {
         const reportBuffer = await getFileBufferFromUrl(reportUrl);
         const type = "pdf";
         var params = {
           ACL: "public-read",
-          // ContentType: `application/${type}`,
+          ContentType: `application/pdf`,
           Key: `PHC-03/${foldersToDistrictMap[action.camp?.villageName]}-rpts/${
             action?.uhid + "." + type
           }`,
@@ -99,7 +137,7 @@ module.exports = async () => {
           if (uploaderr) {
             console.log(uploaderr, "error in uploading");
           }
-          console.log(data1?.Location, "uploaded");
+          newReportUrl = console.log(data1?.Location, "uploaded");
         });
       } else {
         console.log("No Report", action.UHID);
@@ -108,7 +146,9 @@ module.exports = async () => {
         action?._id,
         {
           $set: {
-            uploadedOnExternalS3: true,
+            externalBucketReportUrl: newReportUrl,
+            externalBucketLabourUrl: newLabourUrl,
+            externalBucketName: bucketName,
           },
         },
         { new: true }

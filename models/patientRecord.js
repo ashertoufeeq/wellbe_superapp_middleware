@@ -244,7 +244,7 @@ const patientRecordSchema = new schema(
       },
     ],
     uploadedOnExternalS3: {
-      type: Boolean
+      type: Boolean,
     },
     consolidatedReportUrl: {
       type: String,
@@ -260,7 +260,7 @@ const patientRecordSchema = new schema(
       type: Date,
     },
     labClearReason: {
-      type: String
+      type: String,
     },
     partnerOrganization: {
       type: schema.Types.ObjectId,
@@ -317,6 +317,9 @@ const patientRecordSchema = new schema(
     },
     nationality: { type: String },
     localName: { type: String },
+    externalBucketReportUrl: { type: String },
+    externalBucketLabourUrl: { type: String },
+    externalBucketName: { type: String },
     localFatherName: { type: String },
     localMotherName: { type: String },
     labourIdFile: { type: String },
@@ -333,8 +336,8 @@ const patientRecordSchema = new schema(
       type: Date,
     },
     consolidatedReportCampId: {
-      type: schema.Types.ObjectId
-    }
+      type: schema.Types.ObjectId,
+    },
   },
   { timestamps: true }
 );

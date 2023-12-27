@@ -85,12 +85,14 @@ module.exports = async () => {
   const allPatients = process.env.VILLAGE
     ? patientCursor.filter((p) => p?.camp?.villageName === process.env.VILLAGE)
     : patientCursor;
+
   console.log(
     "total ->",
     patientCursor.length,
     "fitlered ->",
     allPatients.length
   );
+  delete patientCursor;
   for (const action of allPatients) {
     console.log(i, "th iteration");
     const folderName = foldersToDistrictMap[action?.camp?.villageName]

@@ -88,8 +88,13 @@ const batchRunner = async ({
   db,
   batch,
   patient_journeys,
+  batchIndex,
 }) => {
+  console.log(`index${[batchIndex]}`);
+  let i = 0;
   for (const item of batch) {
+    i++;
+    console.log(`internal -> ${i},batch -> ${batchIndex}`);
     const { _id, ...rest } = item;
     const previousScreenings = await campscreeninglists
       .find({
@@ -272,6 +277,7 @@ const batchRunner = async ({
   }
 };
 
+console.log("running ->", data.length);
 const batches = _.chunk(data, 500);
 const main = async () => {
   const client = await MongoClient.connect(uri, {});
@@ -299,8 +305,8 @@ const main = async () => {
   //     patient_journeys,
   //   });
   await Promise.all(
-    batches.map((batch) =>
-      batchRunner({ campscreeninglists, patient_records, db, batch })
+    batches.map((batch, index) =>
+      batchRunner({ campscreeninglists, patient_records, db, batch, index })
     )
   );
   console.log("All Done");

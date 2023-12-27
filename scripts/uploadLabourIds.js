@@ -47,8 +47,6 @@ module.exports = async () => {
           consolidatedReportCampId: { $exists: true },
           consolidatedReportUrl: { $exists: true },
           externalBucketReportUrl: { $exists: false },
-          externalBucketLabourUrl: { $exists: false },
-          externalBucketName: { $exists: false },
           createdAt: { $gte: cutoff },
         },
       },

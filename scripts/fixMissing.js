@@ -303,6 +303,7 @@ const main = async () => {
       batchRunner({ campscreeninglists, patient_records, db, batch })
     )
   );
+  console.log("All Done");
 };
 
 main().then(console.log).catch(console.error);

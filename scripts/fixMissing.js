@@ -279,7 +279,7 @@ const batchRunner = async ({
 };
 
 console.log("running ->", data.length);
-const batches = _.chunk(data, 1000);
+const batches = _.chunk(data, 20000);
 const main = async () => {
   const client = await MongoClient.connect(uri, {});
   const db = client.db("wellbe");

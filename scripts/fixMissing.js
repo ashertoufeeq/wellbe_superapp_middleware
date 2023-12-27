@@ -285,24 +285,24 @@ const main = async () => {
   });
   camps = await allCamps.toArray();
 
-  await batchRunner({
-    campscreeninglists,
-    patient_records,
-    db,
-    batch: [
-      batches[0][0],
-      //   batches[0][2],
-      //   batches[0][3],
-      //   batches[0][4],
-      //   batches[2][1],
-    ],
-    patient_journeys,
-  });
-  //   await Promise.all(
-  //     batches.map((batch) =>
-  //       batchRunner({ campscreeninglists, patient_records, db, batch })
-  //     )
-  //   );
+  //   await batchRunner({
+  //     campscreeninglists,
+  //     patient_records,
+  //     db,
+  //     batch: [
+  //       batches[0][0],
+  //       //   batches[0][2],
+  //       //   batches[0][3],
+  //       //   batches[0][4],
+  //       //   batches[2][1],
+  //     ],
+  //     patient_journeys,
+  //   });
+  await Promise.all(
+    batches.map((batch) =>
+      batchRunner({ campscreeninglists, patient_records, db, batch })
+    )
+  );
 };
 
 main().then(console.log).catch(console.error);

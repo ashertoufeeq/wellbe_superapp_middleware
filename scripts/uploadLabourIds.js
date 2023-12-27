@@ -69,7 +69,7 @@ module.exports = async () => {
       {
         $lookup: {
           from: "program_mgmts",
-          localField: "programId",
+          localField: "camp.programId",
           foreignField: "_id",
           as: "workOrder",
         },

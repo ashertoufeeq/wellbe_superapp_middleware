@@ -145,6 +145,7 @@ module.exports = async () => {
         s3.upload(params, (uploaderr, data1) => {
           if (uploaderr) {
             console.log(uploaderr, "error in uploading");
+            console.log(data1?.Location, "uploaded");
           }
         });
       } else {

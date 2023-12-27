@@ -96,6 +96,7 @@ const batchRunner = async ({
     i++;
     console.log(`internal -> ${i},batch -> ${batchIndex}`);
     const { _id, ...rest } = item;
+    const uhid = rest.uhid;
     const previousScreenings = await campscreeninglists
       .find({
         patientId: _id,
@@ -104,7 +105,7 @@ const batchRunner = async ({
       .toArray();
 
     console.log(
-      `Found ${previousScreenings.length} previousScreenings for ${_id}`
+      `Found ${previousScreenings.length} previousScreenings for ${uhid}`
     );
     if (previousScreenings.length > 0) {
       const $exists = _.some(previousScreenings, (previousScreening) =>
@@ -119,7 +120,7 @@ const batchRunner = async ({
 
       if ($exists) {
         console.log(
-          `Found basic details for ${_id} in previousScreenings, skipping...`
+          `Found basic details for ${uhid} in previousScreenings, skipping...`
         );
         continue;
       }
@@ -180,7 +181,7 @@ const batchRunner = async ({
     }
 
     if (previousScreenings.length > 0) {
-      console.log(`Found previousScreenings for ${_id}`);
+      console.log(`Found previousScreenings for ${uhid}`);
       const previousScreening =
         previousScreenings[previousScreenings.length - 1];
       data.campId = previousScreening.campId;
@@ -204,7 +205,7 @@ const batchRunner = async ({
         console.log("camp id ->", data.campId);
       } else {
         console.log(
-          `No sameDayCamps found for ${_id} on ${moment(rest.createdAt).format(
+          `No sameDayCamps found for ${uhid} on ${moment(rest.createdAt).format(
             "DD-MM-YYYY"
           )}')}`
         );
@@ -219,13 +220,13 @@ const batchRunner = async ({
 
         if (xCamps.length === 0) {
           console.log(
-            `No xCamps found for ${_id} before ${moment(rest.createdAt).format(
+            `No xCamps found for ${uhid} before ${moment(rest.createdAt).format(
               "DD-MM-YYYY"
             )})}`
           );
           data.campId = getRandom(camps.map((camp) => camp._id));
         } else {
-          console.log(`No xCamps found for ${_id}`);
+          console.log(`No xCamps found for ${uhid}`);
           data.campId = getRandom(xCamps);
         }
       }
@@ -266,7 +267,7 @@ const batchRunner = async ({
     data.updatedAt = new Date(rest.createdAt);
     data.journeyPending = true;
 
-    console.log(`Inserting ${_id}`, JSON.stringify(data));
+    console.log(`Inserting ${uhid}`, JSON.stringify(data));
     const scr = await campscreeninglists.insertOne(data);
     await patient_journeys.insertOne({
       type: "CAMP_SCREENING",
@@ -278,7 +279,7 @@ const batchRunner = async ({
 };
 
 console.log("running ->", data.length);
-const batches = _.chunk(data, 500);
+const batches = _.chunk(data, 1000);
 const main = async () => {
   const client = await MongoClient.connect(uri, {});
   const db = client.db("wellbe");

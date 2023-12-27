@@ -109,8 +109,8 @@ module.exports = async () => {
         };
         try {
           const data1 = await s3.upload(params).promise();
-          console.log("uploaded labour ->", data1);
-          newLabourUrl = data1.location;
+          console.log("uploaded labour ->", data1.Location);
+          newLabourUrl = data1.Location;
         } catch (err) {
           console.log(err, "error in uploading");
         }
@@ -133,8 +133,8 @@ module.exports = async () => {
         };
         try {
           const data1 = await s3.upload(params).promise();
-          console.log("uploaded report->", data1.location);
-          newReportUrl = data1.location;
+          console.log("uploaded report->", data1.Location);
+          newReportUrl = data1.Location;
         } catch (err) {
           console.log(err, "error in uploading");
         }

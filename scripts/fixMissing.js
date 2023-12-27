@@ -310,6 +310,7 @@ const main = async () => {
       batchRunner({
         campscreeninglists,
         patient_records,
+        patient_journeys,
         db,
         batch,
         batchIndex: index,

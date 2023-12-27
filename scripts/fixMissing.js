@@ -87,6 +87,7 @@ const batchRunner = async ({
   patient_records,
   db,
   batch,
+  patient_journeys,
 }) => {
   for (const item of batch) {
     const { _id, ...rest } = item;
@@ -261,7 +262,12 @@ const batchRunner = async ({
     data.journeyPending = true;
 
     console.log(`Inserting ${_id}`, JSON.stringify(data));
-    await campscreeninglists.insertOne(data);
+    const scr = await campscreeninglists.insertOne(data);
+    await patient_journeys.insertOne({
+      type: "CAMP_SCREENING",
+      patientId: ObjectId(data.patientId),
+      campScreening: scr.insertedId,
+    });
     console.log("inserted");
   }
 };
@@ -272,29 +278,31 @@ const main = async () => {
   const db = client.db("wellbe");
   const campscreeninglists = db.collection("campscreeninglists");
   const patient_records = db.collection("patient_records");
+  const patient_journeys = db.collection("patient_journeys");
 
   const allCamps = await db.collection("camps").find({
     createdAt: { $gte: new Date("2023-08-31T18:30:00.000Z") },
   });
   camps = await allCamps.toArray();
 
-  //   await batchRunner({
-  //     campscreeninglists,
-  //     patient_records,
-  //     db,
-  //     batch: [
-  //       batches[0][0],
-  //       //   batches[0][2],
-  //       //   batches[0][3],
-  //       //   batches[0][4],
-  //       //   batches[2][1],
-  //     ],
-  //   });
-  await Promise.all(
-    batches.map((batch) =>
-      batchRunner({ campscreeninglists, patient_records, db, batch })
-    )
-  );
+  await batchRunner({
+    campscreeninglists,
+    patient_records,
+    db,
+    batch: [
+      batches[0][0],
+      //   batches[0][2],
+      //   batches[0][3],
+      //   batches[0][4],
+      //   batches[2][1],
+    ],
+    patient_journeys,
+  });
+  //   await Promise.all(
+  //     batches.map((batch) =>
+  //       batchRunner({ campscreeninglists, patient_records, db, batch })
+  //     )
+  //   );
 };
 
 main().then(console.log).catch(console.error);

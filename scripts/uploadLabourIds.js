@@ -80,7 +80,7 @@ module.exports = async () => {
       },
     ],
     { allowDiskUse: true }
-  ).limit(1000);
+  ).limit(10000);
 
   const allPatients = process.env.VILLAGE
     ? patientCursor.filter((p) => p?.camp?.villageName === process.env.VILLAGE)

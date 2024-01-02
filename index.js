@@ -65,7 +65,6 @@ mongoose
   })
   .then(async () => {
     console.log("analytics db connected");
-    scrips.uploadLabourIds();
     if (process.env.FULL_RECONCILE) {
       await jobs.analytics.add.processAll();
     }

@@ -110,7 +110,7 @@ const batchRunner = async ({ batch, batchIndex }) => {
       formsDetails.results.History_Text = 'Regular eye check up';
       formsDetails.results.External_Eye_Examination = 'Normal';
       formsDetails.results.Visual_Acuity__RE = '6/6';
-      formsDetails.results.right_freq_2000 = '6/6';
+      formsDetails.results.Visual_Acuity__LE = '6/6';
       formsDetails.results.Comment = 'Normal';
     }
 

@@ -6,3 +6,4 @@ exports.fixMissing = require("./fixMissing");
 exports.fixMissingAudiometry = require("./fixMissingAudiometry");
 exports.fixMissingOpto = require("./fixMissingOpto");
 exports.poc = require("./poc");
+exports.reportByUhid = require("./reportByUhid.job");

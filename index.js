@@ -109,7 +109,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
 app.use(bodyParser.json({ limit: "100mb" }));
 
 app.listen(process.env.PORT || 4000, async () => {
-  // jobs.generateConsolidatedReport();
+  scrips.labReportGeneration();
   console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);
 });
 

@@ -276,7 +276,7 @@ const batchRunner = async ({ batch, batchIndex }) => {
 console.log("running ->", data.length);
 const batches = _.chunk(data, 20000);
 const main = async () => {
-  ccamps = await Camps.find({
+  camps = await Camps.find({
     createdAt: { $gte: new Date("2023-08-31T18:30:00.000Z") },
   });
 

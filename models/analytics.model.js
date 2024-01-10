@@ -244,7 +244,7 @@ const analyticsSchema = new schema(
   "LE Axis": { type: String },
   "Re Addition": { type: String },
   "LE Addition": { type: String },
-  "Optometry Comment": { type: String },
+  "Optomerty Comment": { type: String },
   "left_freq_500": { type: String },
   "left_freq_1000": { type: String },
   "left_freq_2000": { type: String },

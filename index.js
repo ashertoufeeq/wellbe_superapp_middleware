@@ -8,22 +8,19 @@ const mongoose = require("mongoose");
 const path = require("path");
 
 const camps = require("./models/camps.model");
+const site = require("./models/site.model");
 const patientRecord = require("./models/patientRecord");
+const consultationItem = require("./models/consultationitem");
 const campScreening = require("./models/campScreening.model");
 const Program = require("./models/program.model");
 const labItem = require("./models/labItem");
-const scrips = require("./scripts/index");
 
-let analyticsDb = (module.exports = new mongoose.Mongoose());
 
 const app = express();
 app.options("*", cors());
 app.use(cors());
 
 const jobs = require("./jobs");
-
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -32,14 +29,13 @@ console.log(
   express.static(path.join(__dirname, "public"))
 );
 
-const rootRouter = require("./routes");
 
 let agenda;
 if (!process.env.NO_JOB) {
   agenda = new Agenda({
     db: {
       address: process.env.MONGO_URI,
-      collection: "wellbemiddleware",
+      collection: "blossommmu",
     },
     defaultLockLifetime: 240000,
     defaultConcurrency: 100,
@@ -54,20 +50,9 @@ mongoose
   })
   .then(async () => {
     console.log("db connected");
-    if (process.env.ANALYTICS_DB) {
-      return analyticsDb.connect(process.env.ANALYTICS_DB, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-    } else {
-      return Promise.resolve(true);
-    }
+    // await jobs.addConsultations()
   })
   .then(async () => {
-    console.log("analytics db connected");
-    if (process.env.FULL_RECONCILE) {
-      await jobs.analytics.add.processAll();
-    }
   })
   .catch((err) => console.warn(err));
 
@@ -109,146 +94,48 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
 app.use(bodyParser.json({ limit: "100mb" }));
 
 app.listen(process.env.PORT || 4000, async () => {
-  scrips.labReportGeneration();
-  console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);
+console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);
 });
 
-app.use("/", rootRouter);
 
 function time() {
   return new Date().toTimeString().split(" ")[0];
 }
 
+
 if (!process.env.NO_JOB) {
   agenda.define("Run Analytics", { concurrency: 10 }, async (job, done) => {
     console.log("running Run Analytics -> ", new Date());
     try {
-      await jobs.analytics.add.processAll();
+      await jobs.addConsultations();
       done();
     } catch (err) {
       console.log(err, "Failed -> Run Analytics");
       done();
     }
   });
+(async function () {
+  await agenda.start();
+  
 
-  agenda.define(
-    "Run Analytics Night",
-    { concurrency: 10 },
-    async (job, done) => {
-      console.log("running Run Analytics -> ", new Date());
-      try {
-        await jobs.analytics.add.processAll();
-        done();
-      } catch (err) {
-        console.log(err, "Failed -> Run Analytics");
-        done();
-      }
+  await agenda.every(
+    "*/4 0 * * *",
+    ["Run Analytics"],
+    {},
+    {
+      timezone: "Asia/Kolkata",
     }
   );
 
-  agenda.define("Process Screening", { concurrency: 10 }, async (job, done) => {
-    console.log("running Process Screening -> ", new Date());
-    try {
-      await jobs.analytics.add.processScreening();
-      done();
-    } catch (err) {
-      console.log(err, "Failed -> Process Screening");
-      done();
-    }
+  agenda.on("start", (job) => {
+    console.log(time(), `Job <${job.attrs.name}> starting`);
   });
-
-  agenda.define("Process Lab", { concurrency: 10 }, async (job, done) => {
-    console.log("running Process Lab -> ", new Date());
-    try {
-      await jobs.analytics.add.processLab();
-      done();
-    } catch (err) {
-      console.log(err, "Failed -> Process Lab");
-      done();
-    }
+  agenda.on("success", (job) => {
+    console.log(time(), `Job <${job.attrs.name}> succeeded`);
   });
-
-  agenda.define("Process Eod", { concurrency: 10 }, async (job, done) => {
-    console.log("running Process Eod -> ", new Date());
-    try {
-      await jobs.analytics.add.processEod();
-      done();
-    } catch (err) {
-      console.log(err, "Failed -> Process Eod");
-      done();
-    }
+  agenda.on("fail", (error, job) => {
+    console.log(time(), `Job <${job.attrs.name}> failed:`, error);
   });
-
-  agenda.define("Process Patients", { concurrency: 10 }, async (job, done) => {
-    console.log("running Process Patients -> ", new Date());
-    try {
-      await jobs.analytics.add.processPatients();
-      done();
-    } catch (err) {
-      console.log(err, "Failed -> Process Patients");
-      done();
-    }
-  });
-
-  agenda.define(
-    "Run Consolidated Report",
-    { concurrency: 10 },
-    async (job, done) => {
-      console.log("running Run Consolidated Report -> ", new Date());
-      try {
-        await jobs.generateConsolidatedReport();
-        done();
-      } catch (err) {
-        console.log(err, "Failed -> Run Consolidated Report");
-        done();
-      }
-    }
-  );
-
-  (async function () {
-    await agenda.start();
-    await agenda.every(
-      "*/4 * * * *",
-      ["Process Screening"],
-      {},
-      {
-        timezone: "Asia/Kolkata",
-      }
-    );
-
-    await agenda.every(
-      "0 0 * * *",
-      ["Run Analytics"],
-      {},
-      {
-        timezone: "Asia/Kolkata",
-      }
-    );
-    await agenda.every(
-      "0 */2 * * *",
-      ["Run Consolidated Report"],
-      {},
-      {
-        timezone: "Asia/Kolkata",
-      }
-    );
-    await agenda.every(
-      "0 5 * * *",
-      ["Run Analytics Night"],
-      {},
-      {
-        timezone: "Asia/Kolkata",
-      }
-    );
-
-    agenda.on("start", (job) => {
-      console.log(time(), `Job <${job.attrs.name}> starting`);
-    });
-    agenda.on("success", (job) => {
-      console.log(time(), `Job <${job.attrs.name}> succeeded`);
-    });
-    agenda.on("fail", (error, job) => {
-      console.log(time(), `Job <${job.attrs.name}> failed:`, error);
-    });
-  })();
+})();
 }
+

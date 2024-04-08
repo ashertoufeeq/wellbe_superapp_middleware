@@ -50,7 +50,6 @@ mongoose
   })
   .then(async () => {
     console.log("db connected");
-    // await jobs.addConsultations()
   })
   .then(async () => {
   })
@@ -119,7 +118,7 @@ if (!process.env.NO_JOB) {
   
 
   await agenda.every(
-    "*/4 0 * * *",
+    "*/4 * * * *",
     ["Run Analytics"],
     {},
     {

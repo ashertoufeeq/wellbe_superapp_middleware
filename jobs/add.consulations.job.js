@@ -97,6 +97,7 @@ module.exports = async () => {
                 assigningAuthority: currentCamp?.assigningAuthority?._id,
                 assigningAuthorityName: action?.patient?.assigningAuthority,
                 Mobile: action.patient?.mobile,
+                consultationCreatedAt: action?.createdAt,
             };
             const newAnalytic = await consultationAnalytics.analyticsModel(results);
             newAnalytic.save();

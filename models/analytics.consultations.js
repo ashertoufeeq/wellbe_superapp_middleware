@@ -11,6 +11,9 @@ const analyticsSchema = new schema(
         type: schema.Types.ObjectId,
         ref: "consultationItem",
       },
+    consultationCreatedAt: {
+      type: Date,
+    },  
     "First Name": {
       type: String,
       default: null,

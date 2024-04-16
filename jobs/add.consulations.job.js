@@ -2,13 +2,16 @@ const consultationAnalytics = require("../models/analytics.consultations");
 const consultationItem = require("../models/consultationitem");
 const Camp = require("../models/camps.model");
 const moment = require("moment");
+const ObjectId = require("mongoose").Types.ObjectId;
 
+const debug = true;
 
 module.exports = async () => {
     console.log('Started Add consultations in analytics');
     const cons = consultationItem
       .aggregate([{"$match":{
-        isProcessed: {"$ne": true}
+        // isProcessed: {"$ne": true}
+        _id: ObjectId('661d0269415c4669d1cc100d')
       }}, {
         $lookup: {
           from: "patient_records",
@@ -78,8 +81,8 @@ module.exports = async () => {
                 ? "40-65 Years"
                 : "65 years and Above",
                 UHID: action?.patient?.uhid,
-                Camp: (camp || []).length>0? camp[0]?.name : undefined,
-                campId: (camp || []).length>0? camp[0]?._id : undefined,
+                Camp:  currentCamp?.name  ||undefined,
+                campId: currentCamp?._id ||undefined,
                 "Labour Id File": action?.patient.labourIdFile,
                 "Labour Id": action?.patient.labourId,
                 "Labour Document Type": action?.patient?.labourDocumentType,
@@ -99,13 +102,19 @@ module.exports = async () => {
                 Mobile: action.patient?.mobile,
                 consultationCreatedAt: action?.createdAt,
             };
-            const newAnalytic = await consultationAnalytics.analyticsModel(results);
-            newAnalytic.save();
-            await consultationItem.findByIdAndUpdate(
-                action?._id,
-                  {"$set" : {isProcessed: true}},
-                { new: true }
-              );}catch(e){
+            
+            console.log(results,'here')
+
+            if(!debug && currentCamp){
+              const newAnalytic = await consultationAnalytics.analyticsModel(results);
+              newAnalytic.save();
+              await consultationItem.findByIdAndUpdate(
+                  action?._id,
+                    {"$set" : {isProcessed: true}},
+                  { new: true }
+                );  
+              }
+            }catch(e){
                 console.log(e,'error')
             }
         }

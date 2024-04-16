@@ -4,7 +4,7 @@ const Camp = require("../models/camps.model");
 const moment = require("moment");
 const ObjectId = require("mongoose").Types.ObjectId;
 
-const debug = true;
+const debug = false;
 
 module.exports = async () => {
     console.log('Started Add consultations in analytics');

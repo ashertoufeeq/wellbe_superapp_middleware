@@ -10,8 +10,7 @@ module.exports = async () => {
     console.log('Started Add consultations in analytics');
     const cons = consultationItem
       .aggregate([{"$match":{
-        // isProcessed: {"$ne": true}
-        _id: ObjectId('661d0269415c4669d1cc100d')
+        isProcessed: {"$ne": true}
       }}, {
         $lookup: {
           from: "patient_records",

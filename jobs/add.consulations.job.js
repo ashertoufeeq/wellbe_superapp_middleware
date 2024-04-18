@@ -1,10 +1,11 @@
 const consultationAnalytics = require("../models/analytics.consultations");
 const consultationItem = require("../models/consultationitem");
 const Camp = require("../models/camps.model");
-const moment = require("moment");
+const moment = require("moment-timezone");
 const ObjectId = require("mongoose").Types.ObjectId;
 
 const debug = false;
+const timezone = process.env.TIMEZONE || 'Asia/Kolkata';
 
 module.exports = async () => {
     console.log('Started Add consultations in analytics');
@@ -52,16 +53,17 @@ module.exports = async () => {
         }else{ 
             try{
             process.stdout.write(".");
-            const camp = await Camp.find({ assigningAuthority: action?.patient?.assigningAuthority, screeningStartDate: {
-                '$gte':  moment(action.createdAt)
+            const camp = await Camp.find({ assigningAuthority: action?.patient?.assigningAuthority,
+               screeningStartDate: {
+                '$gte':  moment(action.createdAt).tz(timezone)
                 .startOf("day")
                 .toDate(),
-                '$lte': moment(action.createdAt)
+                '$lte': moment(action.createdAt).tz(timezone)
             .endOf("day")
             .toDate(),
             }}).populate(['assigningAuthority']);
             const currentCamp = camp[0];
-            const age = moment().diff(moment(action.patient.dob), "years");
+            const age = moment().tz(timezone).diff(moment(action.patient.dob).tz(timezone), "years");
             const results = {
                 consultationId: action?._id,
                 "Patient Id": action?.patient?._id,

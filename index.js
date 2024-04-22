@@ -115,10 +115,8 @@ if (!process.env.NO_JOB) {
   });
 (async function () {
   await agenda.start();
-  
-
   await agenda.every(
-    "*/4 * * * *",
+    "0 0 7 1/1 * ? *",
     ["Run Analytics"],
     {},
     {

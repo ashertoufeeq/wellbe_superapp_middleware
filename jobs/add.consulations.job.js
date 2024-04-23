@@ -54,15 +54,38 @@ module.exports = async () => {
             try{
             process.stdout.write(".");
             const camp = await Camp.find({ assigningAuthority: action?.patient?.assigningAuthority,
-               screeningStartDate: {
+              screeningStartDate: {
                 '$gte':  moment(action.createdAt).tz(timezone)
                 .startOf("day")
                 .toDate(),
                 '$lte': moment(action.createdAt).tz(timezone)
-            .endOf("day")
-            .toDate(),
-            }}).populate(['assigningAuthority']);
-            const currentCamp = camp[0];
+                .endOf("day")
+                .toDate(),
+                }
+             }).populate(['assigningAuthority']);
+           let currentCamp = null
+            if((camp || []).length> 1){
+            const filteredArray = (camp || []).filter((c) => {
+              if(!c.screeningStartTime){
+                console.log('Screening Time not found : ', c.name, c._id);
+              }
+              if(!c.screeningStartDate){
+                console.log('Screening Date not found : ', c.name, c._id);
+              }
+              const splitTime = (c.screeningStartTime || '').split(':')
+              const screeningTime = moment(c.screeningStartDate).add(splitTime[0] || 0, 'hours').add(splitTime[1] || 0, 'minutes');
+              return (screeningTime.isBefore(action.patient?.createdAt));
+            })
+            currentCamp = filteredArray[0];
+              if(!currentCamp){
+                console.log('Camp not found', action.patient?._id, action?.patient?.uhid, action._id,  )
+              }
+            }else{
+              if(!camp[0]){
+                console.log('Camp not found camp[0]', action.patient?._id, action?.patient?.uhid, action._id,  )
+              } 
+              currentCamp= camp[0] 
+            } 
             const age = moment().tz(timezone).diff(moment(action.patient.dob).tz(timezone), "years");
             const results = {
                 consultationId: action?._id,
@@ -104,9 +127,8 @@ module.exports = async () => {
                 consultationCreatedAt: action?.createdAt,
             };
             
-            console.log(results,'here')
-
             if(!debug && currentCamp){
+              console.log('updating...')
               const newAnalytic = await consultationAnalytics.analyticsModel(results);
               newAnalytic.save();
               await consultationItem.findByIdAndUpdate(

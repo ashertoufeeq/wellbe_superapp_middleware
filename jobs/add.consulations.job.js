@@ -74,7 +74,15 @@ module.exports = async () => {
               }
               const splitTime = (c.screeningStartTime || '').split(':')
               const screeningTime = moment(c.screeningStartDate).add(splitTime[0] || 0, 'hours').add(splitTime[1] || 0, 'minutes');
-              return (screeningTime.isBefore(action.patient?.createdAt));
+              
+              const completedStatus = c._doc.statusLog.find(i => i.status === 'Completed');
+              if(!completedStatus){
+                console.log('Completed Status not found: ', c.name, c._id)
+              }              
+              if(moment(completedStatus?.updatedAt).tz(timezone).isAfter(action.patient?.createdAt) && moment(action.patient?.createdAt).tz(timezone).isAfter(screeningTime)){
+                console.log(c.name, c._id, 'camp name')
+                return true
+              }
             })
             currentCamp = filteredArray[0];
               if(!currentCamp){

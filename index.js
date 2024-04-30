@@ -50,7 +50,6 @@ mongoose
   })
   .then(async () => {
     console.log("db connected");
-    await jobs.addConsultations();
 
   })
   .then(async () => {

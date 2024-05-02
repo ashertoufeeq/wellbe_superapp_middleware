@@ -6,6 +6,7 @@ const Agenda = require("agenda");
 const Agendash = require("agendash");
 const mongoose = require("mongoose");
 const path = require("path");
+const moment = require('moment-timezone');
 
 const camps = require("./models/camps.model");
 const site = require("./models/site.model");
@@ -96,10 +97,12 @@ app.use(bodyParser.json({ limit: "100mb" }));
 app.listen(process.env.PORT || 4000, async () => {
 console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);
 });
+const timezone = process.env.TIMEZONE || 'Asia/Kolkata';
 
 
 function time() {
-  return new Date().toTimeString().split(" ")[0];
+  
+  return moment().tz(timezone).format('lll');
 }
 
 

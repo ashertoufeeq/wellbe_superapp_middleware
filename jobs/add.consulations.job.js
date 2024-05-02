@@ -9,6 +9,7 @@ const timezone = process.env.TIMEZONE || 'Asia/Kolkata';
 
 module.exports = async () => {
     console.log('Started Add consultations in analytics');
+    try{
     const cons = consultationItem
       .aggregate([{"$match":{
         isProcessed: {"$ne": true}
@@ -149,5 +150,7 @@ module.exports = async () => {
                 console.log(e,'error')
             }
         }
-    }         
+    }}catch(e){
+      console.log(e,'error')
+    }      
 }

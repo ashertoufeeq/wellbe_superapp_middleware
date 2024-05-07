@@ -7,6 +7,7 @@ const Agendash = require("agendash");
 const mongoose = require("mongoose");
 const path = require("path");
 const moment = require('moment-timezone');
+const passport = require('passport')
 
 const camps = require("./models/camps.model");
 const site = require("./models/site.model");
@@ -15,13 +16,19 @@ const consultationItem = require("./models/consultationitem");
 const campScreening = require("./models/campScreening.model");
 const Program = require("./models/program.model");
 const labItem = require("./models/labItem");
+const rootRouter = require("./routes/index");
+const MongoClient = require('mongodb').MongoClient;
 
+const ESISDB  = (exports.ESISDB = new MongoClient(process.env.ESIS_URI));
+console.log('esis connected');    
 
 const app = express();
 app.options("*", cors());
 app.use(cors());
 
-const jobs = require("./jobs");
+app.use(passport.initialize());
+require('./utils/passport')(passport);
+require('./utils/passport-anonymous')(passport);
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -31,18 +38,6 @@ console.log(
 );
 
 
-let agenda;
-if (!process.env.NO_JOB) {
-  agenda = new Agenda({
-    db: {
-      address: process.env.MONGO_URI,
-      collection: "blossommmu",
-    },
-    defaultLockLifetime: 240000,
-    defaultConcurrency: 100,
-  });
-  app.use("/dash", Agendash(agenda));
-}
 mongoose.set("strictQuery", false);
 mongoose
   .connect(process.env.MONGO_URI, {
@@ -50,12 +45,14 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(async () => {
-    console.log("db connected");
-
+    console.log("main connected");
   })
   .then(async () => {
+    
   })
   .catch((err) => console.warn(err));
+
+  
 
 app.use((req, res, next) => {
   const oldWrite = res.write;
@@ -97,46 +94,6 @@ app.use(bodyParser.json({ limit: "100mb" }));
 app.listen(process.env.PORT || 4000, async () => {
 console.log(`Running server... http://localhost:${process.env.PORT || 4000}`);
 });
+app.use("/", rootRouter);
+
 const timezone = process.env.TIMEZONE || 'Asia/Kolkata';
-
-
-function time() {
-  
-  return moment().tz(timezone).format('lll');
-}
-
-
-if (!process.env.NO_JOB) {
-  agenda.define("Run Analytics", { concurrency: 10 }, async (job, done) => {
-    console.log("running Run Analytics -> ", new Date());
-    try {
-      await jobs.addConsultations();
-      done();
-    } catch (err) {
-      console.log(err, "Failed -> Run Analytics");
-      done();
-    }
-  });
-(async function () {
-  await agenda.start();
-  await agenda.every(
-    "0 7 * * *",
-    ["Run Analytics"],
-    {},
-    {
-      timezone: "Asia/Kolkata",
-    }
-  );
-
-  agenda.on("start", (job) => {
-    console.log(time(), `Job <${job.attrs.name}> starting`);
-  });
-  agenda.on("success", (job) => {
-    console.log(time(), `Job <${job.attrs.name}> succeeded`);
-  });
-  agenda.on("fail", (error, job) => {
-    console.log(time(), `Job <${job.attrs.name}> failed:`, error);
-  });
-})();
-}
-
